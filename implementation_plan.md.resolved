@@ -1,0 +1,200 @@
+# Phase 3 Sprint — Financial, R2, Printing, Import/Export, QA
+
+Phases 1-2 are complete (18 views, 4 components). This plan incorporates all user review feedback.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Faith Promise**: Moves from standalone view into each member's profile. Auto-records in the financial system.
+
+> [!IMPORTANT]
+> **Print layouts**: Financial Statement = **portrait A4**, no text overlap. ID Card = **portrait, ID-card size**, exportable as **PNG** and printable.
+
+> [!IMPORTANT]
+> **Import/Export**: TSV format with downloadable templates. Applies to both members and financial data.
+
+---
+
+## 1. R2 Storage Integration
+
+R2 client exists ([lib/storage.ts](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/lib/storage.ts)) but is unused. Wire it into all file upload points.
+
+**R2 Bucket Folder Structure:**
+```
+bbc-church/
+├── profiles/        ← Member profile photos
+├── visitors/        ← Visitor card images
+├── sketches/        ← Activity/misc sketches
+├── id-cards/        ← Generated ID card PNGs
+├── statements/      ← Generated PDF statements
+├── imports/         ← Uploaded TSV import files
+├── exports/         ← Generated TSV export files
+└── backups/         ← System backups
+```
+
+#### [MODIFY] [MemberProfile.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/views/MemberProfile.tsx)
+- Wire [uploadFile(file, 'profiles')](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/lib/storage.ts#23-41) into the photo upload handler
+- On delete member, call [deleteFile()](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/lib/storage.ts#42-58) to clean R2
+- Add an "Attach Picture" button for uploading additional photos/documents
+
+#### [MODIFY] [VisitorForm.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/views/VisitorForm.tsx)
+- Add visitor card image upload via [uploadFile(file, 'visitors')](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/lib/storage.ts#23-41)
+
+#### [MODIFY] [Activities.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/views/Activities.tsx)
+- Add "Attach Picture" option for activity documentation (e.g., outreach photos, soul winning)
+- Upload to `sketches/` folder in R2
+
+---
+
+## 2. Faith Promise on Member Profile
+
+#### [MODIFY] [MemberProfile.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/views/MemberProfile.tsx)
+- New "Faith Promise" section:
+  - Editable input for current year's promised amount
+  - Auto-calculated: given so far (from `financial_records` where `type = 'faith_promise'`)
+  - Remaining balance display
+- On save → upsert to `faith_promise_commitments` table
+
+#### [DELETE] [FaithPromise.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/views/FaithPromise.tsx)
+
+#### [MODIFY] [App.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/App.tsx) + [Layout.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/components/Layout.tsx)
+- Remove `/faith-promise` route and sidebar link
+
+---
+
+## 3. Financial Statement — Portrait, No Overlap
+
+#### [MODIFY] [FinancialReportPrint.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/views/FinancialReportPrint.tsx)
+- Portrait A4 with `@page { size: A4 portrait; margin: 15mm; }`
+- `table-layout: fixed` + `overflow-wrap: break-word` to prevent text overlap
+- Proper column widths for long names and large amounts
+- Clean print-specific CSS
+
+---
+
+## 4. ID Card — Portrait, PNG Export
+
+#### [MODIFY] [MemberIDPrint.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/views/MemberIDPrint.tsx)
+- **Portrait layout** (~54mm × 86mm / 2.13in × 3.39in)
+- Redesign vertically: logo → photo → name → ID# → positions → year joined
+- **Export as PNG** using `html2canvas` (new dependency)
+- **Print** via CSS `@page { size: 54mm 86mm; margin: 0; }`
+- Buttons: "Download PNG" + "Print Card"
+
+---
+
+## 5. TSV Import/Export
+
+#### [NEW] [DataImportExport.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/views/DataImportExport.tsx)
+- Two tabs: **Members** / **Financial**
+- Each tab: Template Download → File Picker → Parse → Validate → Preview → Confirm → Insert
+- Export: Query → Format TSV → Download
+
+**Member template:**
+`first_name	middle_name	surname	name_ext	date_of_birth	gender	address	contact_number	email	salvation_date	baptism_date	membership_status`
+
+**Financial template:**
+`member_surname	member_first_name	transaction_date	tithe	faith_promise	love_gift	pledge	pledge_purpose`
+
+#### [MODIFY] [App.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/App.tsx) + [Layout.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/components/Layout.tsx)
+- Add `/import-export` route and sidebar link
+
+---
+
+## 6. Role-Based Access (Foundation)
+
+Define roles for future enforcement:
+
+| Role | Access |
+|------|--------|
+| Super Admin | Full system access |
+| Church Clerk | Members, visitors, services, attendance |
+| Treasurer | Financial records, statements, import/export |
+| Music Minister | Music ministry, choir/ensemble attendance |
+| SS Teacher (Adult) | Adult department attendance & records |
+| SS Teacher (Children) | Children, Beginners, Nursery/Primary, Junior |
+| Activity Coordinator | Good News Class, Soul Winning, Bible Studies, Outreach |
+| Member | View own profile only |
+
+#### [NEW] [RoleManagement.tsx](file:///c:/Users/eds04/Downloads/Church%20System/Final%20Church%20Management/src/views/RoleManagement.tsx)
+- User list with role assignments
+- Role-based sidebar filtering (future phase)
+
+---
+
+## 7. UI/UX Polish
+
+Apply across all views. **Must be mobile-friendly.**
+
+### Design System (inspired by reference designs)
+
+**Color & Layout:**
+- Deep navy/dark blue background with clean white/glass content cards (CRM Dashboard style)
+- Subtle shadows and glassmorphism depth on cards
+- High-contrast badge pills for counts/status (blue, green, orange, red)
+- Color-coded labels for instant orientation (green = active, orange = warning, red = danger)
+
+**Typography & Hierarchy:**
+- Inter font, tight professional spacing
+- Bold hero typography for page headers, scaled metadata below
+- Layered card system with clear visual hierarchy — primary info large, supporting data small
+
+**Mobile-First Responsive:**
+- Sidebar collapses to bottom tab bar on mobile
+- Cards stack vertically, tables become scrollable or card-based on small screens
+- Touch-friendly controls: minimum 44px tap targets, swipe actions where appropriate
+- Inline quantity/amount controls (+/−) for quick input
+
+**Interaction Patterns:**
+- **Toast notifications** (success/error) replacing all `alert()` calls
+- **Skeleton loaders** on every data fetch (no blank screens)
+- **Empty states** with clear CTAs ("No members yet → Add First Member")
+- **Hover reveals** for secondary actions (edit, delete, mark as read)
+- **Progressive disclosure**: summary → detail drill-down (e.g., dashboard cards → full view)
+- **Smooth transitions** on modals, page switches, sidebar toggle
+
+**Button Hierarchy:**
+- Primary: filled purple/blue with shadow
+- Secondary: outline/ghost
+- Danger: red fill or red text with hover background
+- All with hover/active states and transition animations
+
+---
+
+## Verification Plan
+
+### QA Strategy
+
+**Module Testing:**
+- Test each view independently for CRUD operations
+- Verify all form validations and error handling
+- Test R2 upload/delete flows with real files
+
+**Integration Testing:**
+- Faith promise → financial records integration
+- Member delete → cascading cleanup (R2 files, attendance, financials)
+- TSV import → verify data appears in correct views
+
+**System Testing:**
+- Full user workflow: Add member → record financials → print statement
+- Import TSV → verify → export → compare with original
+
+**User Acceptance Testing (UAT):**
+- User imports existing church records via TSV
+- User prints financial statements and verifies accuracy
+- User generates ID cards and checks portrait format
+
+### Browser Verification
+1. **R2 Upload**: Upload member photo → verify R2 URL in database
+2. **Faith Promise**: Member profile → enter promise → save → verify in `faith_promise_commitments`
+3. **Statement Print**: Print to PDF → verify portrait A4, no overlap
+4. **ID Card**: Generate → download PNG at ID-card size → print portrait
+5. **TSV Import**: Download template → fill → import → verify in directory
+6. **TSV Export**: Export members → verify `.tsv` file content
+7. **Attach Picture**: Activities → attach photo → verify in R2 `sketches/`
+
+### Documentation (Post-Implementation)
+- System architecture diagram (already in plan)
+- User guide for import/export workflow
+- Role permissions reference table
+- Code cleanup and refactoring pass

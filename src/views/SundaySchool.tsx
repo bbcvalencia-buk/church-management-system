@@ -1,0 +1,1196 @@
+
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { getLatestSundayISODate } from "@/lib/date";
+import type { SundaySchoolSession } from "@/types";
+import { UserRole } from "@/types";
+import {
+    BookOpen,
+    Plus,
+    TrendingUp,
+    Heart,
+    Users,
+    UserPlus,
+    Search,
+    Eye,
+    Edit2,
+    ChevronLeft,
+    ChevronRight
+} from "lucide-react";
+import ConfirmModal from "@/components/ConfirmModal";
+import ImageUpload from "@/components/ImageUpload";
+import type { DraftVisitor } from "@/components/QuickVisitorRegistration";
+import QuickVisitorRegistration from "@/components/QuickVisitorRegistration";
+import { deleteFile } from "@/lib/storage";
+import SuccessModal from "@/components/SuccessModal";
+import MemberAttendancePicker from "@/components/MemberAttendancePicker";
+import { findExistingMemberForVisitor, splitVisitorName } from "@/lib/visitorDedup";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+    deriveTeacherDepartments,
+    isSundaySchoolTeacherAssignment,
+    normalizeSundaySchoolDepartment,
+    SUNDAY_SCHOOL_POSITION_CATEGORIES
+} from "@/lib/sundaySchoolAccess";
+
+const DEPARTMENTS = [
+    { id: 'adult', label: 'Adult Department', color: '#8884d8' },
+    { id: 'beginners', label: 'Beginners', color: '#ffc658' },
+    { id: 'nursery_kinder_primary', label: 'Nursery/Toddler & Primary Department', color: '#ff8042' },
+    { id: 'junior', label: 'Junior Department', color: '#0088FE' },
+];
+
+const VISITOR_CARD_DEPARTMENTS = ['nursery_kinder_primary', 'junior'];
+const SOULS_SAVED_DEPARTMENTS = ['beginners', 'nursery_kinder_primary', 'junior'];
+
+const isVisitorCardDepartment = (department?: string) =>
+    Boolean(department && VISITOR_CARD_DEPARTMENTS.includes(department));
+
+const isSoulsSavedDepartment = (department?: string) =>
+    Boolean(department && SOULS_SAVED_DEPARTMENTS.includes(department));
+
+const normalizeDraftVisitors = (visitors: DraftVisitor[]) => {
+    return visitors
+        .map((visitor) => ({
+            ...visitor,
+            name: visitor.name.trim(),
+            address: (visitor.address || '').trim(),
+            office_address: (visitor.office_address || '').trim(),
+            contact: (visitor.contact || '').trim(),
+            church_name: (visitor.church_name || '').trim(),
+            invited_by: (visitor.invited_by || '').trim(),
+            visit_date: visitor.visit_date || undefined
+        }))
+        .filter((visitor) => {
+            return Boolean(
+                visitor.name ||
+                visitor.address ||
+                visitor.office_address ||
+                visitor.contact ||
+                visitor.church_name ||
+                visitor.invited_by ||
+                (visitor.images || []).length > 0
+            );
+        });
+};
+
+const SundaySchool: React.FC = () => {
+    const { member: currentMember, roles, loading: authLoading } = useAuth();
+    const isSundaySchoolAdmin =
+        roles.includes(UserRole.SUPER_ADMIN) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN);
+
+    const [sessions, setSessions] = useState<SundaySchoolSession[]>([]);
+    const [members, setMembers] = useState<any[]>([]);
+    const [membersByDepartment, setMembersByDepartment] = useState<Record<string, any[]>>({});
+    const [teacherDepartments, setTeacherDepartments] = useState<string[]>([]);
+    const [accessLoading, setAccessLoading] = useState(true);
+    const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+    const [memberSearchTerm, setMemberSearchTerm] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    // Pagination and Search
+    const [departmentSearchTerm, setDepartmentSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
+
+    // Deletion Modal State
+    const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; id: string | null }>({
+        isOpen: false,
+        id: null
+    });
+
+    // New Session Form State
+    const [newSession, setNewSession] = useState<Partial<SundaySchoolSession>>({
+        session_date: getLatestSundayISODate(),
+        department: 'adult',
+        members_present: 0,
+        visitors_present: 0,
+        total_attendance: 0,
+        souls_saved: 0
+    });
+    const [newVisitors, setNewVisitors] = useState<DraftVisitor[]>([]);
+    const [isStudentEditorOpen, setIsStudentEditorOpen] = useState(false);
+    const [editingStudent, setEditingStudent] = useState<any | null>(null);
+    const [studentSaving, setStudentSaving] = useState(false);
+
+    const managedDepartmentIds = isSundaySchoolAdmin ? DEPARTMENTS.map((d) => d.id) : teacherDepartments;
+    const hasSundaySchoolAccess = isSundaySchoolAdmin || teacherDepartments.length > 0;
+
+    useEffect(() => {
+        const resolveTeacherAccess = async () => {
+            if (authLoading) return;
+
+            if (isSundaySchoolAdmin) {
+                setTeacherDepartments([]);
+                setAccessLoading(false);
+                return;
+            }
+
+            if (!currentMember?.id) {
+                setTeacherDepartments([]);
+                setAccessLoading(false);
+                return;
+            }
+
+            setAccessLoading(true);
+            const { data, error } = await supabase
+                .from("church_positions")
+                .select("position_category, department, position_name, specific_role, is_ministry_head")
+                .eq("member_id", currentMember.id)
+                .eq("is_active", true)
+                .in("position_category", [...SUNDAY_SCHOOL_POSITION_CATEGORIES]);
+
+            if (error) {
+                console.error("Error resolving Sunday School teacher departments:", error);
+                setTeacherDepartments([]);
+                setAccessLoading(false);
+                return;
+            }
+
+            setTeacherDepartments(deriveTeacherDepartments((data || []) as any[]));
+            setAccessLoading(false);
+        };
+
+        resolveTeacherAccess();
+    }, [authLoading, isSundaySchoolAdmin, currentMember?.id]);
+
+    useEffect(() => {
+        if (accessLoading || !hasSundaySchoolAccess) return;
+        fetchSessions();
+        fetchMembers();
+    }, [accessLoading, hasSundaySchoolAccess, isSundaySchoolAdmin, teacherDepartments.join("|")]);
+
+    const fetchSessions = async () => {
+        try {
+            let query = supabase
+                .from('sunday_school_sessions')
+                .select('*')
+                .order('session_date', { ascending: false })
+                .limit(50);
+
+            if (!isSundaySchoolAdmin && managedDepartmentIds.length > 0) {
+                query = query.in('department', managedDepartmentIds as any);
+            }
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+            setSessions(data as SundaySchoolSession[]);
+        } catch (err) {
+            console.error("Error fetching sessions:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchMembers = async () => {
+        if (isSundaySchoolAdmin) {
+            const { data: allMembers, error: allMembersError } = await supabase
+                .from("members")
+                .select("id, first_name, surname, is_visitor, profile_picture_url, phone_number, home_address, date_of_birth, gender, civil_status")
+                .order("surname", { ascending: true })
+                .order("first_name", { ascending: true });
+
+            if (allMembersError) {
+                console.error("Error fetching members:", allMembersError);
+                setMembers([]);
+                setMembersByDepartment({});
+                return;
+            }
+
+            const normalizedMembers = allMembers || [];
+            setMembers(normalizedMembers);
+
+            // Keep department mapping so Student Profiles can still show department labels.
+            const { data: assignmentData, error: assignmentError } = await supabase
+                .from("church_positions")
+                .select("member_id, position_category, department, position_name, specific_role, is_ministry_head")
+                .eq("is_active", true)
+                .in("position_category", [...SUNDAY_SCHOOL_POSITION_CATEGORIES]);
+
+            if (assignmentError) {
+                console.error("Error fetching Sunday School assignments:", assignmentError);
+                setMembersByDepartment({});
+                return;
+            }
+
+            const idsByDepartment = new Map<string, Set<string>>();
+            for (const row of (assignmentData || []) as any[]) {
+                const department = normalizeSundaySchoolDepartment(row);
+                if (!department) continue;
+                if (isSundaySchoolTeacherAssignment(row)) continue;
+                if (!row.member_id) continue;
+
+                if (!idsByDepartment.has(department)) {
+                    idsByDepartment.set(department, new Set<string>());
+                }
+                idsByDepartment.get(department)!.add(row.member_id);
+            }
+
+            const memberById = new Map(normalizedMembers.map((row: any) => [row.id, row]));
+            const nextByDepartment: Record<string, any[]> = {};
+
+            idsByDepartment.forEach((idSet, department) => {
+                nextByDepartment[department] = Array.from(idSet)
+                    .map((id) => memberById.get(id))
+                    .filter(Boolean)
+                    .sort((a: any, b: any) => `${a.surname || ""} ${a.first_name || ""}`.localeCompare(`${b.surname || ""} ${b.first_name || ""}`));
+            });
+
+            setMembersByDepartment(nextByDepartment);
+            return;
+        }
+
+        const scopeDepartmentIds = isSundaySchoolAdmin
+            ? DEPARTMENTS.map((department) => department.id)
+            : managedDepartmentIds;
+
+        if (scopeDepartmentIds.length === 0) {
+            setMembers([]);
+            setMembersByDepartment({});
+            return;
+        }
+
+        const { data: assignmentData, error: assignmentError } = await supabase
+            .from("church_positions")
+            .select("member_id, position_category, department, position_name, specific_role, is_ministry_head")
+            .eq("is_active", true)
+            .in("position_category", [...SUNDAY_SCHOOL_POSITION_CATEGORIES]);
+
+        if (assignmentError) {
+            console.error("Error fetching Sunday School assignments:", assignmentError);
+            setMembers([]);
+            setMembersByDepartment({});
+            return;
+        }
+
+        const assignmentRows = (assignmentData || []) as any[];
+        const idsByDepartment = new Map<string, Set<string>>();
+        const allStudentIds = new Set<string>();
+
+        for (const row of assignmentRows) {
+            const department = normalizeSundaySchoolDepartment(row);
+            if (!department || !scopeDepartmentIds.includes(department)) continue;
+            if (isSundaySchoolTeacherAssignment(row)) continue;
+            if (!row.member_id) continue;
+
+            if (!idsByDepartment.has(department)) {
+                idsByDepartment.set(department, new Set<string>());
+            }
+            idsByDepartment.get(department)!.add(row.member_id);
+            allStudentIds.add(row.member_id);
+        }
+
+        const studentIds = Array.from(allStudentIds);
+        if (studentIds.length === 0) {
+            setMembers([]);
+            setMembersByDepartment({});
+            return;
+        }
+
+        const { data: studentData, error: studentError } = await supabase
+            .from("members")
+            .select("id, first_name, surname, is_visitor, profile_picture_url, phone_number, home_address, date_of_birth, gender, civil_status")
+            .in("id", studentIds)
+            .order("surname", { ascending: true })
+            .order("first_name", { ascending: true });
+
+        if (studentError) {
+            console.error("Error fetching Sunday School students:", studentError);
+            setMembers([]);
+            setMembersByDepartment({});
+            return;
+        }
+
+        const students = studentData || [];
+        const studentById = new Map(students.map((row: any) => [row.id, row]));
+        const nextByDepartment: Record<string, any[]> = {};
+
+        idsByDepartment.forEach((idSet, department) => {
+            nextByDepartment[department] = Array.from(idSet)
+                .map((id) => studentById.get(id))
+                .filter(Boolean)
+                .sort((a: any, b: any) => `${a.surname || ""} ${a.first_name || ""}`.localeCompare(`${b.surname || ""} ${b.first_name || ""}`));
+        });
+
+        setMembersByDepartment(nextByDepartment);
+        setMembers(students);
+    };
+
+    const handleOpenModal = async (session?: SundaySchoolSession) => {
+        setMemberSearchTerm("");
+        if (session) {
+            setNewSession(session);
+
+            // Fetch attendance logs
+            const { data: logs } = await supabase
+                .from('attendance_log')
+                .select('member_id')
+                .eq('event_id', session.id)
+                .eq('event_type', 'sunday_school');
+
+            const memberIds = logs?.map(l => l.member_id) || [];
+
+            // Primary linkage for newer records
+            let registeredVisitors: any[] = [];
+            const { data: linkedVisitors } = await supabase
+                .from('visitors')
+                .select('*')
+                .eq('sunday_school_session_id', session.id);
+
+            if (linkedVisitors?.length) {
+                registeredVisitors = linkedVisitors;
+            }
+
+            // Backward compatibility for older records
+            if (!registeredVisitors.length && memberIds.length > 0) {
+                const { data: visitorsData } = await supabase
+                    .from('visitors')
+                    .select('*')
+                    .in('member_id', memberIds);
+
+                registeredVisitors = visitorsData?.filter(v => v.visit_date === session.session_date) || [];
+            }
+
+            const drafts: DraftVisitor[] = registeredVisitors.map(v => ({
+                id: v.id,
+                name: v.name,
+                address: v.address,
+                office_address: v.office_address,
+                contact: v.contact_number,
+                age: v.age,
+                date_of_birth: v.date_of_birth,
+                gender: v.gender,
+                marital_status: v.marital_status as any,
+                church_name: v.church_name,
+                invited_by: v.invited_by,
+                visit_time: (v.visit_time as 'AM' | 'PM') || 'AM',
+                visit_date: v.visit_date || session.session_date,
+                images: v.visitor_card_images || (v.visitor_card_image_url ? [v.visitor_card_image_url] : [])
+            }));
+
+            setNewVisitors(drafts);
+
+            const registeredMemberIds = registeredVisitors.map(v => v.member_id);
+            const remaining = memberIds.filter(mid => !registeredMemberIds.includes(mid));
+            setSelectedMemberIds(remaining);
+        } else {
+            const defaultDepartment = managedDepartmentIds[0] || 'adult';
+            setNewSession({
+                session_date: getLatestSundayISODate(),
+                department: defaultDepartment as any,
+                members_present: 0,
+                visitors_present: 0,
+                total_attendance: 0,
+                souls_saved: 0
+            });
+            setSelectedMemberIds([]);
+            setNewVisitors([]); // Clear visitors for new session
+        }
+        setIsModalOpen(true);
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const preparedVisitors = normalizeDraftVisitors(newVisitors);
+            const invalidCardIndex = preparedVisitors.findIndex(visitor =>
+                !visitor.name || !visitor.address || !visitor.contact
+            );
+
+            if (invalidCardIndex >= 0) {
+                throw new Error(`Visitor card #${invalidCardIndex + 1} is incomplete. Name, Address, and Contact No. are required.`);
+            }
+
+            const visitorMemberIds = new Set(
+                members.filter((m) => m.is_visitor).map((m) => m.id)
+            );
+            const selectedVisitorIds = selectedMemberIds.filter((id) => visitorMemberIds.has(id));
+            const selectedRegularIds = selectedMemberIds.filter((id) => !visitorMemberIds.has(id));
+
+            const manualVisitorsInput = Number(newSession.visitors_present) || 0;
+            const visitorsPresent = Math.max(
+                selectedVisitorIds.length,
+                preparedVisitors.length > 0 ? preparedVisitors.length : manualVisitorsInput
+            );
+            const membersPresent = selectedRegularIds.length;
+            const total = membersPresent + visitorsPresent;
+
+            const { data: savedSession, error } = await supabase
+                .from('sunday_school_sessions')
+                .upsert({
+                    ...newSession,
+                    members_present: membersPresent,
+                    visitors_present: visitorsPresent,
+                    total_attendance: total
+                } as any)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // 2. Clear old attendance
+            await supabase.from('attendance_log')
+                .delete()
+                .eq('event_id', savedSession.id)
+                .eq('event_type', 'sunday_school');
+
+            // 3. Process New Visitors (Auto-Register with smart duplicate detection)
+            const cardVisitorMemberIds: string[] = [];
+            const cardRegularMemberIds: string[] = [];
+            const isVisitorCache = new Map<string, boolean>();
+            const getIsVisitorMember = async (memberId: string) => {
+                if (isVisitorCache.has(memberId)) return isVisitorCache.get(memberId)!;
+                const { data: memberData } = await supabase
+                    .from('members')
+                    .select('is_visitor')
+                    .eq('id', memberId)
+                    .single();
+                const flag = !!memberData?.is_visitor;
+                isVisitorCache.set(memberId, flag);
+                return flag;
+            };
+            for (const visitor of preparedVisitors) {
+                // Update if existing (UUID check)
+                if (visitor.id && visitor.id.length > 20) { // Assuming UUIDs are longer than 20 chars
+                    const { data: vRecord } = await supabase.from('visitors').select('member_id').eq('id', visitor.id).single();
+                    if (vRecord) {
+                        // Update Visitor
+                        await supabase.from('visitors').update({
+                            name: visitor.name,
+                            contact_number: visitor.contact || '',
+                            age: visitor.age,
+                            gender: visitor.gender,
+                            visit_date: visitor.visit_date || savedSession.session_date,
+                            visit_time: visitor.visit_time || 'AM',
+                            marital_status: visitor.marital_status || 'Single',
+                            visitor_card_images: visitor.images || [],
+                            address: visitor.address || '',
+                            office_address: visitor.office_address || '',
+                            church_name: visitor.church_name || '',
+                            date_of_birth: visitor.date_of_birth,
+                            invited_by: visitor.invited_by || '',
+                            service_id: null,
+                            sunday_school_session_id: savedSession.id
+                        } as any).eq('id', visitor.id);
+
+                        // Update Shadow Member
+                        await supabase.from('members').update({
+                            first_name: visitor.name.split(' ')[0] || 'Visitor',
+                            surname: visitor.name.split(' ').slice(1).join(' ') || '',
+                            home_address: visitor.address || 'Unknown',
+                            phone_number: visitor.contact || 'N/A',
+                            gender: visitor.gender,
+                            civil_status: visitor.marital_status || 'Single',
+                            date_of_birth: visitor.date_of_birth || new Date().toISOString().split('T')[0]
+                        } as any).eq('id', vRecord.member_id);
+
+                        const isVisitorMember = await getIsVisitorMember(vRecord.member_id);
+                        if (isVisitorMember) cardVisitorMemberIds.push(vRecord.member_id);
+                        else cardRegularMemberIds.push(vRecord.member_id);
+                    }
+                } else {
+                    const matchedMember = await findExistingMemberForVisitor({
+                        name: visitor.name,
+                        contact: visitor.contact,
+                        date_of_birth: visitor.date_of_birth,
+                        gender: visitor.gender
+                    });
+
+                    if (matchedMember) {
+                        if (matchedMember.is_visitor) {
+                            cardVisitorMemberIds.push(matchedMember.id);
+
+                            await supabase.from('visitors').insert([{
+                                member_id: matchedMember.id,
+                                name: visitor.name,
+                                contact_number: visitor.contact || '',
+                                age: visitor.age,
+                                gender: visitor.gender,
+                                visit_date: visitor.visit_date || savedSession.session_date,
+                                visit_time: visitor.visit_time || 'AM',
+                                marital_status: visitor.marital_status || 'Single',
+                                visitor_card_images: visitor.images || [],
+                                address: visitor.address || '',
+                                office_address: visitor.office_address || '',
+                                church_name: visitor.church_name || '',
+                                date_of_birth: visitor.date_of_birth,
+                                invited_by: visitor.invited_by || '',
+                                service_id: null,
+                                sunday_school_session_id: savedSession.id,
+                                is_saved: false,
+                                is_prospect_for_baptism: false,
+                                follow_up_status: 'pending'
+                            } as any]);
+                        } else {
+                            // Existing regular member detected from visitor card.
+                            cardRegularMemberIds.push(matchedMember.id);
+                        }
+                        continue;
+                    }
+
+                    const parsedName = splitVisitorName(visitor.name);
+
+                    // Create New
+                    const { data: memberData, error: mError } = await supabase
+                        .from('members')
+                        .insert([{
+                            first_name: parsedName.firstName || 'Visitor',
+                            surname: parsedName.surname || '',
+                            is_visitor: true,
+                            is_regular_member: false,
+                            membership_status: 'active',
+                            home_address: visitor.address || 'Unknown',
+                            phone_number: visitor.contact || 'N/A',
+                            gender: visitor.gender,
+                            civil_status: visitor.marital_status || 'Single',
+                            date_of_birth: visitor.date_of_birth || new Date().toISOString().split('T')[0]
+                        } as any])
+                        .select()
+                        .single();
+
+                    if (mError) throw mError;
+                    cardVisitorMemberIds.push(memberData.id);
+
+                    await supabase.from('visitors').insert([{
+                        member_id: memberData.id,
+                        name: visitor.name,
+                        contact_number: visitor.contact || '',
+                        age: visitor.age,
+                        gender: visitor.gender,
+                        visit_date: visitor.visit_date || savedSession.session_date,
+                        visit_time: visitor.visit_time || 'AM',
+                        marital_status: visitor.marital_status || 'Single',
+                        visitor_card_images: visitor.images || [],
+                        address: visitor.address || '',
+                        office_address: visitor.office_address || '',
+                        church_name: visitor.church_name || '',
+                        date_of_birth: visitor.date_of_birth,
+                        invited_by: visitor.invited_by || '',
+                        service_id: null,
+                        sunday_school_session_id: savedSession.id,
+                        is_saved: false,
+                        is_prospect_for_baptism: false,
+                        follow_up_status: 'pending'
+                    } as any]);
+                }
+            }
+
+            // 4. Save new attendance (Existing + New)
+            const uniqueVisitorIds = Array.from(new Set([...selectedVisitorIds, ...cardVisitorMemberIds]));
+            const uniqueRegularIds = Array.from(new Set([...selectedRegularIds, ...cardRegularMemberIds]));
+            const finalVisitorsCount = Math.max(uniqueVisitorIds.length, manualVisitorsInput);
+            const finalMembersCount = uniqueRegularIds.length;
+            const allMemberIds = Array.from(new Set([...uniqueRegularIds, ...uniqueVisitorIds]));
+
+            const { error: sessionCountUpdateError } = await supabase
+                .from('sunday_school_sessions')
+                .update({
+                    members_present: finalMembersCount,
+                    visitors_present: finalVisitorsCount,
+                    total_attendance: finalMembersCount + finalVisitorsCount
+                })
+                .eq('id', savedSession.id);
+
+            if (sessionCountUpdateError) throw sessionCountUpdateError;
+
+            if (allMemberIds.length > 0) {
+                const logs = allMemberIds.map(mid => ({
+                    member_id: mid,
+                    event_type: 'sunday_school',
+                    event_id: savedSession.id,
+                    event_date: savedSession.session_date,
+                    was_present: true
+                }));
+                await supabase.from('attendance_log').insert(logs);
+            }
+
+            setIsModalOpen(false);
+            setNewVisitors([]); // Reset
+            fetchSessions();
+            if (!newSession.id) {
+                setShowSuccessModal(true);
+            }
+        } catch (err: any) {
+            alert("Error saving report: " + err.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!confirmDelete.id) return;
+        try {
+            const id = confirmDelete.id;
+            // Delete file from R2 if exists
+            const sessionToDelete = sessions.find(s => s.id === id);
+            if (sessionToDelete?.visitor_card_url) {
+                await deleteFile(sessionToDelete.visitor_card_url).catch(console.warn);
+            }
+
+            await supabase.from('attendance_log').delete().eq('event_id', id).eq('event_type', 'sunday_school');
+            const { error } = await supabase.from('sunday_school_sessions').delete().eq('id', id);
+            if (error) throw error;
+            setConfirmDelete({ isOpen: false, id: null });
+            fetchSessions();
+            setIsModalOpen(false);
+        } catch (err: any) {
+            alert("Delete failed: " + err.message);
+        }
+    };
+
+    const handleOpenStudentEditor = (student: any) => {
+        setEditingStudent({
+            id: student.id,
+            first_name: student.first_name || "",
+            surname: student.surname || "",
+            phone_number: student.phone_number || "",
+            home_address: student.home_address || "",
+            date_of_birth: student.date_of_birth || "",
+            gender: student.gender || "Male",
+            civil_status: student.civil_status || "Single",
+        });
+        setIsStudentEditorOpen(true);
+    };
+
+    const handleSaveStudentProfile = async () => {
+        if (!editingStudent?.id) return;
+
+        setStudentSaving(true);
+        try {
+            const payload = {
+                first_name: (editingStudent.first_name || "").trim(),
+                surname: (editingStudent.surname || "").trim(),
+                phone_number: (editingStudent.phone_number || "").trim(),
+                home_address: (editingStudent.home_address || "").trim(),
+                date_of_birth: editingStudent.date_of_birth || null,
+                gender: editingStudent.gender || "Male",
+                civil_status: editingStudent.civil_status || "Single",
+            };
+
+            if (!payload.first_name || !payload.surname) {
+                throw new Error("First name and surname are required.");
+            }
+
+            const { error } = await supabase
+                .from("members")
+                .update(payload as any)
+                .eq("id", editingStudent.id);
+
+            if (error) throw error;
+
+            setIsStudentEditorOpen(false);
+            setEditingStudent(null);
+            await fetchMembers();
+        } catch (err: any) {
+            alert("Error saving student profile: " + err.message);
+        } finally {
+            setStudentSaving(false);
+        }
+    };
+
+    const attendanceMembers = isSundaySchoolAdmin
+        ? members
+        : (membersByDepartment[(newSession.department || "") as string] || []);
+
+    const latestDate = sessions.length > 0 ? sessions[0].session_date : null;
+    const latestSessions = sessions.filter(s => s.session_date === latestDate);
+
+    const totalAttendanceToday = latestSessions.reduce((sum, s) => sum + s.total_attendance, 0);
+    const newVisitorsToday = latestSessions.reduce((sum, s) => sum + (s.visitors_present || 0), 0);
+    const soulsSavedToday = latestSessions.reduce((sum, s) => sum + (s.souls_saved || 0), 0);
+
+    // List filtering
+    const filteredSessions = sessions.filter(session => {
+        const deptLabel = DEPARTMENTS.find(d => d.id === session.department)?.label || '';
+        return deptLabel.toLowerCase().includes(departmentSearchTerm.toLowerCase());
+    });
+
+    const paginatedSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
+    const visitorMemberIdsInModal = new Set(
+        attendanceMembers.filter((m) => m.is_visitor).map((m) => m.id)
+    );
+    const selectedVisitorCountInModal = selectedMemberIds.filter((id) => visitorMemberIdsInModal.has(id)).length;
+    const selectedRegularCountInModal = selectedMemberIds.length - selectedVisitorCountInModal;
+    const visitorsCountInModalBase = newVisitors.length > 0 ? newVisitors.length : (Number(newSession.visitors_present) || 0);
+    const visitorsCountInModal = Math.max(visitorsCountInModalBase, selectedVisitorCountInModal);
+    const supportsVisitorCards = isVisitorCardDepartment(newSession.department);
+    const supportsSoulsSaved = isSoulsSavedDepartment(newSession.department);
+    const selectedDepartmentLabel = DEPARTMENTS.find(d => d.id === newSession.department)?.label || 'Selected Department';
+    const availableDepartments = DEPARTMENTS.filter((dept) => managedDepartmentIds.includes(dept.id));
+
+    useEffect(() => {
+        if (!isModalOpen) return;
+        const allowedIds = new Set(attendanceMembers.map((row) => row.id));
+        setSelectedMemberIds((prev) => {
+            const filtered = prev.filter((id) => allowedIds.has(id));
+            return filtered.length === prev.length ? prev : filtered;
+        });
+    }, [isModalOpen, attendanceMembers]);
+
+    useEffect(() => {
+        if (managedDepartmentIds.length === 0) return;
+        const hasCurrent = managedDepartmentIds.includes((newSession.department || "") as string);
+        if (!hasCurrent) {
+            setNewSession((prev) => ({ ...prev, department: managedDepartmentIds[0] as any }));
+        }
+    }, [managedDepartmentIds.join("|"), newSession.department]);
+
+    if (authLoading || accessLoading) {
+        return (
+            <div className="space-y-8 p-6 lg:p-10 max-w-7xl mx-auto">
+                <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-500">
+                    Loading Sunday School access...
+                </div>
+            </div>
+        );
+    }
+
+    if (!hasSundaySchoolAccess) {
+        return (
+            <div className="space-y-8 p-6 lg:p-10 max-w-4xl mx-auto">
+                <div className="bg-white rounded-2xl border border-red-100 p-8">
+                    <h1 className="text-2xl font-bold text-red-600">Access Restricted</h1>
+                    <p className="text-sm text-gray-600 mt-2">
+                        This page is available only to Sunday School administrators and assigned teachers.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-8 p-6 lg:p-10 max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">
+                        Sunday School Overview
+                    </h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Department reports and attendance tracking for {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}.
+                    </p>
+                </div>
+                <button
+                    onClick={() => handleOpenModal()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 transition-colors shadow-lg shadow-blue-500/20 font-medium"
+                >
+                    <Plus size={18} />
+                    <span>File Report</span>
+                </button>
+            </div>
+
+            {/* Top Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[160px]">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="bg-blue-100 p-2.5 rounded-xl text-blue-600">
+                                <Users size={20} />
+                            </div>
+                            <span className="text-gray-500 text-sm font-medium">Total Attendance Today</span>
+                        </div>
+                        <div className="text-4xl font-bold text-gray-900 mt-2">{totalAttendanceToday}</div>
+                    </div>
+                    <button className="text-blue-600 text-sm font-medium hover:underline text-left">View detailed breakdown</button>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[160px]">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="bg-green-100 p-2.5 rounded-xl text-green-600">
+                                <UserPlus size={20} />
+                            </div>
+                            <span className="text-gray-500 text-sm font-medium">New Visitors</span>
+                        </div>
+                        <div className="text-4xl font-bold text-gray-900 mt-2">{newVisitorsToday}</div>
+                    </div>
+                    <div className="text-green-600 text-sm font-medium flex items-center gap-1">
+                        <TrendingUp size={14} />
+                        12% increase <span className="text-gray-400 font-normal">vs last week</span>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[160px]">
+                    <div>
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="bg-orange-100 p-2.5 rounded-xl text-orange-500">
+                                <Heart size={20} />
+                            </div>
+                            <span className="text-gray-500 text-sm font-medium">Souls Saved</span>
+                        </div>
+                        <div className="text-4xl font-bold text-gray-900 mt-2">{soulsSavedToday}</div>
+                    </div>
+                    <button className="text-blue-600 text-sm font-medium hover:underline text-left">View testimonies</button>
+                </div>
+            </div>
+
+            {/* Recent Reports List */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h3 className="text-lg font-bold text-gray-900">Recent Reports</h3>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        <input
+                            type="text"
+                            placeholder="Search departments..."
+                            value={departmentSearchTerm}
+                            onChange={(e) => {
+                                setDepartmentSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-full sm:w-64"
+                        />
+                    </div>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
+                        <thead>
+                            <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <th className="p-4 pl-6">Date</th>
+                                <th className="p-4">Department</th>
+                                <th className="p-4 text-center">Members</th>
+                                <th className="p-4 text-center">Visitors</th>
+                                <th className="p-4 text-center">Total</th>
+                                <th className="p-4 text-center">Saved</th>
+                                <th className="p-4 pr-6 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {paginatedSessions.map(session => (
+                                <tr key={session.id} className="hover:bg-gray-50 transition-colors text-sm group">
+                                    <td className="p-4 pl-6 text-gray-500">{new Date(session.session_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</td>
+                                    <td className="p-4 font-medium text-gray-900">
+                                        {DEPARTMENTS.find(d => d.id === session.department)?.label}
+                                    </td>
+                                    <td className="p-4 text-center text-gray-500">{session.members_present}</td>
+                                    <td className="p-4 text-center text-gray-500">{session.visitors_present}</td>
+                                    <td className="p-4 text-center font-bold text-blue-600">{session.total_attendance}</td>
+                                    <td className="p-4 text-center">
+                                        {(session.souls_saved || 0) > 0 ? (
+                                            <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold inline-block min-w-[28px]">
+                                                {session.souls_saved}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400">-</span>
+                                        )}
+                                    </td>
+                                    <td className="p-4 pr-6 text-right flex justify-end gap-2">
+                                        <button
+                                            onClick={() => handleOpenModal(session)}
+                                            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
+                                            title="View / Edit"
+                                        >
+                                            <Eye size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleOpenModal(session)}
+                                            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={16} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {paginatedSessions.length === 0 && (
+                                <tr>
+                                    <td colSpan={7} className="p-8 text-center text-gray-500">
+                                        No reports found.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                {/* Pagination */}
+                <div className="p-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500 bg-white">
+                    <div>
+                        Showing {filteredSessions.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to {Math.min(currentPage * itemsPerPage, filteredSessions.length)} of {filteredSessions.length} results
+                    </div>
+                    <div className="flex gap-1">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-1.5 border border-gray-200 rounded bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft size={16} />
+                        </button>
+                        {Array.from({ length: totalPages }).map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setCurrentPage(i + 1)}
+                                className={`px-3 py-1 border rounded ${currentPage === i + 1 ? 'bg-blue-50 text-blue-600 border-blue-200 font-medium' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            className="p-1.5 border border-gray-200 rounded bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-sans animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
+                        {/* Body */}
+                        <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-8">
+                            <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900 border-b border-gray-100 pb-4">
+                                <BookOpen size={24} className="text-blue-600" />
+                                {newSession.id ? 'Edit Report' : 'File New Report'}
+                            </h2>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date</label>
+                                    <input
+                                        type="date"
+                                        value={newSession.session_date}
+                                        onChange={(e) => setNewSession({ ...newSession, session_date: e.target.value })}
+                                        className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Department</label>
+                                    <select
+                                        value={newSession.department}
+                                        onChange={(e) => setNewSession({ ...newSession, department: e.target.value as any })}
+                                        className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    >
+                                        {availableDepartments.map(dept => (
+                                            <option key={dept.id} value={dept.id}>{dept.label}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Attendance */}
+                            <div className="space-y-4 border-t border-gray-100 pt-6">
+                                <MemberAttendancePicker
+                                    label="Members Present"
+                                    members={attendanceMembers}
+                                    selectedIds={selectedMemberIds}
+                                    onChange={setSelectedMemberIds}
+                                    onEditMember={handleOpenStudentEditor}
+                                    searchTerm={memberSearchTerm}
+                                    onSearchTermChange={setMemberSearchTerm}
+                                    maxHeightClass="max-h-[160px]"
+                                    showVisitorToggle
+                                />
+                                {!isSundaySchoolAdmin && attendanceMembers.length === 0 && (
+                                    <p className="text-xs font-semibold text-amber-700">
+                                        No students are assigned to this department yet. Add student assignments in Ministry Directory.
+                                    </p>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-6 pt-4">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Visitors / Non-Members Present</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={newSession.visitors_present}
+                                            onChange={(e) => setNewSession({ ...newSession, visitors_present: parseInt(e.target.value) || 0 })}
+                                            className="w-full border border-gray-200 rounded-lg p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        />
+                                        <p className="text-[10px] text-gray-500 mt-1 font-semibold">
+                                            Visitor cards encoded: {newVisitors.length}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 text-center">Total</label>
+                                        <div className="w-full bg-blue-50 text-gray-900 font-bold text-xl rounded-lg p-3 flex items-center justify-center border border-blue-100 shadow-sm h-[54px]">
+                                            {selectedRegularCountInModal + visitorsCountInModal}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Visitor Card Input for Nursery/Juniors */}
+                                {supportsVisitorCards && (
+                                    <div className="space-y-2 pt-6">
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Visitor Card Image</label>
+                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex gap-4 items-center transition-colors hover:border-blue-300">
+                                            <ImageUpload
+                                                value={newSession.visitor_card_url || ''}
+                                                onChange={(url) => setNewSession({ ...newSession, visitor_card_url: url })}
+                                                folder={`sunday-school/${newSession.department || 'general'}`}
+                                                label=""
+                                                description="Upload photo of visitor card (JPG/PNG)"
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 mt-1">Visit tracking required for Nursery/Toddler & Primary and Junior departments.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {supportsSoulsSaved && (
+                                <div className="pt-6 border-t border-gray-100">
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Souls Saved</label>
+                                    <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 p-4 rounded-xl">
+                                        <Heart size={20} className="text-red-500 shrink-0" />
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={newSession.souls_saved ?? 0}
+                                            onChange={(e) => setNewSession({ ...newSession, souls_saved: parseInt(e.target.value) || 0 })}
+                                            className="w-full border border-gray-200 rounded-lg p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Quick Register Visitors */}
+                            {supportsVisitorCards && (
+                                <div className="border border-gray-200 rounded-[16px] overflow-hidden">
+                                    <QuickVisitorRegistration
+                                        visitors={newVisitors}
+                                        onChange={setNewVisitors}
+                                        folderPath={`sunday-school/${newSession.department || 'general'}/cards`}
+                                        defaultVisitDate={newSession.session_date}
+                                        contextLabel={`${selectedDepartmentLabel}${newSession.session_date ? ` | ${newSession.session_date}` : ''}`}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Sticky Footer */}
+                        <div className="bg-[#1e2333] p-4 px-6 flex items-center justify-between shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] relative z-10 transition-colors">
+                            <div className="flex gap-2">
+                                {newSession.id && (
+                                    <button
+                                        onClick={() => setConfirmDelete({ isOpen: true, id: newSession.id! })}
+                                        className="px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors text-xs font-bold uppercase tracking-widest"
+                                    >
+                                        Delete
+                                    </button>
+                                )}
+                            </div>
+                            <div className="flex gap-4 items-center">
+                                <button
+                                    onClick={() => {
+                                        setIsModalOpen(false);
+                                        setSelectedMemberIds([]);
+                                    }}
+                                    className="text-sm font-medium text-gray-300 hover:text-white transition-colors py-2 px-4"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_12px_rgba(37,99,235,0.2)] rounded-lg px-8 py-2.5 text-sm font-bold transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {saving ? 'Saving...' : (newSession.id ? 'Save Changes' : 'Submit Report')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isStudentEditorOpen && editingStudent && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
+                        <div className="px-6 py-5 border-b border-gray-100">
+                            <h3 className="text-lg font-bold text-gray-900">Edit Student Profile</h3>
+                            <p className="text-xs text-gray-500 mt-1">Update student details for your class roster.</p>
+                        </div>
+                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">First Name</label>
+                                <input
+                                    type="text"
+                                    value={editingStudent.first_name}
+                                    onChange={(e) => setEditingStudent({ ...editingStudent, first_name: e.target.value })}
+                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Surname</label>
+                                <input
+                                    type="text"
+                                    value={editingStudent.surname}
+                                    onChange={(e) => setEditingStudent({ ...editingStudent, surname: e.target.value })}
+                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label>
+                                <input
+                                    type="text"
+                                    value={editingStudent.phone_number}
+                                    onChange={(e) => setEditingStudent({ ...editingStudent, phone_number: e.target.value })}
+                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date of Birth</label>
+                                <input
+                                    type="date"
+                                    value={editingStudent.date_of_birth || ""}
+                                    onChange={(e) => setEditingStudent({ ...editingStudent, date_of_birth: e.target.value })}
+                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                />
+                            </div>
+                            <div className="sm:col-span-2">
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Home Address</label>
+                                <input
+                                    type="text"
+                                    value={editingStudent.home_address}
+                                    onChange={(e) => setEditingStudent({ ...editingStudent, home_address: e.target.value })}
+                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                />
+                            </div>
+                        </div>
+                        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50">
+                            <button
+                                onClick={() => {
+                                    setIsStudentEditorOpen(false);
+                                    setEditingStudent(null);
+                                }}
+                                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveStudentProfile}
+                                disabled={studentSaving}
+                                className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {studentSaving ? "Saving..." : "Save Student"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <SuccessModal
+                isOpen={showSuccessModal}
+                onDone={() => setShowSuccessModal(false)}
+                onView={() => setShowSuccessModal(false)} // Usually routes to a view, but close for now
+            />
+            {/* Confirmation Modal */}
+            <ConfirmModal
+                isOpen={confirmDelete.isOpen}
+                title="Delete Sunday School Report"
+                message="Are you sure you want to PERMANENTLY delete this department report? This will also remove associated attendance logs."
+                confirmText="Delete Record"
+                isDanger={true}
+                onConfirm={handleDelete}
+                onCancel={() => setConfirmDelete({ isOpen: false, id: null })}
+            />
+        </div>
+    );
+};
+
+export default SundaySchool;
