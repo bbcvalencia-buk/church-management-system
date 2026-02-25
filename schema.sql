@@ -237,7 +237,7 @@ CREATE TABLE activities (
 -- 9. SUNDAY SCHOOL SESSIONS
 CREATE TABLE sunday_school_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  department TEXT NOT NULL CHECK (department IN ('adult', 'beginners', 'nursery_kinder_primary', 'junior')),
+  department TEXT NOT NULL CHECK (department IN ('adult', 'beginners', 'nursery', 'kinder', 'primary', 'junior')),
   session_date DATE NOT NULL,
   members_present INTEGER DEFAULT 0,
   total_attendance INTEGER DEFAULT 0,

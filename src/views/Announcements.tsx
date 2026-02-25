@@ -36,7 +36,9 @@ const SERVICE_LABELS: Record<string, string> = {
 const DEPARTMENT_LABELS: Record<string, string> = {
     adult: "Adult Department",
     beginners: "Beginners Department",
-    nursery_kinder_primary: "Nursery/Toddler & Primary Department",
+    nursery: "Nursery/Toddler Department",
+   kinder: "Kindergarten Department",
+   primary: "Primary Department",
     junior: "Junior Department"
 };
 
@@ -47,7 +49,7 @@ const ACTIVITY_LABELS: Record<string, string> = {
     outreach: "Outreach"
 };
 
-const CHILDREN_DEPARTMENTS = new Set(["junior", "nursery_kinder_primary"]);
+const CHILDREN_DEPARTMENTS = new Set(["junior", "nursery", "kinder", "primary"]);
 const PRIMARY_SERVICE_TYPES = new Set(["sunday_morning", "sunday_afternoon", "wednesday_prayer"]);
 const isPrimaryServiceType = (serviceType?: string) => PRIMARY_SERVICE_TYPES.has(serviceType || "");
 

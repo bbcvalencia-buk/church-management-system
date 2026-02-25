@@ -238,7 +238,7 @@ export interface Activity {
 
 export interface SundaySchoolSession {
     id: string;
-    department: 'adult' | 'beginners' | 'nursery_kinder_primary' | 'junior';
+    department: 'adult' | 'beginners' | 'nursery' | 'kinder' | 'primary' | 'junior';
     session_date: string;
     members_present: number;
     total_attendance: number;

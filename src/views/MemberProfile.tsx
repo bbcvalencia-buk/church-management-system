@@ -31,8 +31,10 @@ const MINISTRY_CATEGORY_LABELS: Record<string, string> = {
 
 const MINISTRY_DEPARTMENT_LABELS: Record<string, string> = {
     adult: "Sunday School Adult",
-    beginners: "Sunday School Beginners",
-    nursery_kinder_primary: "Sunday School Nursery/Toddler & Primary Department",
+    beginners: "Sunday School Beginners Class",
+    nursery: "Sunday School Nursery/Toddler",
+    kinder: "Sunday School Kindergarten",
+    primary: "Sunday School Primary",
     junior: "Sunday School Junior",
 };
 
@@ -303,7 +305,7 @@ const MemberProfile: React.FC = () => {
 
             const services = serviceResult.data || [];
             const sundaySchoolSessions = sundaySchoolResult.data || [];
-            const childDepartments = new Set(["beginners", "nursery_kinder_primary", "junior"]);
+            const childDepartments = new Set(["beginners", "nursery", "kinder", "primary", "junior"]);
 
             const sundayMorningServiceDates = new Set(
                 services

@@ -7,7 +7,7 @@ export const SUNDAY_SCHOOL_POSITION_CATEGORIES = [
 export type SundaySchoolDepartmentId =
     | "adult"
     | "beginners"
-    | "nursery_kinder_primary"
+    | "nursery" | "kinder" | "primary"
     | "junior";
 
 const TEACHER_ROLE_KEYWORDS = [
@@ -47,8 +47,14 @@ export const normalizeSundaySchoolDepartment = (
         `${assignment.department || ""} ${assignment.position_name || ""} ${assignment.specific_role || ""}`
     );
 
-    if (haystack.includes("nursery") || haystack.includes("kinder") || haystack.includes("toddler") || haystack.includes("primary")) {
-        return "nursery_kinder_primary";
+    if (haystack.includes("nursery") || haystack.includes("toddler")) {
+        return "nursery";
+    }
+    if (haystack.includes("kinder")) {
+        return "kinder";
+    }
+    if (haystack.includes("primary")) {
+        return "primary";
     }
     if (haystack.includes("beginner")) {
         return "beginners";

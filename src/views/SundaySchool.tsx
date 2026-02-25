@@ -36,12 +36,14 @@ import {
 const DEPARTMENTS = [
     { id: 'adult', label: 'Adult Department', color: '#8884d8' },
     { id: 'beginners', label: 'Beginners', color: '#ffc658' },
-    { id: 'nursery_kinder_primary', label: 'Nursery/Toddler & Primary Department', color: '#ff8042' },
+    { id: 'nursery', label: 'Nursery/Toddler', color: '#ff8042' },
+    { id: 'kinder', label: 'Kindergarten', color: '#ffc658' },
+    { id: 'primary', label: 'Primary', color: '#8dd1e1' },
     { id: 'junior', label: 'Junior Department', color: '#0088FE' },
 ];
 
-const VISITOR_CARD_DEPARTMENTS = ['nursery_kinder_primary', 'junior'];
-const SOULS_SAVED_DEPARTMENTS = ['beginners', 'nursery_kinder_primary', 'junior'];
+const VISITOR_CARD_DEPARTMENTS = ['nursery', 'kinder', 'primary', 'junior'];
+const SOULS_SAVED_DEPARTMENTS = ['beginners', 'nursery', 'kinder', 'primary', 'junior'];
 
 const isVisitorCardDepartment = (department?: string) =>
     Boolean(department && VISITOR_CARD_DEPARTMENTS.includes(department));
@@ -942,9 +944,20 @@ const SundaySchool: React.FC = () => {
                                         onChange={(e) => setNewSession({ ...newSession, department: e.target.value as any })}
                                         className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                     >
-                                        {availableDepartments.map(dept => (
-                                            <option key={dept.id} value={dept.id}>{dept.label}</option>
-                                        ))}
+                                        {availableDepartments.some(d => ['beginners', 'adult'].includes(d.id)) && (
+                                            <optgroup label="Adults / Beginners">
+                                                {availableDepartments.filter(d => ['beginners', 'adult'].includes(d.id)).map(dept => (
+                                                    <option key={dept.id} value={dept.id}>{dept.label}</option>
+                                                ))}
+                                            </optgroup>
+                                        )}
+                                        {availableDepartments.some(d => ['nursery', 'kinder', 'primary', 'junior'].includes(d.id)) && (
+                                            <optgroup label="Children">
+                                                {availableDepartments.filter(d => ['nursery', 'kinder', 'primary', 'junior'].includes(d.id)).map(dept => (
+                                                    <option key={dept.id} value={dept.id}>{dept.label}</option>
+                                                ))}
+                                            </optgroup>
+                                        )}
                                     </select>
                                 </div>
                             </div>
