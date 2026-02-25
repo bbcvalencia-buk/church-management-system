@@ -189,7 +189,7 @@ const MemberIDPrint: React.FC = () => {
             ctx.fillText('ID NUMBER', 16 * scale, footerY);
             ctx.fillStyle = '#1f2937';
             ctx.font = `bold ${10 * scale}px monospace`;
-            const idNum = (member.id_number ?? 0).toString().padStart(4, '0');
+            const idNum = member.member_number || (member.id_number ?? 0).toString().padStart(4, '0');
             ctx.fillText(idNum, 16 * scale, footerY + 12 * scale);
 
             // Joined (right)
@@ -297,7 +297,7 @@ const MemberIDPrint: React.FC = () => {
                         <div className="text-left">
                             <p className="text-[6px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">ID Number</p>
                             <p className="text-xs font-mono font-bold text-gray-800 tracking-tighter">
-                                {(member.id_number ?? 0).toString().padStart(4, '0')}
+                                {member.member_number || (member.id_number ?? 0).toString().padStart(4, '0')}
                             </p>
                         </div>
                         <div className="text-right">

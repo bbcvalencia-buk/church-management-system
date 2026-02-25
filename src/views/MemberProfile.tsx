@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useBlocker, useNavigate, useParams } from "react-router-dom";
 import {
     User, Heart, Shield, Users, ArrowLeft, Save, Upload, Trash2,
-    MapPin, TrendingUp, Star, Mail, Edit3, Printer, CheckCircle2, Phone, Home, BookOpen, Clock, Activity, FileText, Calendar, Eye, MessageSquare
+    MapPin, TrendingUp, Star, Mail, Edit3, Printer, CheckCircle2, Phone, Home, BookOpen, Clock, Activity, FileText, Calendar, Eye, MessageSquare, AlertCircle
 } from "lucide-react";
 
 import { supabase } from "../lib/supabase";
@@ -11,7 +11,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Skeleton from "@/components/Skeleton";
-import { UserRole } from "@/types";
+import { UserRole, type Member } from "@/types";
 
 import BioForm from "../components/members/BioForm";
 import ContactForm from "../components/members/ContactForm";
@@ -76,19 +76,120 @@ const MemberProfile: React.FC = () => {
     const [isViewing, setIsViewing] = useState(isEditMode);
     const [activeTab, setActiveTab] = useState('Overview');
 
-    const [member, setMember] = useState<any>({
-        first_name: "", middle_name: "", surname: "", name_ext: "", nickname: "",
-        date_of_birth: "", gender: "Male", civil_status: "Single", nationality: "Filipino",
-        home_address: "", phone_number: "", membership_status: "active",
-        is_regular_member: true, is_visitor: false, attachment_url: "",
-    });
+    const DEFAULT_FORM_DATA = {
+        member: {
+            first_name: "", middle_name: "", surname: "", name_ext: "", nickname: "",
+            date_of_birth: "", gender: "Male", civil_status: "Single", nationality: "Filipino",
+            home_address: "", phone_number: "", membership_status: "active",
+            is_regular_member: true, attachment_url: "", profile_picture_url: ""
+        } as Partial<Member>,
+        positionsData: {
+            positions: [] as any[],
+            newPosition: {
+                position_name: '', department: '', position_category: 'sunday_school_adult',
+                assignment_reason: '', is_ministry_head: false, start_date: new Date().toISOString().split('T')[0], is_active: true
+            }
+        },
+        familyData: {
+            relationships: [] as any[],
+            newRelationName: '',
+            relationType: 'spouse'
+        },
+        faithPromiseData: {
+            commitments: [] as any[],
+            financials: [] as any[],
+            formYear: new Date().getFullYear(),
+            formAmount: 0,
+            editingId: null as string | null
+        }
+    };
 
-    const [positions, setPositions] = useState<any[]>([]);
+    const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
+    const [savedData, setSavedData] = useState(DEFAULT_FORM_DATA);
+    const [draftFound, setDraftFound] = useState<any>(null);
+
+    const isDirty = JSON.stringify(formData) !== JSON.stringify(savedData);
+    const DRAFT_KEY = `member_draft_${id || 'new'}`;
+
+    const updateFormData = (section: keyof typeof formData, field: string, value: any) => {
+        setFormData(prev => ({
+            ...prev,
+            [section]: {
+                ...prev[section],
+                [field]: value
+            }
+        }));
+    };
+
+    // Derived aliases for backward compatibility in render
+    const member = formData.member;
+    const positions = formData.positionsData.positions;
+    const family = formData.familyData.relationships;
+
     const [initialPositionIds, setInitialPositionIds] = useState<string[]>([]);
-    const [family, setFamily] = useState<any[]>([]);
     const [attendance, setAttendance] = useState<any[]>([]);
     const [attendanceInsights, setAttendanceInsights] = useState<AttendanceInsights>(emptyAttendanceInsights);
     const [activeSection, setActiveSection] = useState<"bio" | "contact" | "spiritual" | "positions" | "family" | "faith_promise">("bio");
+
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
+
+    useEffect(() => {
+        const draft = localStorage.getItem(DRAFT_KEY);
+        if (draft) {
+            try {
+                const parsed = JSON.parse(draft);
+                if (parsed.timestamp && parsed.formData) {
+                    setDraftFound(parsed);
+                }
+            } catch (e) { }
+        }
+    }, [DRAFT_KEY]);
+
+    useEffect(() => {
+        if (!isViewing && isDirty) {
+            const timer = setInterval(() => {
+                localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, timestamp: Date.now() }));
+            }, 30000);
+            return () => clearInterval(timer);
+        } else if (!isDirty && localStorage.getItem(DRAFT_KEY)) {
+            // Optional: clean up if no longer dirty?
+        }
+    }, [formData, isDirty, DRAFT_KEY, isViewing]);
+
+    const handleRestoreDraft = () => {
+        if (draftFound && draftFound.formData) {
+            setFormData(draftFound.formData);
+            setIsViewing(false);
+            setDraftFound(null);
+        }
+    };
+
+    const handleDiscardChanges = () => {
+        setFormData(savedData);
+        localStorage.removeItem(DRAFT_KEY);
+        setDraftFound(null);
+    };
+
+    const blocker = useBlocker(({ currentLocation, nextLocation }) =>
+        isDirty && !isViewing && currentLocation.pathname !== nextLocation.pathname
+    );
+
+    useEffect(() => {
+        if (blocker.state === "blocked") {
+            const shouldLeave = window.confirm("You have unsaved changes. Are you sure you want to leave this page?");
+            if (shouldLeave) blocker.proceed();
+            else blocker.reset();
+        }
+    }, [blocker]);
     const [loading, setLoading] = useState(isEditMode);
     const [saving, setSaving] = useState(false);
     const { showToast } = useToast();
@@ -107,7 +208,7 @@ const MemberProfile: React.FC = () => {
     const [selectedMinistryMates, setSelectedMinistryMates] = useState<any[]>([]);
 
 
-    const canManageProfiles = roles.includes(UserRole.SUPER_ADMIN) || roles.includes(UserRole.CHURCH_CLERK);
+    const canManageProfiles = roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.CHURCH_CLERK);
     const isOwnProfile = Boolean(id && currentMember?.id === id);
 
     useEffect(() => {
@@ -261,21 +362,50 @@ const MemberProfile: React.FC = () => {
         try {
             const { data, error } = await supabase.from("members").select("*").eq("id", memberId).single();
             if (error) throw error;
-            setMember(data);
             if (data.profile_picture_url) setPreviewUrl(data.profile_picture_url);
             if (data.attachment_url) setAttachmentPreview(data.attachment_url);
 
             const { data: posData } = await supabase.from("church_positions").select("*").eq("member_id", memberId);
+            const { data: famData } = await supabase.from("family_relationships").select("*").eq("member_id", memberId);
+
+            const { data: commData } = await supabase.from('faith_promise_commitments').select('*').eq('member_id', memberId).order('year', { ascending: false });
+            const { data: finData } = await supabase.from('financial_records').select('amount, transaction_date').eq('member_id', memberId).eq('transaction_type', 'faith_promise').is('deleted_at', null);
+
+            const summary: Record<number, number> = {};
+            finData?.forEach((record: any) => {
+                const year = new Date(record.transaction_date).getFullYear();
+                summary[year] = (summary[year] || 0) + Number(record.amount);
+            });
+            const financials = Object.entries(summary).map(([year, total]) => ({ year: Number(year), total_given: total }));
+
+            const loadedData = {
+                member: data,
+                positionsData: {
+                    positions: posData || [],
+                    newPosition: DEFAULT_FORM_DATA.positionsData.newPosition
+                },
+                familyData: {
+                    relationships: famData || [],
+                    newRelationName: '',
+                    relationType: 'spouse'
+                },
+                faithPromiseData: {
+                    commitments: commData || [],
+                    financials,
+                    formYear: new Date().getFullYear(),
+                    formAmount: 0,
+                    editingId: null
+                }
+            };
+
+            setFormData(loadedData);
+            setSavedData(loadedData);
+
             if (posData) {
-                setPositions(posData);
                 setInitialPositionIds(posData.map((p: any) => p.id).filter(Boolean));
             } else {
-                setPositions([]);
                 setInitialPositionIds([]);
             }
-
-            const { data: famData } = await supabase.from("family_relationships").select("*").eq("member_id", memberId);
-            if (famData) setFamily(famData);
 
             const { data: attData } = await supabase.from("attendance_log").select("*").eq("member_id", memberId);
             if (attData) {
@@ -369,6 +499,13 @@ const MemberProfile: React.FC = () => {
                 if (removePositionsError) throw removePositionsError;
             }
 
+            const savedFamilyIds = savedData.familyData.relationships.map((f: any) => f.id).filter(Boolean);
+            const currentFamilyIds = formData.familyData.relationships.map((f: any) => f.id).filter(Boolean);
+            const removedFamilyIds = savedFamilyIds.filter((id: string) => !currentFamilyIds.includes(id));
+            if (removedFamilyIds.length > 0) {
+                await supabase.from("family_relationships").delete().in("id", removedFamilyIds);
+            }
+
             for (const rel of family) {
                 if (!rel.member_id) rel.member_id = savedMember.id;
                 await supabase.from("family_relationships").upsert(rel);
@@ -380,9 +517,31 @@ const MemberProfile: React.FC = () => {
                 .eq("member_id", savedMember.id);
             if (latestPosError) throw latestPosError;
             if (latestPosData) {
-                setPositions(latestPosData);
                 setInitialPositionIds(latestPosData.map((p: any) => p.id).filter(Boolean));
             }
+
+            // Sync Faith Promise
+            const savedCommitments = savedData.faithPromiseData.commitments.map((c: any) => c.id).filter(Boolean);
+            const currentCommitmentIds = formData.faithPromiseData.commitments.map((c: any) => c.id).filter(Boolean);
+            const removedCommitments = savedCommitments.filter((id: string) => !currentCommitmentIds.includes(id));
+
+            if (removedCommitments.length > 0) {
+                await supabase.from("faith_promise_commitments").delete().in("id", removedCommitments);
+            }
+
+            const commitmentsToSave = formData.faithPromiseData.commitments;
+            for (const comm of commitmentsToSave) {
+                const payload = { member_id: savedMember.id, year: comm.year, promised_amount: comm.promised_amount };
+                if (comm.id && !comm.id.startsWith('temp_')) {
+                    (payload as any).id = comm.id;
+                }
+                const { error: commSaveErr } = await supabase.from("faith_promise_commitments").upsert(payload, { onConflict: (payload as any).id ? 'id' : 'member_id, year' });
+                if (commSaveErr) throw commSaveErr;
+            }
+
+            await fetchMemberData(savedMember.id);
+
+            localStorage.removeItem(DRAFT_KEY);
 
             showToast("Member saved successfully!", 'success');
             if (!isEditMode) setTimeout(() => navigate(`/members/${savedMember.id}`), 1500);
@@ -505,8 +664,13 @@ const MemberProfile: React.FC = () => {
                                         <span className={`px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider ${member.membership_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                                             {member.membership_status} Member
                                         </span>
-                                        <span className="text-gray-500 text-sm">
-                                            Member ID: #{member.id.substring(0, 6).toUpperCase()}
+                                        {member.member_number && (
+                                            <span className="bg-indigo-600 text-white px-3 py-1 rounded-md font-bold text-[12px] tracking-wider shadow-sm">
+                                                {member.member_number}
+                                            </span>
+                                        )}
+                                        <span className="text-gray-500 text-sm flex items-center gap-1">
+                                            <span className="opacity-60">ID:</span> <span className="font-bold">#{member.id_number}</span>
                                         </span>
                                     </div>
                                     <p className="text-gray-500 italic leading-relaxed text-sm max-w-2xl">
@@ -908,7 +1072,35 @@ const MemberProfile: React.FC = () => {
 
     // ======== EDIT MODE UI ========
     return (
-        <div className="max-w-6xl mx-auto space-y-8 pb-20 font-sans">
+        <div className="max-w-6xl mx-auto space-y-8 pb-20 font-sans relative">
+            {isDirty && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm sticky top-4 z-40">
+                    <div className="flex items-center gap-2 font-semibold text-sm">
+                        <AlertCircle size={18} className="text-amber-500" />
+                        You have unsaved changes
+                    </div>
+                    <button onClick={handleDiscardChanges} className="text-xs font-bold text-amber-900 border border-amber-300 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors bg-white">
+                        Discard Changes
+                    </button>
+                </div>
+            )}
+
+            {draftFound && (
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm sticky top-4 z-40">
+                    <div className="flex items-center gap-2 font-semibold text-sm">
+                        <AlertCircle size={18} className="text-yellow-600" />
+                        You have an unsaved draft from {new Date(draftFound.timestamp).toLocaleString()}
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={handleRestoreDraft} className="text-xs font-bold bg-yellow-400 text-yellow-900 hover:bg-yellow-500 px-3 py-1.5 rounded-lg transition-colors">
+                            Restore Draft
+                        </button>
+                        <button onClick={handleDiscardChanges} className="text-xs font-bold border border-yellow-300 hover:bg-yellow-200 px-3 py-1.5 rounded-lg transition-colors bg-white text-yellow-800">
+                            Discard
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -998,12 +1190,12 @@ const MemberProfile: React.FC = () => {
                         {sections.find((s) => s.id === activeSection)?.label} Information
                     </h2>
                     <div className="animate-in fade-in duration-300">
-                        {activeSection === 'bio' && <BioForm data={member} onChange={setMember} />}
-                        {activeSection === 'contact' && <ContactForm data={member} onChange={setMember} />}
-                        {activeSection === 'spiritual' && <SpiritualForm data={member} onChange={setMember} />}
-                        {activeSection === 'positions' && <PositionsForm positions={positions} onChange={setPositions} />}
-                        {activeSection === 'family' && <FamilyForm relationships={family} onChange={setFamily} />}
-                        {activeSection === 'faith_promise' && id && <FaithPromiseForm memberId={id} />}
+                        {activeSection === 'bio' && <BioForm data={formData.member} onChange={(f, v) => updateFormData('member', f, v)} />}
+                        {activeSection === 'contact' && <ContactForm data={formData.member} onChange={(f, v) => updateFormData('member', f, v)} />}
+                        {activeSection === 'spiritual' && <SpiritualForm data={formData.member} onChange={(f, v) => updateFormData('member', f, v)} />}
+                        {activeSection === 'positions' && <PositionsForm data={formData.positionsData} onChange={(f, v) => updateFormData('positionsData', f, v)} />}
+                        {activeSection === 'family' && <FamilyForm data={formData.familyData} onChange={(f, v) => updateFormData('familyData', f, v)} />}
+                        {activeSection === 'faith_promise' && <FaithPromiseForm data={formData.faithPromiseData} onChange={(f, v) => updateFormData('faithPromiseData', f, v)} />}
                     </div>
                 </div>
             </div>

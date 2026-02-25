@@ -165,6 +165,7 @@ const FinancialReportPrint: React.FC = () => {
             let query = supabase
                 .from("financial_records")
                 .select("*, members(*)")
+                .is("deleted_at", null)
                 .gte("transaction_date", `${year}-01-01`)
                 .lte("transaction_date", `${year}-12-31`)
                 .order("transaction_date");

@@ -15,16 +15,23 @@ import {
   Calendar,
   Eye,
   Star,
-  MoreHorizontal
+  MoreHorizontal,
+  Download,
+  MapPin,
+  Clock,
+  Trash2,
+  Edit2
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { Link } from "react-router-dom";
+import { exportToCSV } from "@/lib/csv";
 
 interface PartialMember {
   id: string;
   first_name: string;
   surname: string;
   profile_picture_url?: string;
+  member_number?: string;
 }
 
 interface PositionWithMember extends ChurchPosition {
@@ -164,7 +171,7 @@ const MinistryDirectory: React.FC = () => {
   };
 
   const fetchMembers = async () => {
-    const { data } = await supabase.from('members').select('id, first_name, surname, profile_picture_url').order('surname');
+    const { data } = await supabase.from('members').select('id, first_name, surname, profile_picture_url, member_number').order('surname');
     if (data) setMembers(data);
   };
 
@@ -399,12 +406,37 @@ const MinistryDirectory: React.FC = () => {
           <h1 className="text-[24px] sm:text-[32px] font-serif font-extrabold text-[#111827] mb-0.5 tracking-tight">Ministry Directory</h1>
           <p className="text-[#6b7280] text-[15px]">Manage your church leadership and ministry assignments.</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
-        >
-          <Plus size={16} strokeWidth={2.5} /> Establish New Group
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              const exportData = groups.flatMap((g: any) => g.members.map((m: any) => ({
+                ministry: g.name,
+                category: g.categoryLabel,
+                member_number: m.member_number || '',
+                name: `${m.first_name} ${m.surname}`,
+                role: m.specific_role,
+                is_head: m.full_pos?.is_ministry_head ? 'Yes' : 'No'
+              })));
+              exportToCSV('Church_Ministries_Roster.csv', exportData, [
+                { key: 'ministry', label: 'Ministry' },
+                { key: 'category', label: 'Category' },
+                { key: 'member_number', label: 'Member #' },
+                { key: 'name', label: 'Member Name' },
+                { key: 'role', label: 'Role' },
+                { key: 'is_head', label: 'Head' }
+              ]);
+            }}
+            className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <Download size={16} /> Export CSV
+          </button>
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <Plus size={16} strokeWidth={2.5} /> Establish New Group
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar Container */}
@@ -555,7 +587,12 @@ const MinistryDirectory: React.FC = () => {
                         <User size={16} className="text-gray-500" />
                       </div>
                     )}
-                    <p className="text-sm font-bold text-gray-900">{m.first_name} {m.surname}</p>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900">{m.first_name} {m.surname}</p>
+                      {m.member_number && (
+                        <p className="text-[10px] font-bold text-indigo-600 tracking-tight">{m.member_number}</p>
+                      )}
+                    </div>
                   </div>
                   <Eye size={15} className="text-blue-600" />
                 </Link>
@@ -624,6 +661,9 @@ const MinistryDirectory: React.FC = () => {
                     )}
                     <div>
                       <Link to={`/members/${m.id}`} className="text-[13px] font-bold text-gray-900 hover:text-blue-600 transition-colors inline-block">{m.first_name} {m.surname}</Link>
+                      {m.member_number && (
+                        <p className="text-[9px] font-bold text-indigo-600 tracking-tight">{m.member_number}</p>
+                      )}
                       <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mt-0.5">
                         {m.specific_role}
                         {m.full_pos?.is_ministry_head && <span className="ml-2 text-amber-600">HEAD</span>}
@@ -686,7 +726,7 @@ const MinistryDirectory: React.FC = () => {
                       <div key={m.id} className="bg-gray-50 border border-gray-100 rounded-xl p-3 flex flex-col gap-2 relative group hover:border-blue-200 transition-colors">
                         <div className="flex justify-between items-center">
                           <span className="text-gray-900 text-[13px] font-bold">
-                            {m.first_name} {m.surname}
+                            {m.first_name} {m.surname} {m.member_number && <span className="text-indigo-600 ml-2 font-mono text-[11px]">{m.member_number}</span>}
                           </span>
                           <X size={16} className="cursor-pointer text-gray-400 hover:text-red-500 transition-colors" onClick={() => setSelectedMembers(sm => sm.filter(x => x.id !== m.id))} />
                         </div>
@@ -726,7 +766,7 @@ const MinistryDirectory: React.FC = () => {
                           }}
                           className={`w-full text-left p-3 text-sm font-semibold border-b border-gray-50 last:border-0 transition-colors ${isSelected ? 'bg-gray-100 text-gray-400 cursor-default' : 'hover:bg-gray-50'}`}
                         >
-                          {m.first_name} {m.surname} {isSelected && <span className="float-right text-blue-500">Added</span>}
+                          {m.first_name} {m.surname} {m.member_number && <span className="text-indigo-600 italic text-[11px] ml-1">({m.member_number})</span>} {isSelected && <span className="float-right text-blue-500">Added</span>}
                         </button>
                       );
                     })}

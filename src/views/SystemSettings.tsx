@@ -9,10 +9,12 @@ import {
     Upload,
     Image,
     Trash2,
-    Loader2
+    Loader2,
+    ListChecks
 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 import { uploadFile, deleteFile } from "@/lib/storage";
+import { ImportReviewPanel } from "@/components/ImportReviewPanel";
 
 const SystemSettings: React.FC = () => {
     const { showToast } = useToast();
@@ -32,13 +34,24 @@ const SystemSettings: React.FC = () => {
     const [logoUploading, setLogoUploading] = useState(false);
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
+    // We'll need user role to determine if they can see the Import Review tab
+    const [userRole, setUserRole] = useState<string | null>(null);
+
     useEffect(() => {
+        const fetchUserRole = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data } = await supabase.rpc('app_has_role', { target_role: 'church_administrator' });
+                if (data) setUserRole('church_administrator');
+            }
+        };
+        fetchUserRole();
         fetchSettings();
         fetchAuditLogs();
     }, []);
 
     const fetchSettings = async () => {
-        const { data } = await supabase.from('system_settings').select('*').single();
+        const { data } = await supabase.from('system_settings').select('*').maybeSingle();
         if (data) {
             setSettings({
                 church_name: data.church_name || '',
@@ -69,7 +82,7 @@ const SystemSettings: React.FC = () => {
             if (count === 0) {
                 await supabase.from('system_settings').insert(settings);
             } else {
-                const { data } = await supabase.from('system_settings').select('id').single();
+                const { data } = await supabase.from('system_settings').select('id').maybeSingle();
                 if (data?.id) {
                     await supabase.from('system_settings').update(settings).eq('id', data.id);
                 }
@@ -111,7 +124,7 @@ const SystemSettings: React.FC = () => {
             setSettings(prev => ({ ...prev, church_logo_url: url }));
 
             // Save to DB immediately
-            const { data } = await supabase.from('system_settings').select('id').single();
+            const { data } = await supabase.from('system_settings').select('id').maybeSingle();
             if (data?.id) {
                 await supabase.from('system_settings').update({ church_logo_url: url }).eq('id', data.id);
             }
@@ -135,7 +148,7 @@ const SystemSettings: React.FC = () => {
             await deleteFile(settings.church_logo_url);
             setSettings(prev => ({ ...prev, church_logo_url: '' }));
 
-            const { data } = await supabase.from('system_settings').select('id').single();
+            const { data } = await supabase.from('system_settings').select('id').maybeSingle();
             if (data?.id) {
                 await supabase.from('system_settings').update({ church_logo_url: null }).eq('id', data.id);
             }
@@ -213,6 +226,14 @@ const SystemSettings: React.FC = () => {
                         >
                             <Activity size={18} /> Audit Logs
                         </button>
+                        {userRole === 'church_administrator' && (
+                            <button
+                                onClick={() => setActiveTab('import_review')}
+                                className={`whitespace-nowrap lg:w-full text-left p-2.5 sm:p-3 rounded-lg flex items-center gap-2 sm:gap-3 transition-colors font-medium text-sm ${activeTab === 'import_review' ? 'bg-[var(--color-primary)] text-white shadow-md' : 'hover:bg-gray-100 dark:hover:bg-white/5 text-[var(--color-text-muted)]'}`}
+                            >
+                                <ListChecks size={18} /> Import Review
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -426,6 +447,16 @@ const SystemSettings: React.FC = () => {
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'import_review' && userRole === 'church_administrator' && (
+                        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div>
+                                <h2 className="text-2xl font-bold text-[var(--color-text-main)]">Import Review</h2>
+                                <p className="text-[var(--color-text-muted)] mt-1 text-sm">Review and resolve data conflicts from recent imports.</p>
+                            </div>
+                            <ImportReviewPanel />
                         </div>
                     )}
                 </div>

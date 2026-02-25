@@ -3,29 +3,26 @@ import React from 'react';
 import type { Member } from '@/types';
 
 interface SpiritualFormProps {
-    data: Partial<Member>;
-    onChange: (data: Partial<Member>) => void;
+    data: any;
+    onChange: (field: string, value: any) => void;
 }
 
 const SpiritualForm: React.FC<SpiritualFormProps> = ({ data, onChange }) => {
     // Helper to update fields
-    const update = (field: keyof Member, value: any) => {
-        onChange({ ...data, [field]: value });
+    const update = (field: string, value: any) => {
+        onChange(field, value);
     };
 
     const handleBaptismChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const date = e.target.value;
-        const updates: Partial<Member> = { baptism_date: date };
-
-        // Business Rule: Baptism Date = Membership Date
-        // And automatically becomes Regular Member
         if (date) {
-            updates.membership_date = date;
-            updates.is_regular_member = true;
-            updates.is_visitor = false;
+            onChange('baptism_date', date);
+            onChange('membership_date', date);
+            onChange('is_regular_member', true);
+            
+        } else {
+            onChange('baptism_date', date);
         }
-
-        onChange({ ...data, ...updates });
     };
 
     return (
@@ -98,8 +95,8 @@ const SpiritualForm: React.FC<SpiritualFormProps> = ({ data, onChange }) => {
                         <label className="flex items-center gap-2">
                             <input
                                 type="checkbox"
-                                checked={data.is_visitor || false}
-                                onChange={(e) => update('is_visitor', e.target.checked)}
+                                
+                                
                             />
                             <span>Visitor</span>
                         </label>

@@ -6,7 +6,7 @@ export interface AttendanceMember {
     first_name: string;
     surname: string;
     profile_picture_url?: string;
-    is_visitor?: boolean;
+    
 }
 
 interface MemberAttendancePickerProps {
@@ -54,7 +54,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
     const visibleMembers = useMemo(() => {
         if (!showVisitorToggle) return members;
         if (includeVisitors) return members;
-        return members.filter((m) => !m.is_visitor);
+        return members.filter((m) => !false);
     }, [members, showVisitorToggle, includeVisitors]);
 
     useEffect(() => {
@@ -139,7 +139,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                     <div className="p-6 text-center text-sm text-gray-500">
                         {members.length === 0
                             ? "No members in the registry yet. Add members first in Members Directory."
-                            : (showVisitorToggle && !includeVisitors && visibleMembers.length === 0 && members.some((m) => m.is_visitor)
+                            : (showVisitorToggle && !includeVisitors && visibleMembers.length === 0 && members.some((m) => false)
                                 ? "Only visitor records are available. Enable \"Include visitors in search\"."
                                 : `No members match "${searchTerm.trim()}".`)}
                     </div>
@@ -172,7 +172,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                                 <span className="text-sm text-gray-900 leading-tight truncate">
                                     <span className="font-bold">{member.surname}</span>, <span className="text-gray-600 font-medium">{member.first_name}</span>
                                 </span>
-                                {member.is_visitor && (
+                                {false && (
                                     <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Visitor</span>
                                 )}
                             </div>

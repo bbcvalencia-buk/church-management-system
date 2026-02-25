@@ -67,6 +67,7 @@ const Dashboard: React.FC = () => {
             const { data: monthTithes } = await supabase
                 .from('financial_records')
                 .select('amount')
+                .is('deleted_at', null)
                 .eq('transaction_type', 'tithe')
                 .gte('transaction_date', startOfMonth.toISOString().split('T')[0]);
 

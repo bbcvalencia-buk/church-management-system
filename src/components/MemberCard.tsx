@@ -39,15 +39,22 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                             {member.first_name} {member.surname}
                             {member.name_ext && <span className="text-sm font-normal text-[var(--color-text-muted)] ml-1">{member.name_ext}</span>}
                         </h3>
-                        <p className="text-xs text-[var(--color-text-muted)] mt-1 font-medium flex items-center gap-2">
-                            <span className="opacity-70">ID: {member.id_number}</span>
-                            {member.nickname && (
-                                <>
-                                    <span className="w-1 h-1 rounded-full bg-gray-300"></span>
-                                    <span>"{member.nickname}"</span>
-                                </>
+                        <div className="flex flex-col gap-0.5 mt-1">
+                            {member.member_number && (
+                                <p className="text-sm font-bold text-indigo-600 tracking-tight">
+                                    {member.member_number}
+                                </p>
                             )}
-                        </p>
+                            <p className="text-xs text-[var(--color-text-muted)] font-medium flex items-center gap-2">
+                                <span className="opacity-70">ID: {member.id_number}</span>
+                                {member.nickname && (
+                                    <>
+                                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                        <span>"{member.nickname}"</span>
+                                    </>
+                                )}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -87,9 +94,6 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                 )}
                 {member.is_regular_member && (
                     <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2 py-1 rounded-md border border-blue-100">Regular Member</span>
-                )}
-                {member.is_visitor && (
-                    <span className="bg-yellow-50 text-yellow-700 text-[10px] font-semibold px-2 py-1 rounded-md border border-yellow-100">Visitor Status</span>
                 )}
             </div>
 

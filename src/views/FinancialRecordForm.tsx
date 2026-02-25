@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
+import { submitFinancialMutation } from "@/lib/financial";
 import { getLatestSundayISODate } from "@/lib/date";
 import type { FinancialRecord, Member } from "@/types";
 import {
@@ -151,11 +152,8 @@ const FinancialRecordForm: React.FC = () => {
 
         setSaving(true);
         try {
-            const { error } = await supabase
-                .from('financial_records')
-                .insert(recordsToInsert as any);
+            await submitFinancialMutation('INSERT', { records: recordsToInsert });
 
-            if (error) throw error;
             showToast("Records saved successfully!", 'success');
             navigate('/finance');
         } catch (err: any) {

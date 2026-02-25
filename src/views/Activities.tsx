@@ -94,7 +94,6 @@ const Activities: React.FC = () => {
         const { data, error } = await supabase
             .from('members')
             .select('id, first_name, surname, profile_picture_url')
-            .or('is_visitor.eq.false,is_visitor.is.null')
             .order('surname', { ascending: true })
             .order('first_name', { ascending: true });
         if (error) {

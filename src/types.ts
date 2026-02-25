@@ -1,10 +1,13 @@
 
 export enum UserRole {
-    SUPER_ADMIN = 'super_admin',
+    CHURCH_ADMINISTRATOR = 'church_administrator',
+    PASTOR = 'pastor',
     CHURCH_CLERK = 'church_clerk',
     TREASURER = 'treasurer',
+    RECORDING_SECRETARY = 'recording_secretary',
     MUSIC_MINISTER = 'music_minister',
     SUNDAY_SCHOOL_ADMIN = 'sunday_school_admin',
+    GOODNEWS_TEACHER = 'goodnews_teacher',
     ACTIVITY_COORDINATOR = 'activity_coordinator',
     MEMBER = 'member'
 }
@@ -15,6 +18,10 @@ export type MaritalStatus = 'Single' | 'Married' | 'Widow' | 'Widower' | 'Separa
 export interface Member {
     id: string;
     id_number: number;
+    member_number?: string;
+    member_number_year?: number;
+    member_number_seq?: number;
+    legacy_v1_id?: string;
 
     // Biographical
     first_name: string;
@@ -49,13 +56,13 @@ export interface Member {
     // Status
     membership_status: 'active' | 'inactive' | 'under_discipline';
     is_regular_member: boolean;
-    is_visitor: boolean;
     is_pastor: boolean;
     is_pastors_wife: boolean;
 
     // Media
     profile_picture_url?: string;
     id_card_url?: string;
+    attachment_url?: string;
 
     // Metadata
     created_at: string;
@@ -88,8 +95,14 @@ export interface Visitor {
     is_prospect_for_baptism: boolean;
     follow_up_status: 'pending' | 'contacted' | 'visiting' | 'converted' | 'inactive';
     next_follow_up_date?: string;
-    converted_to_member: boolean;
-    conversion_date?: string;
+
+    status?: 'active' | 'converted' | 'archived';
+    converted_to_member_id?: string;
+    converted_at?: string;
+    converted_by?: string;
+
+    converted_to_member: boolean; // Legacy
+    conversion_date?: string; // Legacy
 }
 
 export interface ChurchPosition {
@@ -134,8 +147,39 @@ export interface FaithPromiseCommitment {
     member_id: string;
     year: number;
     promised_amount: number;
-    total_given: number; // Calculated/Cached
-    remaining: number; // Calculated
+
+    // New Fields
+    started_giving_date?: string;
+    weeks_committed?: number;
+    status?: string | null;
+    fulfillment_date?: string;
+    notes?: string;
+    created_by?: string;
+}
+
+export interface FaithPromiseLedger {
+    id: string;
+    member_id: string;
+    first_name: string;
+    surname: string;
+    member_number?: string;
+    year: number;
+    committed_amount: number;
+    started_giving_date?: string;
+    weeks_committed: number;
+    manual_status?: string | null;
+    fulfillment_date?: string;
+    notes?: string;
+
+    // Calculated by VIEW
+    total_paid: number;
+    weekly_target: number;
+    remaining_balance: number;
+    expected_paid_by_now: number;
+    variance: number;
+    fulfillment_pct: number;
+    catchup_weekly: number;
+    status: 'FULFILLED' | 'INCOMPLETE' | 'ON TRACK' | 'BEHIND';
 }
 
 export type ServiceType = 'sunday_morning' | 'sunday_afternoon' | 'wednesday_prayer' | 'pre_service' | 'funeral';

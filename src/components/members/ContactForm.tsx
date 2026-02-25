@@ -3,13 +3,13 @@ import React from 'react';
 import type { Member } from '@/types';
 
 interface ContactFormProps {
-    data: Partial<Member>;
-    onChange: (data: Partial<Member>) => void;
+    data: any;
+    onChange: (field: string, value: any) => void;
 }
 
 const ContactForm: React.FC<ContactFormProps> = ({ data, onChange }) => {
-    const update = (field: keyof Member, value: any) => {
-        onChange({ ...data, [field]: value });
+    const update = (field: string, value: any) => {
+        onChange(field, value);
     };
 
     return (

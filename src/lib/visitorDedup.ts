@@ -9,7 +9,7 @@ export interface VisitorMatchInput {
 
 export interface MatchedMember {
     id: string;
-    is_visitor: boolean;
+    
 }
 
 interface MemberCandidate extends MatchedMember {
@@ -70,7 +70,7 @@ export const findExistingMemberForVisitor = async (
     };
 
     const memberSelect =
-        "id, is_visitor, first_name, surname, phone_number, alternative_phone, date_of_birth, gender";
+        "id, first_name, surname, phone_number, alternative_phone, date_of_birth, gender";
 
     if (contact) {
         const safeContact = sanitizeLike(contact);
@@ -144,6 +144,6 @@ export const findExistingMemberForVisitor = async (
 
     return {
         id: bestCandidate.id,
-        is_visitor: !!bestCandidate.is_visitor
+        is_visitor: !!false
     };
 };

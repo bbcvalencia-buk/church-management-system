@@ -39,11 +39,11 @@ const Layout: React.FC = () => {
     const [notifLoading, setNotifLoading] = useState(false);
     const notifRef = useRef<HTMLDivElement>(null);
 
-    const isAdmin = roles.includes(UserRole.SUPER_ADMIN) || roles.includes(UserRole.CHURCH_CLERK);
+    const isAdmin = roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.CHURCH_CLERK);
 
     useEffect(() => {
         const fetchSettings = async () => {
-            const { data } = await supabase.from('system_settings').select('church_name, system_name, church_logo_url').single();
+            const { data } = await supabase.from('system_settings').select('church_name, system_name, church_logo_url').maybeSingle();
             if (data) {
                 if (data.church_name) setChurchName(data.church_name);
                 if (data.system_name) setSystemName(data.system_name);
@@ -60,7 +60,7 @@ const Layout: React.FC = () => {
                 return;
             }
 
-            if (roles.includes(UserRole.SUPER_ADMIN) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN)) {
+            if (roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.PASTOR) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN)) {
                 setCanAccessSundaySchool(true);
                 return;
             }
@@ -135,7 +135,7 @@ const Layout: React.FC = () => {
         {
             section: 'OVERVIEW',
             items: [
-                { to: '/', icon: LayoutDashboard, label: 'Dashboard', allowedRoles: [UserRole.SUPER_ADMIN, UserRole.CHURCH_CLERK, UserRole.TREASURER] },
+                { to: '/', icon: LayoutDashboard, label: 'Dashboard', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.TREASURER] },
                 { to: '/announcements', icon: Bell, label: 'Announcements' },
                 { to: '/profile', icon: User, label: 'My Profile' },
                 { to: '/change-password', icon: KeyRound, label: 'Change Password' }
@@ -144,36 +144,36 @@ const Layout: React.FC = () => {
         {
             section: 'REGISTRY',
             items: [
-                { to: '/members', icon: Users, label: 'Members', allowedRoles: [UserRole.SUPER_ADMIN, UserRole.CHURCH_CLERK] },
-                { to: '/visitors', icon: UserPlus, label: 'Visitors', allowedRoles: [UserRole.SUPER_ADMIN, UserRole.CHURCH_CLERK] }
+                { to: '/members', icon: Users, label: 'Members', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK] },
+                { to: '/visitors', icon: UserPlus, label: 'Visitors', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK] }
             ]
         },
         {
             section: 'STRUCTURE',
             items: [
-                { to: '/ministries', icon: Shield, label: 'Ministries', allowedRoles: [UserRole.SUPER_ADMIN, UserRole.CHURCH_CLERK] }
+                { to: '/ministries', icon: Shield, label: 'Ministries', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK] }
             ]
         },
         {
             section: 'ROUTINE',
             items: [
-                { to: '/services', icon: Calendar, label: 'Services', allowedRoles: [UserRole.SUPER_ADMIN, UserRole.CHURCH_CLERK] },
+                { to: '/services', icon: Calendar, label: 'Services', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY] },
                 { to: '/sunday-school', icon: Users, label: 'Sunday School', requiresSundaySchoolAccess: true },
-                { to: '/activities', icon: Calendar, label: 'Activities', allowedRoles: [UserRole.SUPER_ADMIN, UserRole.ACTIVITY_COORDINATOR] },
-                { to: '/music-ministry', icon: UserPlus, label: 'Music Ministry', allowedRoles: [UserRole.SUPER_ADMIN, UserRole.MUSIC_MINISTER] }
+                { to: '/activities', icon: Calendar, label: 'Activities', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.ACTIVITY_COORDINATOR, UserRole.RECORDING_SECRETARY] },
+                { to: '/music-ministry', icon: UserPlus, label: 'Music Ministry', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.MUSIC_MINISTER] }
             ]
         },
         {
             section: 'TREASURY',
             items: [
-                { to: '/finance', icon: DollarSign, label: 'Financials', allowedRoles: [UserRole.SUPER_ADMIN, UserRole.TREASURER] }
+                { to: '/finance', icon: DollarSign, label: 'Financials', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.TREASURER] }
             ]
         },
         {
             section: 'ADMINISTRATIVE',
             items: [
-                { to: '/users', icon: Users, label: 'Role Management', allowedRoles: [UserRole.SUPER_ADMIN] },
-                { to: '/settings', icon: Settings, label: 'System Settings', allowedRoles: [UserRole.SUPER_ADMIN] }
+                { to: '/users', icon: Users, label: 'Role Management', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR] },
+                { to: '/settings', icon: Settings, label: 'System Settings', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR] }
             ]
         }
     ];

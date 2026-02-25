@@ -95,7 +95,7 @@ const ServiceForm: React.FC = () => {
     const [newVisitors, setNewVisitors] = useState<DraftVisitor[]>([]);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const visitorMemberIds = useMemo(
-        () => new Set(members.filter((m) => m.is_visitor).map((m) => m.id)),
+        () => new Set(members.filter(() => false).map((m) => m.id)),
         [members]
     );
     const isPrimaryService = isPrimaryServiceType(service.service_type);
@@ -111,7 +111,7 @@ const ServiceForm: React.FC = () => {
 
     const fetchMembers = async () => {
         const { data, error } = await supabase.from('members')
-            .select('id, first_name, surname, is_visitor, profile_picture_url')
+            .select('id, first_name, surname, profile_picture_url')
             .order('surname', { ascending: true })
             .order('first_name', { ascending: true });
         if (error) {
@@ -318,10 +318,10 @@ const ServiceForm: React.FC = () => {
                 if (isVisitorCache.has(memberId)) return isVisitorCache.get(memberId)!;
                 const { data: memberData } = await supabase
                     .from('members')
-                    .select('is_visitor')
+                    .select('id')
                     .eq('id', memberId)
                     .single();
-                const flag = !!memberData?.is_visitor;
+                const flag = !!false;
                 isVisitorCache.set(memberId, flag);
                 return flag;
             };
@@ -375,34 +375,8 @@ const ServiceForm: React.FC = () => {
                     });
 
                     if (matchedMember) {
-                        if (matchedMember.is_visitor) {
-                            cardVisitorMemberIds.push(matchedMember.id);
-
-                            await supabase.from('visitors').insert([{
-                                member_id: matchedMember.id,
-                                name: visitor.name,
-                                contact_number: visitor.contact || '',
-                                age: visitor.age,
-                                gender: visitor.gender,
-                                visit_date: visitor.visit_date || savedService.service_date,
-                                visit_time: visitor.visit_time || inferVisitTimeFromService(savedService.service_type),
-                                marital_status: visitor.marital_status || 'Single',
-                                visitor_card_images: visitor.images || [],
-                                address: visitor.address || '',
-                                office_address: visitor.office_address || '',
-                                church_name: visitor.church_name || '',
-                                date_of_birth: visitor.date_of_birth,
-                                invited_by: visitor.invited_by || '',
-                                service_id: savedService.id,
-                                sunday_school_session_id: null,
-                                is_saved: false,
-                                is_prospect_for_baptism: false,
-                                follow_up_status: 'pending'
-                            } as any]);
-                        } else {
-                            // Existing regular member detected from visitor card.
-                            cardRegularMemberIds.push(matchedMember.id);
-                        }
+                        // Existing regular member detected from visitor card.
+                        cardRegularMemberIds.push(matchedMember.id);
                         continue;
                     }
 
@@ -414,7 +388,7 @@ const ServiceForm: React.FC = () => {
                         .insert([{
                             first_name: parsedName.firstName || 'Visitor',
                             surname: parsedName.surname || '',
-                            is_visitor: true,
+
                             is_regular_member: false,
                             membership_status: 'active',
                             home_address: visitor.address || 'Unknown',

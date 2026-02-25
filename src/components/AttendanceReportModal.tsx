@@ -26,7 +26,7 @@ const AttendanceReportModal: React.FC<AttendanceReportModalProps> = ({
     const [searchTerm, setSearchTerm] = useState("");
     const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedMemberIds);
     const selectedVisitorCount = localSelectedIds.filter((id) =>
-        members.some((m) => m.id === id && m.is_visitor)
+        members.some((m) => m.id === id && false)
     ).length;
     const selectedRegularCount = localSelectedIds.length - selectedVisitorCount;
     const effectiveVisitorsCount = Math.max(visitorsCount, selectedVisitorCount);

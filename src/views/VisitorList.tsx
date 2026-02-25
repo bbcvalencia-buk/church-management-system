@@ -16,6 +16,7 @@ const VisitorList: React.FC = () => {
         name: ''
     });
     const [filterStatus, setFilterStatus] = useState<string>("all");
+    const [showConverted, setShowConverted] = useState<boolean>(false);
 
     useEffect(() => {
         fetchVisitors();
@@ -83,7 +84,10 @@ const VisitorList: React.FC = () => {
         const matchesFilter =
             filterStatus === "all" || visitor.follow_up_status === filterStatus;
 
-        return matchesSearch && matchesFilter;
+        const isConverted = visitor.converted_to_member || visitor.status === 'converted' || visitor.follow_up_status === 'converted';
+        const matchesConverted = showConverted || !isConverted;
+
+        return matchesSearch && matchesFilter && matchesConverted;
     });
 
     return (
@@ -145,10 +149,19 @@ const VisitorList: React.FC = () => {
                             <option value="all">All Status</option>
                             <option value="pending">Pending</option>
                             <option value="contacted">Contacted</option>
-                            <option value="converted">Converted</option>
                         </select>
                         <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
                     </div>
+
+                    <label className="flex items-center gap-2 bg-white px-3 py-2.5 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors shrink-0">
+                        <input
+                            type="checkbox"
+                            checked={showConverted}
+                            onChange={(e) => setShowConverted(e.target.checked)}
+                            className="rounded text-blue-600 focus:ring-blue-500/20 shadow-sm"
+                        />
+                        <span className="text-sm font-bold text-gray-700 whitespace-nowrap">Show Converted</span>
+                    </label>
 
                     <button className="p-2.5 border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 transition-colors bg-white">
                         <Download size={18} />

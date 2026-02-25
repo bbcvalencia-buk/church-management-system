@@ -115,6 +115,7 @@ const MyFinancialRecords: React.FC = () => {
                     .from("financial_records")
                     .select("id, member_id, transaction_date, transaction_type, amount, pledge_purpose, notes, description, created_at")
                     .eq("member_id", memberId)
+                    .is("deleted_at", null)
                     .in("transaction_type", ["tithe", "faith_promise", "love_gift"])
                     .gte("transaction_date", `${year}-01-01`)
                     .lte("transaction_date", `${year}-12-31`)

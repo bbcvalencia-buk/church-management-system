@@ -14,6 +14,7 @@ import SundaySchool from './views/SundaySchool';
 import TreasuryDashboard from './views/TreasuryDashboard';
 import FinancialRecordForm from './views/FinancialRecordForm';
 import FinancialReportPrint from './views/FinancialReportPrint';
+import FaithPromiseStatementPrint from './views/FaithPromiseStatementPrint';
 import SystemSettings from './views/SystemSettings';
 import Activities from './views/Activities';
 import MusicMinistry from './views/MusicMinistry';
@@ -30,15 +31,16 @@ import ChangePassword from './views/ChangePassword';
 import { UserRole } from './types';
 import { deriveTeacherDepartments, SUNDAY_SCHOOL_POSITION_CATEGORIES } from './lib/sundaySchoolAccess';
 
-const CLERK_ROLES = [UserRole.SUPER_ADMIN, UserRole.CHURCH_CLERK];
-const DASHBOARD_ROLES = [UserRole.SUPER_ADMIN, UserRole.CHURCH_CLERK, UserRole.TREASURER];
-const SUNDAY_SCHOOL_ROLES = [UserRole.SUPER_ADMIN, UserRole.SUNDAY_SCHOOL_ADMIN];
-const ACTIVITY_ROLES = [UserRole.SUPER_ADMIN, UserRole.ACTIVITY_COORDINATOR];
-const MUSIC_ROLES = [UserRole.SUPER_ADMIN, UserRole.MUSIC_MINISTER];
-const TREASURY_ROLES = [UserRole.SUPER_ADMIN, UserRole.TREASURER];
-const ADMIN_ROLES = [UserRole.SUPER_ADMIN];
+const CLERK_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK];
+const SERVICE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY];
+const DASHBOARD_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.TREASURER];
+const SUNDAY_SCHOOL_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.SUNDAY_SCHOOL_ADMIN];
+const ACTIVITY_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.ACTIVITY_COORDINATOR, UserRole.RECORDING_SECRETARY];
+const MUSIC_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.MUSIC_MINISTER];
+const TREASURY_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.TREASURER];
+const ADMIN_ROLES = [UserRole.CHURCH_ADMINISTRATOR];
 const MEMBER_ROLES = [UserRole.MEMBER];
-const MEMBER_PROFILE_MANAGER_ROLES = [UserRole.SUPER_ADMIN, UserRole.CHURCH_CLERK, UserRole.SUNDAY_SCHOOL_ADMIN];
+const MEMBER_PROFILE_MANAGER_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.SUNDAY_SCHOOL_ADMIN];
 
 const LoadingScreen: React.FC = () => (
   <div className="min-h-screen bg-[#111] flex items-center justify-center text-white">Loading...</div>
@@ -46,7 +48,7 @@ const LoadingScreen: React.FC = () => (
 
 const hasAllowedRole = (userRoles: string[], allowedRoles: UserRole[]) => {
   if (allowedRoles.length === 0) return true;
-  if (userRoles.includes(UserRole.SUPER_ADMIN)) return true;
+  if (userRoles.includes(UserRole.CHURCH_ADMINISTRATOR)) return true;
   return allowedRoles.some(role => userRoles.includes(role));
 };
 
@@ -347,15 +349,15 @@ function App() {
 
               <Route
                 path="services"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><ServiceList /></RequireRoles>}
+                element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceList /></RequireRoles>}
               />
               <Route
                 path="services/new"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><ServiceForm /></RequireRoles>}
+                element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceForm /></RequireRoles>}
               />
               <Route
                 path="services/:id"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><ServiceForm /></RequireRoles>}
+                element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceForm /></RequireRoles>}
               />
               <Route
                 path="sunday-school"
@@ -384,6 +386,10 @@ function App() {
               <Route
                 path="finance/reports"
                 element={<RequireRoles allowedRoles={TREASURY_ROLES}><FinancialReportPrint /></RequireRoles>}
+              />
+              <Route
+                path="finance/faith-promise-print"
+                element={<RequireRoles allowedRoles={TREASURY_ROLES}><FaithPromiseStatementPrint /></RequireRoles>}
               />
 
               <Route

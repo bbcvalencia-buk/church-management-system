@@ -1,12 +1,12 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import type { FamilyRelationship } from '@/types';
 import { Plus, X, UserPlus, Users } from 'lucide-react';
 import { supabase } from '@/lib/supabase'; // Assuming alias works, or need relative path
 
 interface FamilyFormProps {
-    relationships: Partial<FamilyRelationship>[];
-    onChange: (relationships: Partial<FamilyRelationship>[]) => void;
+    data: any;
+    onChange: (field: string, value: any) => void;
 }
 
 const RELATION_TYPES = {
@@ -27,12 +27,8 @@ const RELATION_TYPES = {
     in_law: 'In-Law',
 };
 
-const FamilyForm: React.FC<FamilyFormProps> = ({ relationships, onChange }) => {
-    const [newRelationName, setNewRelationName] = useState('');
-    const [relationType, setRelationType] = useState<keyof typeof RELATION_TYPES>('spouse');
-
-    // Future: Search existing members to link
-    // const [memberSearch, setMemberSearch] = useState('');
+const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
+    const { relationships = [], newRelationName = '', relationType = 'spouse' } = data;
 
     const addRelation = () => {
         if (!newRelationName.trim()) return;
@@ -42,14 +38,14 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ relationships, onChange }) => {
             relationship_type: relationType,
         };
 
-        onChange([...relationships, relation]);
-        setNewRelationName('');
+        onChange('relationships', [...relationships, relation]);
+        onChange('newRelationName', '');
     };
 
     const removeRelation = (index: number) => {
         const newRelations = [...relationships];
         newRelations.splice(index, 1);
-        onChange(newRelations);
+        onChange('relationships', newRelations);
     };
 
     return (
@@ -62,7 +58,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ relationships, onChange }) => {
                     <input
                         type="text"
                         value={newRelationName}
-                        onChange={(e) => setNewRelationName(e.target.value)}
+                        onChange={(e) => onChange('newRelationName', e.target.value)}
                         placeholder="e.g. Maria Santos"
                     />
                 </div>
@@ -70,7 +66,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ relationships, onChange }) => {
                     <label className="text-sm font-medium text-[var(--color-text-muted)]">Relationship</label>
                     <select
                         value={relationType}
-                        onChange={(e) => setRelationType(e.target.value as any)}
+                        onChange={(e) => onChange('relationType', e.target.value)}
                     >
                         {Object.entries(RELATION_TYPES).map(([key, label]) => (
                             <option key={key} value={key}>{label}</option>
@@ -91,7 +87,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ relationships, onChange }) => {
                     <p className="text-center text-[var(--color-text-muted)] py-4">No family members linked yet.</p>
                 )}
 
-                {relationships.map((rel, idx) => (
+                {relationships.map((rel: any, idx: number) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 group">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg">

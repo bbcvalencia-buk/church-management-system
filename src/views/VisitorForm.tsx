@@ -7,6 +7,8 @@ import type { Visitor, Member } from '@/types';
 import MultiImageUpload from '@/components/MultiImageUpload';
 import { useToast } from '@/contexts/ToastContext';
 import { User, Phone, MapPin, Calendar, Heart, ArrowLeft, Save, UserPlus, CheckCircle, Upload, FileText } from 'lucide-react';
+import ConvertToMemberModal from '@/components/ConvertToMemberModal';
+import { useAuth } from '@/contexts/AuthContext';
 
 const VisitorForm: React.FC = () => {
     const { id } = useParams();
@@ -25,8 +27,10 @@ const VisitorForm: React.FC = () => {
         visitor_card_images: []
     });
     const [loading, setLoading] = useState(isEditMode);
-    const [converting, setConverting] = useState(false);
     const [activeTab, setActiveTab] = useState('visit');
+    const [showConvertModal, setShowConvertModal] = useState(false);
+    const { roles } = useAuth();
+    const canConvert = roles.includes('church_administrator') || roles.includes('church_clerk');
 
     const TABS = [
         { id: 'visit', label: 'Visit Details', icon: Calendar },
@@ -57,49 +61,10 @@ const VisitorForm: React.FC = () => {
         setVisitor(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleConvertToMember = async () => {
-        if (!visitor.member_id) {
-            showToast("No linked member record found.", 'error');
-            return;
-        }
-        const baptismDate = prompt("Please enter Baptism Date (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-        if (!baptismDate) return;
-
-        setConverting(true);
-        try {
-            // 1. Update Shadow Member to Regular Member
-            const { error: mError } = await supabase
-                .from('members')
-                .update({
-                    is_visitor: false,
-                    is_regular_member: true,
-                    membership_status: 'active',
-                    baptism_date: baptismDate,
-                    membership_date: baptismDate // Rule: Membership Date is set to Baptism Date
-                })
-                .eq('id', visitor.member_id);
-
-            if (mError) throw mError;
-
-            // 2. Mark Visitor as converted
-            const { error: vError } = await supabase
-                .from('visitors')
-                .update({
-                    converted_to_member: true,
-                    conversion_date: new Date().toISOString().split('T')[0],
-                    follow_up_status: 'converted'
-                })
-                .eq('id', id);
-
-            if (vError) throw vError;
-
-            showToast("Successfully converted to regular member!", 'success');
-            navigate(`/members/${visitor.member_id}`);
-        } catch (err: any) {
-            showToast("Conversion failed: " + err.message, 'error');
-        } finally {
-            setConverting(false);
-        }
+    const handleConversionSuccess = (newMemberId: string) => {
+        showToast("Successfully converted to regular member!", 'success');
+        setShowConvertModal(false);
+        navigate(`/members/${newMemberId}`);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -111,51 +76,18 @@ const VisitorForm: React.FC = () => {
             const visitorData = { ...visitor };
 
             if (isEditMode) {
-                // Update linked member basic info first
-                if (visitor.member_id) {
-                    const memberUpdate = {
-                        first_name: visitor.name?.split(' ')[0] || '',
-                        surname: visitor.name?.split(' ').slice(1).join(' ') || 'Visitor',
-                        gender: visitor.gender,
-                        civil_status: visitor.marital_status as any,
-                        home_address: visitor.address,
-                        phone_number: visitor.contact_number,
-                        date_of_birth: visitor.date_of_birth || '1900-01-01'
-                    };
-                    const { error: mError } = await supabase.from('members').update(memberUpdate).eq('id', visitor.member_id);
-                    if (mError) throw mError;
-                }
-
                 const { error } = await supabase.from('visitors').update(visitorData).eq('id', id);
                 if (error) throw error;
                 showToast("Visitor updated successfully!", 'success');
             } else {
-                // 1. Create Shadow Member Record
-                const { data: newMember, error: mError } = await supabase
-                    .from('members')
-                    .insert([{
-                        first_name: visitor.name?.split(' ')[0] || '',
-                        surname: visitor.name?.split(' ').slice(1).join(' ') || 'Visitor',
-                        gender: visitor.gender,
-                        civil_status: visitor.marital_status as any,
-                        home_address: visitor.address || 'Unknown',
-                        phone_number: visitor.contact_number || 'N/A',
-                        date_of_birth: visitor.date_of_birth || '1900-01-01',
-                        is_visitor: true,
-                        is_regular_member: false,
-                        membership_status: 'active'
-                    }])
-                    .select()
-                    .single();
-
-                if (mError) throw mError;
-
-                // 2. Create Visitor Record linked to member
+                // 1. Create Visitor directly. No need for shadow members anymore.
                 const { data: newVisitor, error } = await supabase
                     .from('visitors')
                     .insert([{
                         ...visitorData,
-                        member_id: newMember.id,
+                        name: visitorData.name?.trim() || 'Unknown',
+                        address: visitorData.address?.trim() || 'Unknown',
+                        contact_number: visitorData.contact_number?.trim() || 'N/A',
                         visitor_card_images: visitor.visitor_card_images || []
                     }])
                     .select()
@@ -459,7 +391,7 @@ const VisitorForm: React.FC = () => {
                                     </div>
                                 </label>
 
-                                {isEditMode && !visitor.converted_to_member && (
+                                {isEditMode && canConvert && !visitor.converted_to_member && visitor.status !== 'converted' && (
                                     <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between bg-white rounded-xl p-4 border shadow-sm">
                                         <div>
                                             <span className="font-bold text-gray-900 text-sm">Convert to Member</span>
@@ -467,19 +399,18 @@ const VisitorForm: React.FC = () => {
                                         </div>
                                         <button
                                             type="button"
-                                            onClick={handleConvertToMember}
-                                            disabled={converting}
+                                            onClick={() => setShowConvertModal(true)}
                                             className="text-green-600 bg-white hover:bg-green-50 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors text-sm font-bold border-2 border-green-200"
                                         >
                                             <CheckCircle size={18} />
-                                            {converting ? 'Converting...' : 'Baptized: Convert to Member'}
+                                            Convert to Member
                                         </button>
                                     </div>
                                 )}
-                                {visitor.converted_to_member && (
+                                {(visitor.converted_to_member || visitor.status === 'converted') && (
                                     <div className="pt-4 mt-4 border-t border-gray-100">
                                         <div className="flex items-center gap-2 text-green-600 text-sm font-bold px-4 py-3 bg-green-50 rounded-xl border border-green-200 w-full justify-center">
-                                            <CheckCircle size={18} /> Regular Member Status
+                                            <CheckCircle size={18} /> Fully Converted Member
                                         </div>
                                     </div>
                                 )}
@@ -511,6 +442,13 @@ const VisitorForm: React.FC = () => {
                     </form>
                 </div>
             </div>
+
+            <ConvertToMemberModal
+                visitor={visitor}
+                isOpen={showConvertModal}
+                onClose={() => setShowConvertModal(false)}
+                onSuccess={handleConversionSuccess}
+            />
         </div>
     );
 };

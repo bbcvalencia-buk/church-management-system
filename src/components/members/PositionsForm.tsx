@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import type { ChurchPosition } from '@/types';
 import { Plus, X, Star } from 'lucide-react';
 
 interface PositionsFormProps {
-    positions: Partial<ChurchPosition>[];
-    onChange: (positions: Partial<ChurchPosition>[]) => void;
+    data: any;
+    onChange: (field: string, value: any) => void;
 }
 
 const CATEGORY_OPTIONS = [
@@ -38,11 +38,11 @@ const getCategoryLabel = (category?: string) => {
     return CATEGORY_LABELS[category] || category.replace(/_/g, ' ');
 };
 
-const PositionsForm: React.FC<PositionsFormProps> = ({ positions, onChange }) => {
-    const [newPosition, setNewPosition] = useState<Partial<ChurchPosition>>(createInitialPosition());
+const PositionsForm: React.FC<PositionsFormProps> = ({ data, onChange }) => {
+    const { positions = [], newPosition = createInitialPosition() } = data;
 
     const updateDraft = (field: keyof ChurchPosition, value: any) => {
-        setNewPosition(prev => ({ ...prev, [field]: value }));
+        onChange('newPosition', { ...newPosition, [field]: value });
     };
 
     const addPosition = () => {
@@ -78,14 +78,14 @@ const PositionsForm: React.FC<PositionsFormProps> = ({ positions, onChange }) =>
             }
         }
 
-        onChange(updated);
-        setNewPosition(createInitialPosition());
+        onChange('positions', updated);
+        onChange('newPosition', createInitialPosition());
     };
 
     const removePosition = (index: number) => {
         const next = [...positions];
         next.splice(index, 1);
-        onChange(next);
+        onChange('positions', next);
     };
 
     return (
@@ -176,7 +176,7 @@ const PositionsForm: React.FC<PositionsFormProps> = ({ positions, onChange }) =>
                     <p className="text-center text-gray-500 py-4">No positions assigned yet.</p>
                 )}
 
-                {positions.map((pos, idx) => (
+                {positions.map((pos: any, idx: number) => (
                     <div key={idx} className="rounded-xl border border-gray-100 bg-white p-4">
                         <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
@@ -214,4 +214,3 @@ const PositionsForm: React.FC<PositionsFormProps> = ({ positions, onChange }) =>
 };
 
 export default PositionsForm;
-

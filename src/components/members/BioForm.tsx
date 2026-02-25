@@ -3,14 +3,14 @@ import React from 'react';
 import type { Member } from '@/types';
 
 interface BioFormProps {
-    data: Partial<Member>;
-    onChange: (data: Partial<Member>) => void;
+    data: any;
+    onChange: (field: string, value: any) => void;
 }
 
 const BioForm: React.FC<BioFormProps> = ({ data, onChange }) => {
     // Helper to update fields
-    const update = (field: keyof Member, value: any) => {
-        onChange({ ...data, [field]: value });
+    const update = (field: string, value: any) => {
+        onChange(field, value);
     };
 
     // Calculate age if DOB changes

@@ -77,7 +77,7 @@ const normalizeDraftVisitors = (visitors: DraftVisitor[]) => {
 const SundaySchool: React.FC = () => {
     const { member: currentMember, roles, loading: authLoading } = useAuth();
     const isSundaySchoolAdmin =
-        roles.includes(UserRole.SUPER_ADMIN) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN);
+        roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.PASTOR) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN);
 
     const [sessions, setSessions] = useState<SundaySchoolSession[]>([]);
     const [members, setMembers] = useState<any[]>([]);
@@ -190,7 +190,7 @@ const SundaySchool: React.FC = () => {
         if (isSundaySchoolAdmin) {
             const { data: allMembers, error: allMembersError } = await supabase
                 .from("members")
-                .select("id, first_name, surname, is_visitor, profile_picture_url, phone_number, home_address, date_of_birth, gender, civil_status")
+                .select("id, first_name, surname, profile_picture_url, phone_number, home_address, date_of_birth, gender, civil_status")
                 .order("surname", { ascending: true })
                 .order("first_name", { ascending: true });
 
@@ -293,7 +293,7 @@ const SundaySchool: React.FC = () => {
 
         const { data: studentData, error: studentError } = await supabase
             .from("members")
-            .select("id, first_name, surname, is_visitor, profile_picture_url, phone_number, home_address, date_of_birth, gender, civil_status")
+            .select("id, first_name, surname, profile_picture_url, phone_number, home_address, date_of_birth, gender, civil_status")
             .in("id", studentIds)
             .order("surname", { ascending: true })
             .order("first_name", { ascending: true });
@@ -400,14 +400,15 @@ const SundaySchool: React.FC = () => {
             const invalidCardIndex = preparedVisitors.findIndex(visitor =>
                 !visitor.name || !visitor.address || !visitor.contact
             );
-
             if (invalidCardIndex >= 0) {
                 throw new Error(`Visitor card #${invalidCardIndex + 1} is incomplete. Name, Address, and Contact No. are required.`);
             }
 
-            const visitorMemberIds = new Set(
-                members.filter((m) => m.is_visitor).map((m) => m.id)
-            );
+            const totalVisitors = new Set(
+                attendanceMembers.filter(() => false).map((m) => m.id)
+            ).size;
+
+            const visitorMemberIds = new Set<string>();
             const selectedVisitorIds = selectedMemberIds.filter((id) => visitorMemberIds.has(id));
             const selectedRegularIds = selectedMemberIds.filter((id) => !visitorMemberIds.has(id));
 
@@ -446,10 +447,10 @@ const SundaySchool: React.FC = () => {
                 if (isVisitorCache.has(memberId)) return isVisitorCache.get(memberId)!;
                 const { data: memberData } = await supabase
                     .from('members')
-                    .select('is_visitor')
+                    .select('id')
                     .eq('id', memberId)
                     .single();
-                const flag = !!memberData?.is_visitor;
+                const flag = !!false;
                 isVisitorCache.set(memberId, flag);
                 return flag;
             };
@@ -501,34 +502,8 @@ const SundaySchool: React.FC = () => {
                     });
 
                     if (matchedMember) {
-                        if (matchedMember.is_visitor) {
-                            cardVisitorMemberIds.push(matchedMember.id);
-
-                            await supabase.from('visitors').insert([{
-                                member_id: matchedMember.id,
-                                name: visitor.name,
-                                contact_number: visitor.contact || '',
-                                age: visitor.age,
-                                gender: visitor.gender,
-                                visit_date: visitor.visit_date || savedSession.session_date,
-                                visit_time: visitor.visit_time || 'AM',
-                                marital_status: visitor.marital_status || 'Single',
-                                visitor_card_images: visitor.images || [],
-                                address: visitor.address || '',
-                                office_address: visitor.office_address || '',
-                                church_name: visitor.church_name || '',
-                                date_of_birth: visitor.date_of_birth,
-                                invited_by: visitor.invited_by || '',
-                                service_id: null,
-                                sunday_school_session_id: savedSession.id,
-                                is_saved: false,
-                                is_prospect_for_baptism: false,
-                                follow_up_status: 'pending'
-                            } as any]);
-                        } else {
-                            // Existing regular member detected from visitor card.
-                            cardRegularMemberIds.push(matchedMember.id);
-                        }
+                        // Existing regular member detected
+                        cardRegularMemberIds.push(matchedMember.id);
                         continue;
                     }
 
@@ -540,7 +515,7 @@ const SundaySchool: React.FC = () => {
                         .insert([{
                             first_name: parsedName.firstName || 'Visitor',
                             surname: parsedName.surname || '',
-                            is_visitor: true,
+
                             is_regular_member: false,
                             membership_status: 'active',
                             home_address: visitor.address || 'Unknown',
@@ -712,7 +687,7 @@ const SundaySchool: React.FC = () => {
     const paginatedSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
     const visitorMemberIdsInModal = new Set(
-        attendanceMembers.filter((m) => m.is_visitor).map((m) => m.id)
+        attendanceMembers.filter((m) => false).map((m) => m.id)
     );
     const selectedVisitorCountInModal = selectedMemberIds.filter((id) => visitorMemberIdsInModal.has(id)).length;
     const selectedRegularCountInModal = selectedMemberIds.length - selectedVisitorCountInModal;

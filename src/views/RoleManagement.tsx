@@ -16,15 +16,33 @@ import { UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 
+import ConfirmModal from '@/components/ConfirmModal';
+
 // Define roles with descriptions
 const ROLE_DESCRIPTIONS = {
-    [UserRole.SUPER_ADMIN]: "Full system access. Can manage settings, users, and all data.",
+    [UserRole.CHURCH_ADMINISTRATOR]: "Full system access. Can manage settings, users, and all data.",
+    [UserRole.PASTOR]: "Read-only access to all records and data.",
     [UserRole.CHURCH_CLERK]: "Manages members, visitors, services, and attendance records.",
     [UserRole.TREASURER]: "Manages financial records, reports, faith promise, and audits.",
+    [UserRole.RECORDING_SECRETARY]: "Records attendance and updates services and activities.",
     [UserRole.MUSIC_MINISTER]: "Manages music ministry members, attendance, and songs.",
     [UserRole.SUNDAY_SCHOOL_ADMIN]: "Manages Sunday School departments, teachers, and records.",
+    [UserRole.GOODNEWS_TEACHER]: "Manages Good News class records.",
     [UserRole.ACTIVITY_COORDINATOR]: "Manages church activities, soul winning, and outreach records.",
     [UserRole.MEMBER]: "View-only personal access. Can open own profile and My Financials.",
+};
+
+const ROLE_BADGE_COLORS: Record<string, string> = {
+    [UserRole.CHURCH_ADMINISTRATOR]: 'bg-slate-800 text-white border-slate-700',
+    [UserRole.PASTOR]: 'bg-purple-100 text-purple-700 border-purple-200',
+    [UserRole.CHURCH_CLERK]: 'bg-blue-100 text-blue-700 border-blue-200',
+    [UserRole.TREASURER]: 'bg-green-100 text-green-700 border-green-200',
+    [UserRole.RECORDING_SECRETARY]: 'bg-teal-100 text-teal-700 border-teal-200',
+    [UserRole.MUSIC_MINISTER]: 'bg-orange-100 text-orange-700 border-orange-200',
+    [UserRole.SUNDAY_SCHOOL_ADMIN]: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+    [UserRole.GOODNEWS_TEACHER]: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    [UserRole.ACTIVITY_COORDINATOR]: 'bg-amber-100 text-amber-700 border-amber-200',
+    [UserRole.MEMBER]: 'bg-gray-100 text-gray-700 border-gray-200',
 };
 
 interface MemberRole {
@@ -57,6 +75,7 @@ const RoleManagement: React.FC = () => {
     const [resolvingRequestId, setResolvingRequestId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [editRequests, setEditRequests] = useState<ProfileEditRequest[]>([]);
+    const [confirmAdminObj, setConfirmAdminObj] = useState<{ memberId: string, role: string } | null>(null);
 
     useEffect(() => {
         fetchData();
@@ -124,6 +143,11 @@ const RoleManagement: React.FC = () => {
     };
 
     const toggleRole = async (memberId: string, role: string, create: boolean) => {
+        if (create && role === UserRole.CHURCH_ADMINISTRATOR && !confirmAdminObj) {
+            setConfirmAdminObj({ memberId, role });
+            return;
+        }
+
         setSaving(true);
         try {
             if (create) {
@@ -207,7 +231,7 @@ const RoleManagement: React.FC = () => {
                     <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Your Access:</span>
                     {roles.length > 0 ? (
                         roles.map(r => (
-                            <span key={r} className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wide">
+                            <span key={r} className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${ROLE_BADGE_COLORS[r] || 'bg-blue-50 text-blue-600 border-blue-100'}`}>
                                 {r.replace(/_/g, ' ')}
                             </span>
                         ))
@@ -427,6 +451,22 @@ const RoleManagement: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {confirmAdminObj && (
+                <ConfirmModal
+                    isOpen={true}
+                    title="Grant Church Administrator Access?"
+                    message="Are you sure you want to grant full system access to this user? They will have complete control over settings, users, and all data."
+                    confirmText="Grant Access"
+                    onConfirm={() => {
+                        const targetId = confirmAdminObj.memberId;
+                        const targetRole = confirmAdminObj.role;
+                        setConfirmAdminObj(null);
+                        toggleRole(targetId, targetRole, true);
+                    }}
+                    onCancel={() => setConfirmAdminObj(null)}
+                />
+            )}
         </div>
     );
 };

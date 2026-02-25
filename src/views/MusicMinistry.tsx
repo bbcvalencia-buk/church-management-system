@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { getLatestSundayISODate } from "@/lib/date";
+import { exportToCSV } from "@/lib/csv";
 import {
     Music,
     Calendar,
@@ -44,6 +45,7 @@ export interface Member {
     first_name: string;
     surname: string;
     profile_picture_url?: string;
+    member_number?: string;
 }
 
 interface MusicPositionAssignment {
@@ -208,9 +210,8 @@ const MusicMinistry: React.FC = () => {
 
         const { data, error } = await supabase
             .from('members')
-            .select('id, first_name, surname, profile_picture_url')
+            .select('id, first_name, surname, profile_picture_url, member_number')
             .in('id', musicMemberIds)
-            .or('is_visitor.eq.false,is_visitor.is.null')
             .order('surname', { ascending: true })
             .order('first_name', { ascending: true });
 
@@ -455,7 +456,25 @@ const MusicMinistry: React.FC = () => {
                             <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                                 <Printer size={16} /> Print Report
                             </button>
-                            <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                            <button
+                                onClick={() => {
+                                    if (!viewSession) return;
+                                    const exportData = viewMembers.map(m => ({
+                                        member_number: m.member_number || '',
+                                        surname: m.surname,
+                                        first_name: m.first_name,
+                                        status: viewSessionAttendance.includes(m.id) ? 'Present' : 'Absent'
+                                    }));
+                                    const filename = `Music_Attendance_${viewSession.practice_type}_${viewSession.practice_date}.csv`;
+                                    exportToCSV(filename, exportData, [
+                                        { key: 'member_number', label: 'Member #' },
+                                        { key: 'surname', label: 'Surname' },
+                                        { key: 'first_name', label: 'First Name' },
+                                        { key: 'status', label: 'Status' }
+                                    ]);
+                                }}
+                                className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2"
+                            >
                                 <Download size={16} /> Export to CSV
                             </button>
                             <button

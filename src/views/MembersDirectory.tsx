@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { Member } from "../types";
 import { MemberCard } from "../components/MemberCard";
-import { Plus, Search, Filter } from "lucide-react";
+import { Plus, Search, Filter, Download } from "lucide-react";
+import { exportToCSV } from "../lib/csv";
 
 const MembersDirectory: React.FC = () => {
     const [members, setMembers] = useState<Member[]>([]);
@@ -39,11 +40,11 @@ const MembersDirectory: React.FC = () => {
         const matchesSearch =
             member.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             member.surname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            member.nickname?.toLowerCase().includes(searchTerm.toLowerCase());
+            member.nickname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            member.member_number?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesFilter =
             (filterStatus === "all") ||
-            (filterStatus === "visitors" && member.is_visitor) ||
             (filterStatus === "regular" && member.is_regular_member) ||
             (member.membership_status === filterStatus);
 
@@ -61,13 +62,47 @@ const MembersDirectory: React.FC = () => {
                         Manage church members, track details, and view profiles.
                     </p>
                 </div>
-                <Link
-                    to="/members/new"
-                    className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20"
-                >
-                    <Plus size={18} />
-                    <span>Add Member</span>
-                </Link>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => {
+                            const exportData = filteredMembers.map(m => ({
+                                member_number: m.member_number || '',
+                                surname: m.surname,
+                                first_name: m.first_name,
+                                middle_name: m.middle_name || '',
+                                nickname: m.nickname || '',
+                                gender: m.gender,
+                                civil_status: m.civil_status,
+                                phone_number: m.phone_number,
+                                home_address: m.home_address,
+                                membership_status: m.membership_status
+                            }));
+                            exportToCSV('Church_Members_Directory.csv', exportData, [
+                                { key: 'member_number', label: 'Member #' },
+                                { key: 'surname', label: 'Surname' },
+                                { key: 'first_name', label: 'First Name' },
+                                { key: 'middle_name', label: 'Middle Name' },
+                                { key: 'nickname', label: 'Nickname' },
+                                { key: 'gender', label: 'Gender' },
+                                { key: 'civil_status', label: 'Civil Status' },
+                                { key: 'phone_number', label: 'Phone' },
+                                { key: 'home_address', label: 'Address' },
+                                { key: 'membership_status', label: 'Status' }
+                            ]);
+                        }}
+                        className="bg-white border border-[var(--color-border)] text-[var(--color-text-main)] hover:bg-gray-50 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-medium"
+                    >
+                        <Download size={18} />
+                        <span>Export CSV</span>
+                    </button>
+                    <Link
+                        to="/members/new"
+                        className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20"
+                    >
+                        <Plus size={18} />
+                        <span>Add Member</span>
+                    </Link>
+                </div>
             </div>
 
             {/* Filters & Search - Floating Style */}
@@ -94,7 +129,6 @@ const MembersDirectory: React.FC = () => {
                     >
                         <option value="all">All People</option>
                         <option value="regular">Regular Members</option>
-                        <option value="visitors">Visitors (Non-Members)</option>
                         <option value="active">Active Members</option>
                         <option value="inactive">Inactive</option>
                         <option value="under_discipline">Under Discipline</option>
