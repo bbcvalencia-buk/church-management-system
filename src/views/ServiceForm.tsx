@@ -470,7 +470,7 @@ const ServiceForm: React.FC = () => {
             const allMemberIds = Array.from(new Set([...uniqueRegularIds, ...uniqueVisitorIds]));
 
             await serviceService.upsertService({
-                id: savedService.id,
+                ...savedService,
                 members_present: finalMembersCount,
                 visitors_present: finalVisitorsCount,
                 souls_saved: soulsSaved,

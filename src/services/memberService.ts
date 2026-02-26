@@ -390,7 +390,7 @@ export const getMemberAttendanceRates = async (): Promise<Record<string, { count
         .from('attendance_log')
         .select('member_id')
         .eq('event_type', 'service')
-        .eq('status', 'present');
+        .eq('was_present', true);
 
     if (err2) {
         throw new Error(`Failed to get attendance data: ${err2.message}`);

@@ -129,7 +129,7 @@ const GoodnewsClass = () => {
         try {
             const payload = {
                 id: seriesForm.id,
-                title: seriesForm.title,
+                title: seriesForm.area, // Title is now automatically the area
                 area: seriesForm.area,
                 location: seriesForm.location,
                 start_date: seriesForm.start_date,
@@ -252,7 +252,7 @@ const GoodnewsClass = () => {
                                         className="border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group bg-white shadow-sm flex flex-col"
                                     >
                                         <div className="flex justify-between items-start mb-2">
-                                            <h3 className="font-black text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">{series.title}</h3>
+                                            <h3 className="font-black text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">{series.area}</h3>
                                             <span className={`text-[10px] shrink-0 font-bold uppercase px-2 py-1 rounded-full ${series.status === 'ongoing' ? 'bg-green-100 text-green-700' :
                                                 series.status === 'completed' ? 'bg-gray-100 text-gray-700' :
                                                     'bg-amber-100 text-amber-700'
@@ -315,9 +315,9 @@ const GoodnewsClass = () => {
                                             'bg-amber-100 text-amber-700'
                                         }`}>{viewingSeries.status}</span>
                                 </div>
-                                <h2 className="text-3xl font-black text-gray-900">{viewingSeries.title}</h2>
+                                <h2 className="text-3xl font-black text-gray-900">{viewingSeries.area}</h2>
                                 <div className="flex items-center gap-4 mt-4 text-sm text-gray-600">
-                                    <span className="flex items-center gap-1.5 font-bold"><MapPin size={16} className="text-red-400" /> {viewingSeries.area} {viewingSeries.location ? `(${viewingSeries.location})` : ''}</span>
+                                    {viewingSeries.location && <span className="flex items-center gap-1.5 font-bold"><MapPin size={16} className="text-red-400" /> {viewingSeries.location}</span>}
                                     <span className="flex items-center gap-1.5"><Calendar size={16} className="text-blue-400" /> Started: {new Date(viewingSeries.start_date).toLocaleDateString()}</span>
                                     <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
                                         <User size={14} className="text-gray-400" />
@@ -494,336 +494,329 @@ const GoodnewsClass = () => {
                         )}
                     </div>
                 </div>
-            )}
+            )
+            }
 
             {/* Series Form Modal */}
-            {showSeriesForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm font-sans animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
-                                <BookOpen size={20} className="text-blue-600" />
-                                {seriesForm.id ? 'Edit Goodnews Series' : 'Create New Series'}
-                            </h2>
-                            <button onClick={() => setShowSeriesForm(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 bg-white rounded-md border border-gray-200">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Series Title *</label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="e.g. Genesis Foundation"
-                                    value={seriesForm.title || ''}
-                                    onChange={(e) => setSeriesForm({ ...seriesForm, title: e.target.value })}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Area/Barangay *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="e.g. Bagontaas"
-                                        value={seriesForm.area || ''}
-                                        onChange={(e) => setSeriesForm({ ...seriesForm, area: e.target.value })}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Specific Location</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Purok 5 Covered Court"
-                                        value={seriesForm.location || ''}
-                                        onChange={(e) => setSeriesForm({ ...seriesForm, location: e.target.value })}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Lead Teacher</label>
-                                    <select
-                                        value={seriesForm.lead_member_id || ''}
-                                        onChange={(e) => setSeriesForm({ ...seriesForm, lead_member_id: e.target.value || undefined })}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
-                                    >
-                                        <option value="">-- Unassigned --</option>
-                                        {members.map(m => (
-                                            <option key={m.id} value={m.id}>{m.first_name} {m.surname}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Status</label>
-                                    <select
-                                        value={seriesForm.status || 'ongoing'}
-                                        onChange={(e) => setSeriesForm({ ...seriesForm, status: e.target.value as any })}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold"
-                                    >
-                                        <option value="ongoing">Ongoing</option>
-                                        <option value="paused">Paused</option>
-                                        <option value="completed">Completed</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Start Date *</label>
-                                    <input
-                                        type="date"
-                                        required
-                                        value={seriesForm.start_date || ''}
-                                        onChange={(e) => setSeriesForm({ ...seriesForm, start_date: e.target.value })}
-                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">End Date</label>
-                                    <input
-                                        type="date"
-                                        disabled={seriesForm.status !== 'completed'}
-                                        value={seriesForm.end_date || ''}
-                                        onChange={(e) => setSeriesForm({ ...seriesForm, end_date: e.target.value })}
-                                        className="w-full disabled:bg-gray-100 disabled:text-gray-400 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Notes / Description</label>
-                                <textarea
-                                    rows={3}
-                                    placeholder="Any additional information..."
-                                    value={seriesForm.notes || ''}
-                                    onChange={(e) => setSeriesForm({ ...seriesForm, notes: e.target.value })}
-                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="p-4 px-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-                            {seriesForm.id ? (
-                                <button
-                                    onClick={() => setConfirmDelete({ isOpen: true, type: 'series', id: seriesForm.id! })}
-                                    className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors uppercase tracking-widest"
-                                >
-                                    Delete
+            {
+                showSeriesForm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm font-sans animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
+                            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
+                                    <BookOpen size={20} className="text-blue-600" />
+                                    {seriesForm.id ? 'Edit Goodnews Series' : 'Create New Series'}
+                                </h2>
+                                <button onClick={() => setShowSeriesForm(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 bg-white rounded-md border border-gray-200">
+                                    <X size={20} />
                                 </button>
-                            ) : <div></div>}
-                            <div className="flex gap-3">
+                            </div>
+
+                            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Area/Barangay *</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="e.g. Bagontaas"
+                                            value={seriesForm.area || ''}
+                                            onChange={(e) => setSeriesForm({ ...seriesForm, area: e.target.value })}
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Specific Location</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Purok 5 Covered Court"
+                                            value={seriesForm.location || ''}
+                                            onChange={(e) => setSeriesForm({ ...seriesForm, location: e.target.value })}
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Lead Teacher</label>
+                                        <select
+                                            value={seriesForm.lead_member_id || ''}
+                                            onChange={(e) => setSeriesForm({ ...seriesForm, lead_member_id: e.target.value || undefined })}
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                                        >
+                                            <option value="">-- Unassigned --</option>
+                                            {members.map(m => (
+                                                <option key={m.id} value={m.id}>{m.first_name} {m.surname}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Status</label>
+                                        <select
+                                            value={seriesForm.status || 'ongoing'}
+                                            onChange={(e) => setSeriesForm({ ...seriesForm, status: e.target.value as any })}
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all font-bold"
+                                        >
+                                            <option value="ongoing">Ongoing</option>
+                                            <option value="paused">Paused</option>
+                                            <option value="completed">Completed</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Start Date *</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={seriesForm.start_date || ''}
+                                            onChange={(e) => setSeriesForm({ ...seriesForm, start_date: e.target.value })}
+                                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">End Date</label>
+                                        <input
+                                            type="date"
+                                            disabled={seriesForm.status !== 'completed'}
+                                            value={seriesForm.end_date || ''}
+                                            onChange={(e) => setSeriesForm({ ...seriesForm, end_date: e.target.value })}
+                                            className="w-full disabled:bg-gray-100 disabled:text-gray-400 bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-widest mb-1.5">Notes / Description</label>
+                                    <textarea
+                                        rows={3}
+                                        placeholder="Any additional information..."
+                                        value={seriesForm.notes || ''}
+                                        onChange={(e) => setSeriesForm({ ...seriesForm, notes: e.target.value })}
+                                        className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="p-4 px-6 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                {seriesForm.id ? (
+                                    <button
+                                        onClick={() => setConfirmDelete({ isOpen: true, type: 'series', id: seriesForm.id! })}
+                                        className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors uppercase tracking-widest"
+                                    >
+                                        Delete
+                                    </button>
+                                ) : <div></div>}
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setShowSeriesForm(false)}
+                                        className="px-4 py-2 font-bold text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSaveSeries}
+                                        disabled={submitting || !seriesForm.area || !seriesForm.start_date}
+                                        className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                    >
+                                        {submitting ? 'Saving...' : 'Save Series'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Session Form Modal */}
+            {
+                showSessionForm && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm font-sans animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
+                            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
+                                    <ClipboardList size={20} className="text-green-600" />
+                                    {sessionForm.id ? 'Edit Session' : 'Add New Session'}
+                                </h2>
+                                <button onClick={() => setShowSessionForm(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 bg-white rounded-md border border-gray-200">
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Session Number</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            required
+                                            value={sessionForm.session_number || ''}
+                                            onChange={(e) => setSessionForm({ ...sessionForm, session_number: parseInt(e.target.value) || 1 })}
+                                            className="w-full bg-white border border-gray-200 rounded-xl p-3 text-lg font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={sessionForm.date || ''}
+                                            onChange={(e) => setSessionForm({ ...sessionForm, date: e.target.value })}
+                                            className="w-full bg-white border border-gray-200 rounded-xl p-3 text-lg text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Lesson Topic (Optional)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Creation"
+                                        value={sessionForm.lesson_topic || ''}
+                                        onChange={(e) => setSessionForm({ ...sessionForm, lesson_topic: e.target.value })}
+                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-6 p-4 rounded-xl border border-gray-100 bg-gray-50/50">
+                                    <div>
+                                        <label className="block text-[10px] items-center gap-1 font-bold text-sky-600 uppercase tracking-widest mb-1.5 flex"><Users size={12} /> Children Attendance</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={sessionForm.children_count === 0 && !sessionForm.id ? '' : sessionForm.children_count}
+                                            onChange={(e) => setSessionForm({ ...sessionForm, children_count: parseInt(e.target.value) || 0 })}
+                                            className="w-full bg-white border border-sky-200 rounded-xl p-3 text-center text-2xl font-black text-sky-700 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none shadow-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] items-center gap-1 font-bold text-rose-600 uppercase tracking-widest mb-1.5 flex"><Heart size={12} /> Souls Saved</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={sessionForm.souls_saved_count === 0 && !sessionForm.id ? '' : sessionForm.souls_saved_count}
+                                            onChange={(e) => setSessionForm({ ...sessionForm, souls_saved_count: parseInt(e.target.value) || 0 })}
+                                            className="w-full bg-white border border-rose-200 rounded-xl p-3 text-center text-2xl font-black text-rose-700 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none shadow-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Notes</label>
+                                    <textarea
+                                        rows={2}
+                                        placeholder="Additional session details..."
+                                        value={sessionForm.notes || ''}
+                                        onChange={(e) => setSessionForm({ ...sessionForm, notes: e.target.value })}
+                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    />
+                                </div>
+
+                                {/* Member Selection for Session */}
+                                <div className="border-t border-gray-100 pt-6">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2"><Users size={16} className="text-blue-500" /> Church Members Participating</h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSessionMembers([...sessionMembers, { member_id: '', role: 'teacher', notes: '' }]);
+                                            }}
+                                            className="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors"
+                                        >
+                                            + Add Member
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {sessionMembers.length === 0 ? (
+                                            <p className="text-xs text-gray-400 italic text-center p-4 border border-dashed border-gray-200 rounded-xl bg-gray-50/50">No members added to this session yet.</p>
+                                        ) : (
+                                            sessionMembers.map((sm, index) => (
+                                                <div key={index} className="flex gap-2 items-start bg-gray-50/50 p-2.5 rounded-xl border border-gray-100 group">
+                                                    <div className="flex-1 space-y-2">
+                                                        <div className="flex gap-2">
+                                                            <select
+                                                                value={sm.member_id}
+                                                                onChange={(e) => {
+                                                                    const newMembers = [...sessionMembers];
+                                                                    newMembers[index].member_id = e.target.value;
+                                                                    setSessionMembers(newMembers);
+                                                                }}
+                                                                className="flex-1 bg-white border border-gray-200 rounded-lg p-2 text-xs font-bold text-gray-900"
+                                                            >
+                                                                <option value="" disabled>Select Member...</option>
+                                                                {members.map(m => (
+                                                                    <option key={m.id} value={m.id}>{m.surname}, {m.first_name}</option>
+                                                                ))}
+                                                            </select>
+
+                                                            <select
+                                                                value={sm.role}
+                                                                onChange={(e) => {
+                                                                    const newMembers = [...sessionMembers];
+                                                                    newMembers[index].role = e.target.value as any;
+                                                                    setSessionMembers(newMembers);
+                                                                }}
+                                                                className="w-[120px] bg-white border border-gray-200 rounded-lg p-2 text-xs font-bold text-gray-700 uppercase tracking-wide"
+                                                            >
+                                                                {ROLES.map(r => (
+                                                                    <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Role notes (optional)"
+                                                            value={sm.notes || ''}
+                                                            onChange={(e) => {
+                                                                const newMembers = [...sessionMembers];
+                                                                newMembers[index].notes = e.target.value;
+                                                                setSessionMembers(newMembers);
+                                                            }}
+                                                            className="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs text-gray-600"
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const newMembers = [...sessionMembers];
+                                                            newMembers.splice(index, 1);
+                                                            setSessionMembers(newMembers);
+                                                        }}
+                                                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors mt-0.5"
+                                                        title="Remove"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-4 px-6 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
                                 <button
-                                    onClick={() => setShowSeriesForm(false)}
+                                    onClick={() => setShowSessionForm(false)}
                                     className="px-4 py-2 font-bold text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={handleSaveSeries}
-                                    disabled={submitting || !seriesForm.title || !seriesForm.area || !seriesForm.start_date}
-                                    className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                                    onClick={handleSaveSession}
+                                    disabled={submitting || !sessionForm.date || sessionMembers.some(sm => !sm.member_id)}
+                                    className="px-6 py-2.5 bg-green-600 text-white rounded-xl font-bold shadow-sm hover:bg-green-700 transition-colors disabled:opacity-50"
                                 >
-                                    {submitting ? 'Saving...' : 'Save Series'}
+                                    {submitting ? 'Saving...' : 'Save Session'}
                                 </button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-
-            {/* Session Form Modal */}
-            {showSessionForm && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm font-sans animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
-                        <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
-                                <ClipboardList size={20} className="text-green-600" />
-                                {sessionForm.id ? 'Edit Session' : 'Add New Session'}
-                            </h2>
-                            <button onClick={() => setShowSessionForm(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 bg-white rounded-md border border-gray-200">
-                                <X size={20} />
-                            </button>
-                        </div>
-
-                        <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6">
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Session Number</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        required
-                                        value={sessionForm.session_number || ''}
-                                        onChange={(e) => setSessionForm({ ...sessionForm, session_number: parseInt(e.target.value) || 1 })}
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-lg font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date</label>
-                                    <input
-                                        type="date"
-                                        required
-                                        value={sessionForm.date || ''}
-                                        onChange={(e) => setSessionForm({ ...sessionForm, date: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-lg text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Lesson Topic (Optional)</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Creation"
-                                    value={sessionForm.lesson_topic || ''}
-                                    onChange={(e) => setSessionForm({ ...sessionForm, lesson_topic: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-6 p-4 rounded-xl border border-gray-100 bg-gray-50/50">
-                                <div>
-                                    <label className="block text-[10px] items-center gap-1 font-bold text-sky-600 uppercase tracking-widest mb-1.5 flex"><Users size={12} /> Children Attendance</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={sessionForm.children_count === 0 && !sessionForm.id ? '' : sessionForm.children_count}
-                                        onChange={(e) => setSessionForm({ ...sessionForm, children_count: parseInt(e.target.value) || 0 })}
-                                        className="w-full bg-white border border-sky-200 rounded-xl p-3 text-center text-2xl font-black text-sky-700 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none shadow-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] items-center gap-1 font-bold text-rose-600 uppercase tracking-widest mb-1.5 flex"><Heart size={12} /> Souls Saved</label>
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={sessionForm.souls_saved_count === 0 && !sessionForm.id ? '' : sessionForm.souls_saved_count}
-                                        onChange={(e) => setSessionForm({ ...sessionForm, souls_saved_count: parseInt(e.target.value) || 0 })}
-                                        className="w-full bg-white border border-rose-200 rounded-xl p-3 text-center text-2xl font-black text-rose-700 focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 outline-none shadow-sm"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Notes</label>
-                                <textarea
-                                    rows={2}
-                                    placeholder="Additional session details..."
-                                    value={sessionForm.notes || ''}
-                                    onChange={(e) => setSessionForm({ ...sessionForm, notes: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                />
-                            </div>
-
-                            {/* Member Selection for Session */}
-                            <div className="border-t border-gray-100 pt-6">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2"><Users size={16} className="text-blue-500" /> Church Members Participating</h3>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setSessionMembers([...sessionMembers, { member_id: '', role: 'teacher', notes: '' }]);
-                                        }}
-                                        className="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors"
-                                    >
-                                        + Add Member
-                                    </button>
-                                </div>
-
-                                <div className="space-y-3">
-                                    {sessionMembers.length === 0 ? (
-                                        <p className="text-xs text-gray-400 italic text-center p-4 border border-dashed border-gray-200 rounded-xl bg-gray-50/50">No members added to this session yet.</p>
-                                    ) : (
-                                        sessionMembers.map((sm, index) => (
-                                            <div key={index} className="flex gap-2 items-start bg-gray-50/50 p-2.5 rounded-xl border border-gray-100 group">
-                                                <div className="flex-1 space-y-2">
-                                                    <div className="flex gap-2">
-                                                        <select
-                                                            value={sm.member_id}
-                                                            onChange={(e) => {
-                                                                const newMembers = [...sessionMembers];
-                                                                newMembers[index].member_id = e.target.value;
-                                                                setSessionMembers(newMembers);
-                                                            }}
-                                                            className="flex-1 bg-white border border-gray-200 rounded-lg p-2 text-xs font-bold text-gray-900"
-                                                        >
-                                                            <option value="" disabled>Select Member...</option>
-                                                            {members.map(m => (
-                                                                <option key={m.id} value={m.id}>{m.surname}, {m.first_name}</option>
-                                                            ))}
-                                                        </select>
-
-                                                        <select
-                                                            value={sm.role}
-                                                            onChange={(e) => {
-                                                                const newMembers = [...sessionMembers];
-                                                                newMembers[index].role = e.target.value as any;
-                                                                setSessionMembers(newMembers);
-                                                            }}
-                                                            className="w-[120px] bg-white border border-gray-200 rounded-lg p-2 text-xs font-bold text-gray-700 uppercase tracking-wide"
-                                                        >
-                                                            {ROLES.map(r => (
-                                                                <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Role notes (optional)"
-                                                        value={sm.notes || ''}
-                                                        onChange={(e) => {
-                                                            const newMembers = [...sessionMembers];
-                                                            newMembers[index].notes = e.target.value;
-                                                            setSessionMembers(newMembers);
-                                                        }}
-                                                        className="w-full bg-white border border-gray-200 rounded-lg p-2 text-xs text-gray-600"
-                                                    />
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const newMembers = [...sessionMembers];
-                                                        newMembers.splice(index, 1);
-                                                        setSessionMembers(newMembers);
-                                                    }}
-                                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors mt-0.5"
-                                                    title="Remove"
-                                                >
-                                                    <X size={16} />
-                                                </button>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-4 px-6 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
-                            <button
-                                onClick={() => setShowSessionForm(false)}
-                                className="px-4 py-2 font-bold text-sm text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSaveSession}
-                                disabled={submitting || !sessionForm.date || sessionMembers.some(sm => !sm.member_id)}
-                                className="px-6 py-2.5 bg-green-600 text-white rounded-xl font-bold shadow-sm hover:bg-green-700 transition-colors disabled:opacity-50"
-                            >
-                                {submitting ? 'Saving...' : 'Save Session'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+                )
+            }
 
             <ConfirmModal
                 isOpen={confirmDelete.isOpen}
@@ -834,7 +827,7 @@ const GoodnewsClass = () => {
                 onConfirm={handleDelete}
                 onCancel={() => setConfirmDelete({ isOpen: false, type: 'series', id: null })}
             />
-        </div>
+        </div >
     );
 };
 
