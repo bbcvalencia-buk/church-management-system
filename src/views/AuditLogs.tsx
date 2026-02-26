@@ -14,7 +14,6 @@ interface AuditLog {
 }
 
 const AuditLogs: React.FC = () => {
-    const [logs, setLogs] = null as any; // placeholder to trigger proper typing down
     const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
