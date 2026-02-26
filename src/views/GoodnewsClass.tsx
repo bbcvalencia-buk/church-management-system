@@ -76,17 +76,35 @@ const GoodnewsClass = () => {
     useEffect(() => {
         fetchSeries();
         fetchMembers();
-    }, []);
+    }, [isTeacher, canManageSessions, member?.id]);
 
     const fetchSeries = async () => {
         setLoading(true);
         try {
+            if (isTeacher && !canManageSessions) {
+                if (!member?.id) {
+                    setSeriesList([]);
+                    return;
+                }
+                const assignments = await goodnewsService.getGoodnewsAssignmentsByMember(member.id);
+                const seen = new Map<string, GoodnewsSeries>();
+                for (const row of assignments as any[]) {
+                    const series = row?.session?.series;
+                    if (series?.id && !seen.has(series.id)) {
+                        seen.set(series.id, series);
+                    }
+                }
+                setSeriesList(Array.from(seen.values()));
+                return;
+            }
+
             const data = await goodnewsService.getGoodnewsSeries();
             setSeriesList(data as any[]);
         } catch (e) {
             console.error("Goodnews series not found", e);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const fetchMembers = async () => {

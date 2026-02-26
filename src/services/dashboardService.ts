@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabase";
+import { isMissingTableError, isTableMarkedMissing, markTableMissing } from "./supabaseErrorUtils";
 
 export interface DashboardStats {
     activeMembers: number;
@@ -53,9 +54,18 @@ export const getDashboardData = async () => {
         .select('*', { count: 'exact', head: true });
 
     // 5. Church Events count
-    const { count: eventsCount } = await supabase
-        .from('church_events')
-        .select('*', { count: 'exact', head: true });
+    let safeEventsCount = 0;
+    if (!isTableMarkedMissing('church_events')) {
+        const { count: eventsCount, error: eventsError } = await supabase
+            .from('church_events')
+            .select('*', { count: 'exact', head: true });
+
+        if (eventsError && isMissingTableError(eventsError)) {
+            markTableMissing('church_events');
+        } else {
+            safeEventsCount = eventsCount || 0;
+        }
+    }
 
     // 6. Goodnews Stats
     let activeGoodnewsSeries = 0;
@@ -88,7 +98,7 @@ export const getDashboardData = async () => {
             soulsSavedThisWeek: totalSouls,
             tithesThisMonth: totalTithes,
             activitiesCount: activityCount || 0,
-            churchEventsCount: eventsCount || 0,
+            churchEventsCount: safeEventsCount,
             activeGoodnewsSeries,
             goodnewsChildrenReached,
             goodnewsSoulsSaved

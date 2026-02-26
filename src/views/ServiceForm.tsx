@@ -28,6 +28,7 @@ import { deleteFile } from "@/lib/storage";
 import { findExistingMemberForVisitor, splitVisitorName } from "@/lib/visitorDedup";
 import SuccessModal from "@/components/SuccessModal";
 import { SearchMemberModal } from "@/components/SearchMemberModal";
+import { useSessionDraft, useSessionValue } from "@/hooks/useSessionDraft";
 
 // Initial state for a new service
 const INITIAL_STATE: Partial<Service> = {
@@ -108,18 +109,30 @@ const ServiceForm: React.FC = () => {
     const navigate = useNavigate();
     const isEditMode = !!id;
 
-    const [service, setService] = useState<Partial<Service>>(INITIAL_STATE);
+    const [service, setService, clearServiceDraft] = useSessionDraft<Partial<Service>>(
+        isEditMode ? `service-form-edit-${id}` : 'service-form-new',
+        INITIAL_STATE
+    );
     const [members, setMembers] = useState<any[]>([]);
-    const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+    const [selectedMemberIds, setSelectedMemberIds, clearMembersDraft] = useSessionValue<string[]>(
+        isEditMode ? `service-members-edit-${id}` : 'service-members-new',
+        []
+    );
     const [memberSearchTerm, setMemberSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
     const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
-    const [newVisitors, setNewVisitors] = useState<DraftVisitor[]>([]);
+    const [newVisitors, setNewVisitors, clearVisitorsDraft] = useSessionValue<DraftVisitor[]>(
+        isEditMode ? `service-visitors-edit-${id}` : 'service-visitors-new',
+        []
+    );
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-    const [assignments, setAssignments] = useState<Partial<ServiceAssignment>[]>([]);
+    const [assignments, setAssignments, clearAssignmentsDraft] = useSessionValue<Partial<ServiceAssignment>[]>(
+        isEditMode ? `service-assignments-edit-${id}` : 'service-assignments-new',
+        []
+    );
     const [showRoleSearch, setShowRoleSearch] = useState<ServiceRole | null>(null);
 
     const visitorMemberIds = useMemo(
@@ -477,8 +490,16 @@ const ServiceForm: React.FC = () => {
             }
 
             if (!id) {
+                clearServiceDraft();
+                clearMembersDraft();
+                clearVisitorsDraft();
+                clearAssignmentsDraft();
                 setShowSuccessModal(true);
             } else {
+                clearServiceDraft();
+                clearMembersDraft();
+                clearVisitorsDraft();
+                clearAssignmentsDraft();
                 navigate('/services');
             }
         } catch (err: any) {

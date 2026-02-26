@@ -5,3 +5,10 @@
 [build.environment]
   # Tell Netlify scanner to ignore these public/semi-public keys
   SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_ANON_KEY,VITE_R2_SECRET_ACCESS_KEY,VITE_R2_ACCESS_KEY_ID,VITE_GEMINI_API_KEY,VITE_R2_ACCOUNT_ID,VITE_R2_BUCKET_NAME,VITE_SUPABASE_URL,VITE_R2_PUBLIC_URL"
+
+[dev]
+  command = "npm run dev"
+  targetPort = 5173
+  port = 3000
+  publish = "dist"
+  functions = "netlify/functions"

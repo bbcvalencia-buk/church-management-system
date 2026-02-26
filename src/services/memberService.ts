@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase";
 import type { Member, ChurchPosition, FamilyRelationship, FaithPromiseCommitment, AttendanceLog } from "../types";
+import { isMissingTableError, isTableMarkedMissing, markTableMissing } from "./supabaseErrorUtils";
 
 /**
  * Fetches all members from the database, ordered by surname.
@@ -33,6 +34,15 @@ export const getActiveMembers = async (): Promise<Member[]> => {
  * Fetches a single member by their ID.
  */
 export const getMemberById = async (id: string): Promise<Member> => {
+    // Try RPC first (bypasses RLS infinite recursion)
+    const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_member_by_id', { target_id: id });
+
+    if (!rpcError && rpcData) {
+        return rpcData as Member;
+    }
+
+    // Fallback to direct query
     const { data, error } = await supabase
         .from("members")
         .select("*")
@@ -231,17 +241,27 @@ export const getTeammates = async (department: string) => {
  * Updates an existing member.
  */
 export const updateMember = async (id: string, memberData: Partial<Member>): Promise<Member> => {
-    const { data, error } = await supabase
+    const { error } = await supabase
         .from("members")
         .update(memberData)
-        .eq("id", id)
-        .select()
-        .single();
+        .eq("id", id);
 
     if (error) {
         throw new Error(`Failed to update member: ${error.message}`);
     }
-    return data as Member;
+
+    // Some roles/policies can update but not return selected row.
+    const { data: updatedRow } = await supabase
+        .from("members")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+    if (updatedRow) {
+        return updatedRow as Member;
+    }
+
+    return { id, ...memberData } as Member;
 };
 
 /**
@@ -329,8 +349,17 @@ export const updateChurchPositions = async (ids: string[], updates: Partial<Chur
  * Fetches the count of service assignments for each member.
  */
 export const getServiceAssignmentCounts = async (): Promise<Record<string, number>> => {
+    if (isTableMarkedMissing('service_assignments')) {
+        return {};
+    }
+
     const { data, error } = await supabase.from('service_assignments').select('member_id');
     if (error) {
+        if (isMissingTableError(error)) {
+            markTableMissing('service_assignments');
+            console.warn('service_assignments table not found - returning empty counts');
+            return {};
+        }
         throw new Error(`Failed to fetch service assignments: ${error.message}`);
     }
 

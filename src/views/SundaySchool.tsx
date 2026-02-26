@@ -79,8 +79,9 @@ const normalizeDraftVisitors = (visitors: DraftVisitor[]) => {
 
 const SundaySchool: React.FC = () => {
     const { member: currentMember, roles, loading: authLoading } = useAuth();
+    const isPastor = roles.includes(UserRole.PASTOR);
     const isSundaySchoolAdmin =
-        roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.PASTOR) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN);
+        roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN) || roles.includes(UserRole.RECORDING_SECRETARY);
 
     const [sessions, setSessions] = useState<SundaySchoolSession[]>([]);
     const [members, setMembers] = useState<any[]>([]);
@@ -119,8 +120,8 @@ const SundaySchool: React.FC = () => {
     const [editingStudent, setEditingStudent] = useState<any | null>(null);
     const [studentSaving, setStudentSaving] = useState(false);
 
-    const managedDepartmentIds = isSundaySchoolAdmin ? DEPARTMENTS.map((d) => d.id) : teacherDepartments;
-    const hasSundaySchoolAccess = isSundaySchoolAdmin || teacherDepartments.length > 0;
+    const managedDepartmentIds = (isSundaySchoolAdmin || isPastor) ? DEPARTMENTS.map((d) => d.id) : teacherDepartments;
+    const hasSundaySchoolAccess = isSundaySchoolAdmin || isPastor || teacherDepartments.length > 0;
 
     useEffect(() => {
         const resolveTeacherAccess = async () => {
@@ -281,6 +282,10 @@ const SundaySchool: React.FC = () => {
     };
 
     const handleSave = async () => {
+        if (!isSundaySchoolAdmin) {
+            alert("You have read-only access.");
+            return;
+        }
         if (!isSundaySchoolAdmin && !managedDepartmentIds.includes(newSession.department!)) {
             return alert("You don't have permission to save to this department.");
         }
@@ -448,6 +453,10 @@ const SundaySchool: React.FC = () => {
     };
 
     const handleDelete = async () => {
+        if (!isSundaySchoolAdmin) {
+            alert("You have read-only access.");
+            return;
+        }
         if (!confirmDelete.id) return;
         setSaving(true);
         try {
@@ -477,6 +486,10 @@ const SundaySchool: React.FC = () => {
     };
 
     const handleSaveStudentProfile = async () => {
+        if (!isSundaySchoolAdmin) {
+            alert("You have read-only access.");
+            return;
+        }
         if (!editingStudent?.id) return;
 
         setStudentSaving(true);

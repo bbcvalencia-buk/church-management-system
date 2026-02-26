@@ -1,16 +1,26 @@
 import { supabase } from "../lib/supabase";
 import type { ChurchEvent } from "../types";
+import { isMissingTableError, isTableMarkedMissing, markTableMissing } from "./supabaseErrorUtils";
 
 /**
  * Fetches all church events.
  */
 export const getChurchEvents = async (): Promise<ChurchEvent[]> => {
+    if (isTableMarkedMissing('church_events')) {
+        return [];
+    }
+
     const { data, error } = await supabase
         .from('church_events')
         .select('*')
         .order('event_date', { ascending: false });
 
     if (error) {
+        if (isMissingTableError(error)) {
+            markTableMissing('church_events');
+            console.warn('church_events table not found - returning empty events');
+            return [];
+        }
         throw new Error(`Failed to fetch church events: ${error.message}`);
     }
     return data as ChurchEvent[];
@@ -20,6 +30,10 @@ export const getChurchEvents = async (): Promise<ChurchEvent[]> => {
  * Upserts a church event.
  */
 export const upsertChurchEvent = async (eventData: Partial<ChurchEvent>): Promise<ChurchEvent> => {
+    if (isTableMarkedMissing('church_events')) {
+        throw new Error('Church events module is not installed yet.');
+    }
+
     const { data, error } = await supabase
         .from('church_events')
         .upsert(eventData as any)
@@ -27,6 +41,10 @@ export const upsertChurchEvent = async (eventData: Partial<ChurchEvent>): Promis
         .single();
 
     if (error) {
+        if (isMissingTableError(error)) {
+            markTableMissing('church_events');
+            throw new Error('Church events module is not installed yet.');
+        }
         throw new Error(`Failed to save church event: ${error.message}`);
     }
     return data as ChurchEvent;
@@ -36,10 +54,18 @@ export const upsertChurchEvent = async (eventData: Partial<ChurchEvent>): Promis
  * Deletes a church event and its logs.
  */
 export const deleteChurchEvent = async (eventId: string): Promise<void> => {
+    if (isTableMarkedMissing('church_events')) {
+        return;
+    }
+
     await supabase.from('attendance_log').delete().eq('event_id', eventId).eq('event_type', 'church_event');
 
     const { error } = await supabase.from('church_events').delete().eq('id', eventId);
     if (error) {
+        if (isMissingTableError(error)) {
+            markTableMissing('church_events');
+            return;
+        }
         throw new Error(`Failed to delete church event: ${error.message}`);
     }
 };

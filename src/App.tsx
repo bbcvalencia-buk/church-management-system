@@ -15,6 +15,7 @@ import TreasuryDashboard from './views/TreasuryDashboard';
 import FinancialRecordForm from './views/FinancialRecordForm';
 import FinancialReportPrint from './views/FinancialReportPrint';
 import FaithPromiseStatementPrint from './views/FaithPromiseStatementPrint';
+import MyFinancialRecords from './views/MyFinancialRecords';
 import SystemSettings from './views/SystemSettings';
 import Activities from './views/Activities';
 import GoodnewsClass from './views/GoodnewsClass';
@@ -35,13 +36,16 @@ import { UserRole } from './types';
 import { deriveTeacherDepartments, SUNDAY_SCHOOL_POSITION_CATEGORIES } from './lib/sundaySchoolAccess';
 
 const CLERK_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK];
+const CLERK_WRITE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK];
 const SERVICE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY];
+const SERVICE_WRITE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY];
 const DASHBOARD_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.TREASURER];
-const SUNDAY_SCHOOL_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.SUNDAY_SCHOOL_ADMIN];
+const SUNDAY_SCHOOL_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.SUNDAY_SCHOOL_ADMIN, UserRole.RECORDING_SECRETARY];
 const ACTIVITY_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.ACTIVITY_COORDINATOR, UserRole.RECORDING_SECRETARY];
 const MUSIC_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.MUSIC_MINISTER];
 const GOODNEWS_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.GOODNEWS_TEACHER];
 const TREASURY_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.TREASURER];
+const TREASURY_WRITE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.TREASURER];
 const ADMIN_ROLES = [UserRole.CHURCH_ADMINISTRATOR];
 const CHURCH_EVENT_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.ACTIVITY_COORDINATOR, UserRole.PASTOR, UserRole.RECORDING_SECRETARY];
 const MEMBER_ROLES = [UserRole.MEMBER];
@@ -80,6 +84,20 @@ const RequireRoles: React.FC<{ allowedRoles: UserRole[]; children: React.ReactNo
 
   if (!hasAllowedRole(roles, allowedRoles)) {
     return <Navigate to="/unauthorized" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const RequireRolesOrRedirect: React.FC<{ allowedRoles: UserRole[]; redirectTo: string; children: React.ReactNode }> = ({ allowedRoles, redirectTo, children }) => {
+  const { roles, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!hasAllowedRole(roles, allowedRoles)) {
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <>{children}</>;
@@ -322,7 +340,7 @@ function App() {
                 />
                 <Route
                   path="members/new"
-                  element={<RequireRoles allowedRoles={CLERK_ROLES}><MemberProfile /></RequireRoles>}
+                  element={<RequireRoles allowedRoles={CLERK_WRITE_ROLES}><MemberProfile /></RequireRoles>}
                 />
                 <Route
                   path="members/:id"
@@ -341,11 +359,11 @@ function App() {
                 />
                 <Route
                   path="visitors/new"
-                  element={<RequireRoles allowedRoles={CLERK_ROLES}><VisitorForm /></RequireRoles>}
+                  element={<RequireRoles allowedRoles={CLERK_WRITE_ROLES}><VisitorForm /></RequireRoles>}
                 />
                 <Route
                   path="visitors/:id"
-                  element={<RequireRoles allowedRoles={CLERK_ROLES}><VisitorForm /></RequireRoles>}
+                  element={<RequireRoles allowedRoles={CLERK_WRITE_ROLES}><VisitorForm /></RequireRoles>}
                 />
 
                 <Route
@@ -359,11 +377,11 @@ function App() {
                 />
                 <Route
                   path="services/new"
-                  element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceForm /></RequireRoles>}
+                  element={<RequireRoles allowedRoles={SERVICE_WRITE_ROLES}><ServiceForm /></RequireRoles>}
                 />
                 <Route
                   path="services/:id"
-                  element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceForm /></RequireRoles>}
+                  element={<RequireRoles allowedRoles={SERVICE_WRITE_ROLES}><ServiceForm /></RequireRoles>}
                 />
                 <Route
                   path="sunday-school"
@@ -391,11 +409,11 @@ function App() {
                 />
                 <Route
                   path="finance/new"
-                  element={<RequireRoles allowedRoles={TREASURY_ROLES}><FinancialRecordForm /></RequireRoles>}
+                  element={<RequireRoles allowedRoles={TREASURY_WRITE_ROLES}><FinancialRecordForm /></RequireRoles>}
                 />
                 <Route
                   path="finance/:id"
-                  element={<RequireRoles allowedRoles={TREASURY_ROLES}><FinancialRecordForm /></RequireRoles>}
+                  element={<RequireRoles allowedRoles={TREASURY_WRITE_ROLES}><FinancialRecordForm /></RequireRoles>}
                 />
                 <Route
                   path="finance/reports"
@@ -408,11 +426,15 @@ function App() {
 
                 <Route
                   path="settings"
-                  element={<RequireRoles allowedRoles={ADMIN_ROLES}><SystemSettings /></RequireRoles>}
+                  element={<RequireRolesOrRedirect allowedRoles={ADMIN_ROLES} redirectTo="/announcements"><SystemSettings /></RequireRolesOrRedirect>}
                 />
                 <Route
                   path="users"
                   element={<RequireRoles allowedRoles={ADMIN_ROLES}><RoleManagement /></RequireRoles>}
+                />
+                <Route
+                  path="my-financial-records"
+                  element={<RequireRoles allowedRoles={MEMBER_ROLES}><MyFinancialRecords /></RequireRoles>}
                 />
 
                 <Route path="*" element={<Navigate to="/" replace />} />

@@ -64,47 +64,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const fetchMemberProfile = async (email: string | undefined) => {
         if (!email) {
+            console.warn('[Auth] No email provided for member lookup');
             setLoading(false);
             return;
         }
 
-        // Keep loading=true (set by caller) until everything resolves
+        console.log('[Auth] ========== ROLE FETCH START ==========');
+        console.log('[Auth] JWT email:', email);
+
         try {
-            // Find member by email
-            const { data: memberData } = await supabase
-                .from('members')
-                .select('*')
-                .eq('email', email)
-                .single();
+            // Use a single SECURITY DEFINER RPC call that bypasses all RLS
+            // This avoids "infinite recursion detected in policy for relation members"
+            const { data, error } = await supabase.rpc('get_my_profile_and_roles');
 
-            if (memberData) {
-                setMember(memberData);
-
-                // Fetch roles for this member
-                const { data: roleData } = await supabase
-                    .from('user_roles')
-                    .select('role')
-                    .eq('member_id', memberData.id);
-
-                setRoles(roleData ? roleData.map((r: any) => r.role) : []);
-            } else {
-                // No member record matched by email — try looking up by auth user id
-                const { data: currentUser } = await supabase.auth.getUser();
-                if (currentUser?.user?.id) {
-                    const { data: roleData } = await supabase
-                        .from('user_roles')
-                        .select('role')
-                        .eq('user_id', currentUser.user.id);
-                    if (roleData && roleData.length > 0) {
-                        setRoles(roleData.map((r: any) => r.role));
-                    }
-                }
-                console.log('No member record found for this user email.');
+            if (error) {
+                console.error('[Auth] RPC get_my_profile_and_roles error:', error.message);
+                // Fallback: no member/roles
+                setMember(null);
+                setRoles([]);
+                return;
             }
+
+            console.log('[Auth] RPC result:', data);
+
+            if (data?.member) {
+                console.log('[Auth] Found member:', data.member.first_name, data.member.surname, '(id:', data.member.id, ')');
+                setMember(data.member);
+            } else {
+                console.warn('[Auth] No member record found for this user');
+                setMember(null);
+            }
+
+            if (data?.roles && Array.isArray(data.roles) && data.roles.length > 0) {
+                console.log('[Auth] Roles:', data.roles);
+                setRoles(data.roles);
+            } else {
+                console.warn('[Auth] No roles found for this user');
+                setRoles([]);
+            }
+
+            console.log('[Auth] ========== ROLE FETCH COMPLETE ==========');
         } catch (error) {
-            console.error('Error loading member profile:', error);
+            console.error('[Auth] Error loading member profile:', error);
         } finally {
-            // Only unblock rendering AFTER both member and roles are set
             setLoading(false);
         }
     };

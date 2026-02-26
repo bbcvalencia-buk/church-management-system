@@ -15,3 +15,8 @@ export const getLatestSundayDate = (baseDate: Date = new Date()): Date => {
 export const getLatestSundayISODate = (baseDate: Date = new Date()): string =>
     toISODateLocal(getLatestSundayDate(baseDate));
 
+export const getPreviousSundayISODate = (baseDate: Date = new Date()): string => {
+    const latestSunday = getLatestSundayDate(baseDate);
+    latestSunday.setDate(latestSunday.getDate() - 7);
+    return toISODateLocal(latestSunday);
+};

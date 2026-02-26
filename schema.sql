@@ -234,6 +234,17 @@ CREATE TABLE activities (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- 8b. SERVICE ASSIGNMENTS
+CREATE TABLE service_assignments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  service_id UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+  member_id UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('songleader', 'pastor', 'moderator', 'pianist', 'technicals', 'mini_ensemble', 'usher', 'choir', 'preacher', 'worship_leader', 'other')),
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(service_id, member_id, role)
+);
+
 -- 9. SUNDAY SCHOOL SESSIONS
 CREATE TABLE sunday_school_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

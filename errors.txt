@@ -1,0 +1,14 @@
+﻿src/components/MemberAttendancePicker.tsx(57,32): error TS6133: 'm' is declared but its value is never read.
+src/components/MemberAttendancePicker.tsx(142,118): error TS6133: 'm' is declared but its value is never read.
+src/lib/visitorDedup.ts(147,9): error TS2353: Object literal may only specify known properties, and 'is_visitor' does not exist in type 'MatchedMember'.
+src/views/GoodnewsClass.tsx(414,34): error TS2304: Cannot find name 'Activity'.
+src/views/GoodnewsClass.tsx(428,63): error TS6133: 'index' is declared but its value is never read.
+src/views/GoodnewsClass.tsx(670,34): error TS2552: Cannot find name 'ClipboardList'. Did you mean 'Clipboard'?
+src/views/MemberProfile.tsx(234,9): error TS2304: Cannot find name 'setShowMinistryMatesModal'.
+src/views/MemberProfile.tsx(1175,18): error TS2304: Cannot find name 'showMinistryMatesModal'.
+src/views/MemberProfile.tsx(1182,56): error TS2304: Cannot find name 'setShowMinistryMatesModal'.
+src/views/MemberProfile.tsx(1220,56): error TS2304: Cannot find name 'setShowMinistryMatesModal'.
+src/views/MemberProfile.tsx(1398,14): error TS2304: Cannot find name 'showMinistryMatesModal'.
+src/views/MemberProfile.tsx(1405,52): error TS2304: Cannot find name 'setShowMinistryMatesModal'.
+src/views/MemberProfile.tsx(1443,52): error TS2304: Cannot find name 'setShowMinistryMatesModal'.
+src/views/SundaySchool.tsx(692,35): error TS6133: 'm' is declared but its value is never read.

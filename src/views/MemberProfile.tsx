@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
     User, Heart, Shield, Users, ArrowLeft, Save, Upload, Trash2,
@@ -111,9 +111,13 @@ const MemberProfile: React.FC = () => {
         }
     };
 
-    const [formData, setFormData] = useState(DEFAULT_FORM_DATA);
-    const [savedData, setSavedData] = useState(DEFAULT_FORM_DATA);
+    const cloneFormData = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+
+    const [formData, setFormData] = useState(() => cloneFormData(DEFAULT_FORM_DATA));
+    const [savedData, setSavedData] = useState(() => cloneFormData(DEFAULT_FORM_DATA));
     const [draftFound, setDraftFound] = useState<any>(null);
+    const { showToast } = useToast();
+    const lastAutosaveAtRef = useRef(0);
 
     const isDirty = JSON.stringify(formData) !== JSON.stringify(savedData);
     const DRAFT_KEY = `member_draft_${id || 'new'}`;
@@ -165,25 +169,31 @@ const MemberProfile: React.FC = () => {
         if (!isViewing && isDirty) {
             const timer = setInterval(() => {
                 localStorage.setItem(DRAFT_KEY, JSON.stringify({ formData, timestamp: Date.now() }));
+                if (Date.now() - lastAutosaveAtRef.current >= 30000) {
+                    lastAutosaveAtRef.current = Date.now();
+                    showToast("Draft auto-saved.", 'success');
+                }
             }, 30000);
             return () => clearInterval(timer);
         } else if (!isDirty && localStorage.getItem(DRAFT_KEY)) {
             // Optional: clean up if no longer dirty?
         }
-    }, [formData, isDirty, DRAFT_KEY, isViewing]);
+    }, [formData, isDirty, DRAFT_KEY, isViewing, showToast]);
 
     const handleRestoreDraft = () => {
         if (draftFound && draftFound.formData) {
-            setFormData(draftFound.formData);
+            setFormData(cloneFormData(draftFound.formData));
             setIsViewing(false);
             setDraftFound(null);
+            showToast("Draft restored.", 'success');
         }
     };
 
     const handleDiscardChanges = () => {
-        setFormData(savedData);
+        setFormData(cloneFormData(savedData));
         localStorage.removeItem(DRAFT_KEY);
         setDraftFound(null);
+        showToast("Changes discarded.", 'success');
     };
 
     useEffect(() => {
@@ -219,7 +229,6 @@ const MemberProfile: React.FC = () => {
     }, [isDirty, isViewing]);
     const [loading, setLoading] = useState(isEditMode);
     const [saving, setSaving] = useState(false);
-    const { showToast } = useToast();
     const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
     const [profileImage, setProfileImage] = useState<File | null>(null);
@@ -418,8 +427,8 @@ const MemberProfile: React.FC = () => {
                 }
             };
 
-            setFormData(loadedData);
-            setSavedData(loadedData);
+            setFormData(cloneFormData(loadedData));
+            setSavedData(cloneFormData(loadedData));
 
             if (posData) {
                 setInitialPositionIds(posData.map((p: any) => p.id).filter(Boolean));

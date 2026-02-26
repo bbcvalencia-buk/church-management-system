@@ -1,5 +1,6 @@
 import { supabase } from "../lib/supabase";
 import type { Service, ServiceAssignment } from "../types";
+import { isMissingTableError, isTableMarkedMissing, markTableMissing } from "./supabaseErrorUtils";
 
 /**
  * Fetches all service records.
@@ -31,12 +32,21 @@ export const deleteService = async (serviceId: string): Promise<void> => {
  * Fetches assignments (roster) for a specific service.
  */
 export const getServiceAssignments = async (serviceId: string): Promise<ServiceAssignment[]> => {
+    if (isTableMarkedMissing('service_assignments')) {
+        return [];
+    }
+
     const { data, error } = await supabase
         .from('service_assignments')
         .select('*, member:members(id, first_name, surname, profile_picture_url)')
         .eq('service_id', serviceId);
 
     if (error) {
+        if (isMissingTableError(error)) {
+            markTableMissing('service_assignments');
+            console.warn('service_assignments table not found - returning empty assignments');
+            return [];
+        }
         throw new Error(`Failed to fetch service assignments: ${error.message}`);
     }
     return data || [];
@@ -78,12 +88,22 @@ export const getServicesByIds = async (ids: string[]): Promise<Service[]> => {
  * Fetches service assignments for a member.
  */
 export const getServiceAssignmentsByMember = async (memberId: string) => {
+    if (isTableMarkedMissing('service_assignments')) {
+        return [];
+    }
+
     const { data, error } = await supabase
         .from('service_assignments')
         .select('*, service:services(*)')
         .eq('member_id', memberId);
 
     if (error) {
+        // Table may not exist yet - gracefully return empty
+        if (isMissingTableError(error)) {
+            markTableMissing('service_assignments');
+            console.warn('service_assignments table not found - skipping');
+            return [];
+        }
         throw new Error(`Failed to fetch service assignments for member: ${error.message}`);
     }
     return data || [];
@@ -109,12 +129,21 @@ export const upsertService = async (serviceData: any) => {
  * Deletes service assignments by service ID.
  */
 export const deleteServiceAssignments = async (serviceId: string) => {
+    if (isTableMarkedMissing('service_assignments')) {
+        return;
+    }
+
     const { error } = await supabase
         .from('service_assignments')
         .delete()
         .eq('service_id', serviceId);
 
     if (error) {
+        if (isMissingTableError(error)) {
+            markTableMissing('service_assignments');
+            console.warn('service_assignments table not found - skipping delete');
+            return;
+        }
         throw new Error(`Failed to delete service assignments: ${error.message}`);
     }
 };
@@ -124,11 +153,18 @@ export const deleteServiceAssignments = async (serviceId: string) => {
  */
 export const createServiceAssignments = async (assignments: any[]) => {
     if (assignments.length === 0) return;
+    if (isTableMarkedMissing('service_assignments')) return;
+
     const { error } = await supabase
         .from('service_assignments')
         .insert(assignments);
 
     if (error) {
+        if (isMissingTableError(error)) {
+            markTableMissing('service_assignments');
+            console.warn('service_assignments table not found - skipping insert');
+            return;
+        }
         throw new Error(`Failed to create service assignments: ${error.message}`);
     }
 };

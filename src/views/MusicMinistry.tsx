@@ -28,6 +28,9 @@ import {
 import ConfirmModal from "@/components/ConfirmModal";
 import SuccessModal from "@/components/SuccessModal";
 import MemberAttendancePicker from "@/components/MemberAttendancePicker";
+import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/types";
+import { useSessionDraft, useSessionValue } from "@/hooks/useSessionDraft";
 
 export interface PracticeSession {
     id: string;
@@ -136,15 +139,17 @@ const INITIAL_STATE: Partial<PracticeSession> = {
 };
 
 const MusicMinistry: React.FC = () => {
+    const { roles } = useAuth();
+    const canManageMusic = roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.MUSIC_MINISTER);
     // Data State
     const [sessions, setSessions] = useState<PracticeSession[]>([]);
     const [allMembers, setAllMembers] = useState<Member[]>([]); // All members from memberService
     const [musicAssignments, setMusicAssignments] = useState<MusicPositionAssignment[]>([]); // All music ministry assignments
     const [allMusicMembers, setAllMusicMembers] = useState<Member[]>([]); // Filtered music members
     const [membersByPracticeType, setMembersByPracticeType] = useState<Record<string, Member[]>>({});
-    const [form, setForm] = useState<Partial<PracticeSession>>(INITIAL_STATE);
+    const [form, setForm, clearFormDraft] = useSessionDraft<Partial<PracticeSession>>('music-practice-form', INITIAL_STATE);
     const [memberSearchTerm, setMemberSearchTerm] = useState("");
-    const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+    const [selectedMemberIds, setSelectedMemberIds, clearMembersDraft] = useSessionValue<string[]>('music-practice-members', []);
 
     // UI State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -263,6 +268,10 @@ const MusicMinistry: React.FC = () => {
     };
 
     const handleSave = async () => {
+        if (!canManageMusic) {
+            alert("You have read-only access.");
+            return;
+        }
         setSaving(true);
         try {
             const nonMemberAttendance = Number(form.non_member_attendance) || 0;
@@ -283,7 +292,8 @@ const MusicMinistry: React.FC = () => {
 
             fetchSessions();
             setIsModalOpen(false);
-            setForm(INITIAL_STATE); // Reset form after successful save
+            clearFormDraft();
+            clearMembersDraft();
             setShowSuccessModal(true);
 
             if (viewSession && viewSession.id === savedSession.id) {
@@ -298,6 +308,10 @@ const MusicMinistry: React.FC = () => {
     };
 
     const handleDelete = async () => {
+        if (!canManageMusic) {
+            alert("You have read-only access.");
+            return;
+        }
         if (!confirmDelete.id) return;
         setSaving(true);
         try {

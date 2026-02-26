@@ -22,6 +22,8 @@ import {
     ChevronUp
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/types";
 
 // Helper to format service type
 const formatServiceType = (type: string) => {
@@ -37,6 +39,11 @@ const ROLE_ICONS: Record<string, any> = {
 };
 
 const ServiceList: React.FC = () => {
+    const { roles } = useAuth();
+    const canManageServices =
+        roles.includes(UserRole.CHURCH_ADMINISTRATOR) ||
+        roles.includes(UserRole.CHURCH_CLERK) ||
+        roles.includes(UserRole.RECORDING_SECRETARY);
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -55,6 +62,10 @@ const ServiceList: React.FC = () => {
     }, []);
 
     const handleDelete = async () => {
+        if (!canManageServices) {
+            alert("You have read-only access.");
+            return;
+        }
         if (!confirmDelete.id) return;
         try {
             await serviceService.deleteService(confirmDelete.id);
@@ -128,13 +139,15 @@ const ServiceList: React.FC = () => {
                         <Calendar size={18} className="text-gray-500" />
                         <span className="hidden sm:inline">Announcements</span>
                     </Link>
-                    <Link
-                        to="/services/new"
-                        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-blue-500/20 font-medium"
-                    >
-                        <Plus size={18} />
-                        <span>Log Service</span>
-                    </Link>
+                    {canManageServices && (
+                        <Link
+                            to="/services/new"
+                            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-blue-500/20 font-medium"
+                        >
+                            <Plus size={18} />
+                            <span>Log Service</span>
+                        </Link>
+                    )}
                 </div>
             </div>
 
@@ -184,17 +197,19 @@ const ServiceList: React.FC = () => {
                         return (
                             <div key={service.id} className="card-panel p-0 overflow-hidden group hover:shadow-md transition-all relative bg-white">
                                 <div className="p-4 md:p-6 pb-2">
-                                    <button
-                                        onClick={() => setConfirmDelete({
-                                            isOpen: true,
-                                            id: service.id,
-                                            title: service.sermon_title || "Untitled Service"
-                                        })}
-                                        className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-2 bg-gray-100/50 hover:bg-red-50 rounded-full z-10"
-                                        title="Delete"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+                                    {canManageServices && (
+                                        <button
+                                            onClick={() => setConfirmDelete({
+                                                isOpen: true,
+                                                id: service.id,
+                                                title: service.sermon_title || "Untitled Service"
+                                            })}
+                                            className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-2 bg-gray-100/50 hover:bg-red-50 rounded-full z-10"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
 
                                     <div className="flex flex-col md:flex-row gap-6">
                                         {/* Date Block */}
@@ -266,12 +281,14 @@ const ServiceList: React.FC = () => {
                                         </div>
 
                                         <div className="flex md:flex-col justify-end gap-2 shrink-0">
-                                            <Link
-                                                to={`/services/${service.id}`}
-                                                className="btn btn-ghost px-4 py-2 text-sm whitespace-nowrap text-blue-600 hover:bg-blue-50"
-                                            >
-                                                Edit Record
-                                            </Link>
+                                            {canManageServices && (
+                                                <Link
+                                                    to={`/services/${service.id}`}
+                                                    className="btn btn-ghost px-4 py-2 text-sm whitespace-nowrap text-blue-600 hover:bg-blue-50"
+                                                >
+                                                    Edit Record
+                                                </Link>
+                                            )}
                                             <button
                                                 onClick={() => toggleServiceExpansion(service.id)}
                                                 className={`flex items-center justify-center gap-1 px-4 py-2 rounded-lg text-sm font-bold transition-all border ${isExpanded
@@ -329,7 +346,7 @@ const ServiceList: React.FC = () => {
                                         ) : (
                                             <div className="text-center py-6 bg-white border border-dashed border-gray-200 rounded-2xl">
                                                 <p className="text-sm text-gray-400 font-medium">No service roles assigned for this date.</p>
-                                                <Link to={`/services/${service.id}`} className="text-xs text-blue-500 font-bold hover:underline mt-1 inline-block">Click here to assign roles</Link>
+                                                {canManageServices && <Link to={`/services/${service.id}`} className="text-xs text-blue-500 font-bold hover:underline mt-1 inline-block">Click here to assign roles</Link>}
                                             </div>
                                         )}
                                     </div>

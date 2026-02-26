@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import * as memberService from "@/services/memberService";
+import * as financeService from "@/services/financeService";
 import { submitFinancialMutation } from "@/lib/financial";
-import { getLatestSundayISODate } from "@/lib/date";
+import { getLatestSundayISODate, getPreviousSundayISODate } from "@/lib/date";
 import type { FinancialRecord, Member } from "@/types";
 import {
     DollarSign,
@@ -13,6 +14,7 @@ import {
     Info
 } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import { useSessionDraft, useSessionValue } from "@/hooks/useSessionDraft";
 
 // Form state handles multiple contribution types at once
 interface MultiEntryForm {
@@ -33,6 +35,11 @@ const INITIAL_STATE: MultiEntryForm = {
     pledge_purpose: ''
 };
 
+const normalizeIsoDate = (value: string | null | undefined) => {
+    if (!value) return '';
+    return value.length >= 10 ? value.slice(0, 10) : value;
+};
+
 const FinancialRecordForm: React.FC = () => {
     // Note: Edit mode for this multi-entry form is complex because records are stored individually.
     // For now, we will focus on CREATE mode. If editing, we might need a different approach 
@@ -41,15 +48,34 @@ const FinancialRecordForm: React.FC = () => {
 
     const navigate = useNavigate();
     const { showToast } = useToast();
-    const [form, setForm] = useState<MultiEntryForm>(INITIAL_STATE);
+    const [form, setForm, clearFormDraft] = useSessionDraft<MultiEntryForm>('financial-record-form', INITIAL_STATE);
     const [saving, setSaving] = useState(false);
 
     // Member Search State
     const [memberSearch, setMemberSearch] = useState("");
     const [members, setMembers] = useState<Member[]>([]);
     const [showMemberResults, setShowMemberResults] = useState(false);
-    const [selectedMember, setSelectedMember] = useState<Member | null>(null);
+    const [selectedMember, setSelectedMember, clearMemberDraft] = useSessionValue<Member | null>('financial-record-member', null);
     const [memberRegistryCount, setMemberRegistryCount] = useState<number | null>(null);
+
+    useEffect(() => {
+        const initializeTransactionDate = async () => {
+            const latestSunday = getLatestSundayISODate();
+            try {
+                const latestRecordedDate = normalizeIsoDate(await financeService.getLatestFinancialTransactionDate('active'));
+                if (latestRecordedDate === latestSunday) {
+                    setForm((prev) => ({ ...prev, transaction_date: getPreviousSundayISODate() }));
+                } else {
+                    setForm((prev) => ({ ...prev, transaction_date: latestSunday }));
+                }
+            } catch (error) {
+                console.error("Error initializing contribution date:", error);
+                setForm((prev) => ({ ...prev, transaction_date: latestSunday }));
+            }
+        };
+
+        initializeTransactionDate();
+    }, []);
 
     useEffect(() => {
         const fetchMemberRegistryCount = async () => {
@@ -145,8 +171,10 @@ const FinancialRecordForm: React.FC = () => {
         try {
             await submitFinancialMutation('INSERT', { records: recordsToInsert });
 
+            clearFormDraft();
+            clearMemberDraft();
             showToast("Records saved successfully!", 'success');
-            navigate('/finance');
+            navigate('/finance', { replace: true, state: { refreshedAt: Date.now() } });
         } catch (err: any) {
             showToast("Error saving records: " + err.message, 'error');
         } finally {

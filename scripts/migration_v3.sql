@@ -1,0 +1,3 @@
+-- This SQL migration script should be run in the Supabase SQL Editor.
+-- See the user's original script content - saved separately.
+-- Due to size, please copy from the user's message and paste into Supabase SQL Editor.

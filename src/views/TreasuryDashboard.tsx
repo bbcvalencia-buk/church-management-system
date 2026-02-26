@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import * as financeService from "@/services/financeService";
 import type { FinancialRecord, Member } from "@/types";
@@ -64,10 +64,16 @@ const EMPTY_EDIT_FORM: EditTransactionForm = {
     pledge_purpose: ''
 };
 
+const normalizeIsoDate = (value: string | null | undefined): string => {
+    if (!value) return '';
+    return value.length >= 10 ? value.slice(0, 10) : value;
+};
+
 const TreasuryDashboard: React.FC = () => {
     const { user, roles } = useAuth();
     const { showToast } = useToast();
     const isChurchAdmin = roles.includes('church_administrator');
+    const canManageTreasury = roles.includes('church_administrator') || roles.includes('treasurer');
 
     const [rawRecords, setRawRecords] = useState<FinancialRecordWithMember[]>([]);
     const [periodLocks, setPeriodLocks] = useState<any[]>([]);
@@ -76,7 +82,7 @@ const TreasuryDashboard: React.FC = () => {
 
     const [activeTab, setActiveTab] = useState<'active' | 'deleted' | 'faith_promise'>('active');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth()).toString());
+    const [selectedMonth, setSelectedMonth] = useState('all');
     const [selectedSunday, setSelectedSunday] = useState('');
     const [sortDirection, setSortDirection] = useState<'desc' | 'asc'>('desc');
 
@@ -95,6 +101,29 @@ const TreasuryDashboard: React.FC = () => {
     const [quickAddMember, setQuickAddMember] = useState<{ id: string, name: string } | null>(null);
     const [showPledgeForm, setShowPledgeForm] = useState(false);
     const [showImport, setShowImport] = useState(false);
+    const initializedFiltersRef = useRef(false);
+
+    useEffect(() => {
+        if (initializedFiltersRef.current) return;
+
+        const initializeFiltersFromLatestRecord = async () => {
+            try {
+                const latestDate = await financeService.getLatestFinancialTransactionDate('active');
+                if (!latestDate) return;
+
+                const parsed = new Date(`${latestDate}T00:00:00`);
+                if (!Number.isNaN(parsed.getTime())) {
+                    setSelectedYear(parsed.getFullYear());
+                }
+            } catch (err) {
+                console.error("Error initializing financial filters:", err);
+            } finally {
+                initializedFiltersRef.current = true;
+            }
+        };
+
+        initializeFiltersFromLatestRecord();
+    }, []);
 
     useEffect(() => {
         fetchRecords();
@@ -144,24 +173,25 @@ const TreasuryDashboard: React.FC = () => {
         const map = new Map<string, AggregatedTransaction>();
 
         rawRecords.forEach(record => {
-            const recordDate = new Date(record.transaction_date);
+            const recordDate = normalizeIsoDate(record.transaction_date);
+            if (!recordDate) return;
 
-            if (selectedMonth !== 'all' && recordDate.getMonth().toString() !== selectedMonth) {
+            if (selectedMonth !== 'all' && recordDate.slice(5, 7) !== String(Number(selectedMonth) + 1).padStart(2, '0')) {
                 return;
             }
 
-            if (selectedSunday && record.transaction_date !== selectedSunday) {
+            if (selectedSunday && recordDate !== selectedSunday) {
                 return;
             }
 
-            const key = `${record.member_id}_${record.transaction_date} `;
+            const key = `${record.member_id}_${recordDate}`;
 
             if (!map.has(key)) {
                 map.set(key, {
                     key,
                     member_id: record.member_id,
-                    date: record.transaction_date,
-                    member_name: record.members ? `${record.members.first_name} ${record.members.surname} ` : 'Unknown',
+                    date: recordDate,
+                    member_name: record.members ? `${record.members.first_name} ${record.members.surname}` : 'Unknown',
                     tithe: 0,
                     faith_promise: 0,
                     love_gift: 0,
@@ -188,7 +218,7 @@ const TreasuryDashboard: React.FC = () => {
 
         const rows = Array.from(map.values());
         rows.sort((a, b) => {
-            const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
+            const dateDiff = a.date.localeCompare(b.date);
             if (dateDiff !== 0) return sortDirection === 'asc' ? dateDiff : -dateDiff;
             return a.member_name.localeCompare(b.member_name);
         });
@@ -406,7 +436,7 @@ const TreasuryDashboard: React.FC = () => {
                     </Link>
                     {activeTab === 'faith_promise' ? (
                         <>
-                            {(roles.includes('church_administrator') || roles.includes('treasurer')) && (
+                            {canManageTreasury && (
                                 <button
                                     onClick={() => setShowImport(true)}
                                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold"
@@ -415,15 +445,17 @@ const TreasuryDashboard: React.FC = () => {
                                     <span>Import</span>
                                 </button>
                             )}
-                            <button
-                                onClick={() => setShowPledgeForm(true)}
-                                className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20 font-bold"
-                            >
-                                <Plus size={18} />
-                                <span>New Pledge</span>
-                            </button>
+                            {canManageTreasury && (
+                                <button
+                                    onClick={() => setShowPledgeForm(true)}
+                                    className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20 font-bold"
+                                >
+                                    <Plus size={18} />
+                                    <span>New Pledge</span>
+                                </button>
+                            )}
                         </>
-                    ) : (
+                    ) : canManageTreasury ? (
                         <Link
                             to="/finance/new"
                             className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20"
@@ -431,7 +463,8 @@ const TreasuryDashboard: React.FC = () => {
                             <Plus size={18} />
                             <span>New Entry</span>
                         </Link>
-                    )}
+                    ) : null
+                    }
                 </div>
             </div>
 
@@ -464,21 +497,21 @@ const TreasuryDashboard: React.FC = () => {
             <div className="card-panel p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white">
                 <div className="flex gap-4">
                     <button
-                        className={`font - bold text - lg pb - 1 transition - colors ${activeTab === 'active' ? 'text-black border-b-2 border-black' : 'text-gray-400 hover:text-gray-600'} `}
+                        className={`font-bold text-lg pb-1 transition-colors ${activeTab === 'active' ? 'text-black border-b-2 border-black' : 'text-gray-400 hover:text-gray-600'}`}
                         onClick={() => setActiveTab('active')}
                     >
                         Transaction History
                     </button>
                     {isChurchAdmin && (
                         <button
-                            className={`font - bold text - lg pb - 1 transition - colors flex items - center gap - 2 ${activeTab === 'deleted' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400 hover:text-gray-600'} `}
+                            className={`font-bold text-lg pb-1 transition-colors flex items-center gap-2 ${activeTab === 'deleted' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400 hover:text-gray-600'}`}
                             onClick={() => setActiveTab('deleted')}
                         >
                             <Trash2 size={18} /> Deleted Records
                         </button>
                     )}
                     <button
-                        className={`font - bold text - lg pb - 1 transition - colors flex items - center gap - 2 ${activeTab === 'faith_promise' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'} `}
+                        className={`font-bold text-lg pb-1 transition-colors flex items-center gap-2 ${activeTab === 'faith_promise' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
                         onClick={() => setActiveTab('faith_promise')}
                     >
                         <Heart size={18} /> Faith Promise Ledger
@@ -557,11 +590,11 @@ const TreasuryDashboard: React.FC = () => {
                     onQuickAdd={(memberId, memberName) => setQuickAddMember({ id: memberId, name: memberName })}
                 />
             ) : (
-                <div className={`card - panel overflow - hidden bg - white ${activeTab === 'deleted' ? 'border border-red-200 shadow-red-500/10' : ''} `}>
+                <div className={`card-panel overflow-hidden bg-white ${activeTab === 'deleted' ? 'border border-red-200 shadow-red-500/10' : ''}`}>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className={`border - b border - [var(--color - border)]text - xs font - bold uppercase tracking - wider ${activeTab === 'deleted' ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-[var(--color-text-muted)]'} `}>
+                                <tr className={`border-b border-[var(--color-border)] text-xs font-bold uppercase tracking-wider ${activeTab === 'deleted' ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-[var(--color-text-muted)]'}`}>
                                     <th className="p-4">Date</th>
                                     <th className="p-4">Member</th>
                                     <th className="p-4 text-right">Tithe</th>
@@ -588,13 +621,13 @@ const TreasuryDashboard: React.FC = () => {
                                     ))
                                 ) : aggregatedData.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className={`p - 8 text - center font - medium ${activeTab === 'deleted' ? 'text-red-400' : 'text-gray-400'} `}>
+                                        <td colSpan={8} className={`p-8 text-center font-medium ${activeTab === 'deleted' ? 'text-red-400' : 'text-gray-400'}`}>
                                             No {activeTab} records found for the selected period.
                                         </td>
                                     </tr>
                                 ) : (
                                     aggregatedData.map((row) => (
-                                        <tr key={row.key} className={`text - sm group transition - colors ${activeTab === 'deleted' ? 'hover:bg-red-50/50' : 'hover:bg-gray-50'} `}>
+                                        <tr key={row.key} className={`text-sm group transition-colors ${activeTab === 'deleted' ? 'hover:bg-red-50/50' : 'hover:bg-gray-50'}`}>
                                             <td className="p-4 font-mono text-gray-500">{row.date}</td>
                                             <td className="p-4 font-medium text-gray-800 flex items-center gap-2">
                                                 {row.member_name}
@@ -607,23 +640,25 @@ const TreasuryDashboard: React.FC = () => {
                                             <td className="p-4 text-right font-bold text-black">{formatCurrency(row.total)}</td>
                                             <td className="p-4 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 {activeTab === 'active' ? (
-                                                    <>
-                                                        <button
-                                                            onClick={() => openEditModal(row)}
-                                                            className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit size={14} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => prepareDelete(row)}
-                                                            className="p-1.5 text-red-500 hover:bg-red-500/20 rounded"
-                                                            title="Delete"
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </>
-                                                ) : (
+                                                    canManageTreasury ? (
+                                                        <>
+                                                            <button
+                                                                onClick={() => openEditModal(row)}
+                                                                className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded"
+                                                                title="Edit"
+                                                            >
+                                                                <Edit size={14} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => prepareDelete(row)}
+                                                                className="p-1.5 text-red-500 hover:bg-red-500/20 rounded"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </>
+                                                    ) : null
+                                                ) : canManageTreasury ? (
                                                     <button
                                                         onClick={() => handleRestoreTransaction(row)}
                                                         className="p-1.5 text-green-600 hover:bg-green-500/20 rounded font-bold uppercase text-[10px] tracking-wider flex items-center gap-1"
@@ -631,7 +666,7 @@ const TreasuryDashboard: React.FC = () => {
                                                     >
                                                         <RefreshCcw size={12} /> Restore
                                                     </button>
-                                                )}
+                                                ) : null}
                                             </td>
                                         </tr>
                                     ))

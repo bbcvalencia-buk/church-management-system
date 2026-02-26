@@ -16,7 +16,8 @@ export async function submitFinancialMutation(action: 'INSERT' | 'UPDATE' | 'DEL
         body: JSON.stringify({ action, ...payload })
     });
 
-    const data = await response.json();
+    const rawBody = await response.text();
+    const data = rawBody ? JSON.parse(rawBody) : {};
 
     if (!response.ok) {
         throw new Error(data.error || 'An error occurred while saving financial records.');

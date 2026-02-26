@@ -27,6 +27,33 @@ export const getFinancialRecords = async (start: string, end: string, activeTab:
 };
 
 /**
+ * Fetches the latest financial transaction date for an active tab filter.
+ */
+export const getLatestFinancialTransactionDate = async (
+    activeTab: 'active' | 'deleted' | 'faith_promise'
+): Promise<string | null> => {
+    let query = supabase
+        .from('financial_records')
+        .select('transaction_date')
+        .order('transaction_date', { ascending: false })
+        .limit(1);
+
+    if (activeTab === 'deleted') {
+        query = query.not('deleted_at', 'is', null);
+    } else {
+        query = query.is('deleted_at', null);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        throw new Error(`Failed to fetch latest financial transaction date: ${error.message}`);
+    }
+
+    return data?.[0]?.transaction_date || null;
+};
+
+/**
  * Fetches all financial records for a given year.
  */
 export const getFinancialRecordsByYear = async (year: number, memberId?: string): Promise<any[]> => {
@@ -245,7 +272,8 @@ export const submitFinancialMutation = async (action: 'INSERT' | 'UPDATE' | 'DEL
         body: JSON.stringify({ action, ...payload })
     });
 
-    const data = await response.json();
+    const rawBody = await response.text();
+    const data = rawBody ? JSON.parse(rawBody) : {};
 
     if (!response.ok) {
         throw new Error(data.error || 'An error occurred while saving financial records.');

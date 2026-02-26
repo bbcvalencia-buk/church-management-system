@@ -27,6 +27,9 @@ import {
 import ConfirmModal from "@/components/ConfirmModal";
 import SuccessModal from "@/components/SuccessModal";
 import MemberAttendancePicker from "@/components/MemberAttendancePicker";
+import { useAuth } from "@/contexts/AuthContext";
+import { UserRole } from "@/types";
+import { useSessionDraft, useSessionValue } from "@/hooks/useSessionDraft";
 
 interface ActivityRecord {
     id: string;
@@ -48,7 +51,7 @@ interface ActivityRecord {
 }
 
 const INITIAL_STATE = {
-    activity_type: 'goodnews_class',
+    activity_type: 'soul_winning',
     activity_date: getLatestSundayISODate(),
     members_present: 0,
     non_member_attendance: 0,
@@ -66,14 +69,19 @@ const INITIAL_STATE = {
 };
 
 const Activities: React.FC = () => {
+    const { roles } = useAuth();
+    const canManageActivities =
+        roles.includes(UserRole.CHURCH_ADMINISTRATOR) ||
+        roles.includes(UserRole.ACTIVITY_COORDINATOR) ||
+        roles.includes(UserRole.RECORDING_SECRETARY);
     const [activities, setActivities] = useState<ActivityRecord[]>([]);
     const [members, setMembers] = useState<any[]>([]);
     const [visitors, setVisitors] = useState<any[]>([]);
-    const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+    const [selectedMemberIds, setSelectedMemberIds, clearMembersDraft] = useSessionValue<string[]>('activities-members', []);
     const [memberSearchTerm, setMemberSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [form, setForm] = useState<Partial<ActivityRecord>>(INITIAL_STATE);
+    const [form, setForm, clearFormDraft] = useSessionDraft<Partial<ActivityRecord>>('activities-form', INITIAL_STATE);
     const [saving, setSaving] = useState(false);
     const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -145,12 +153,15 @@ const Activities: React.FC = () => {
     };
 
     const handleSave = async () => {
+        if (!canManageActivities) {
+            alert("You have read-only access.");
+            return;
+        }
         setSaving(true);
         try {
             const membersPresent = selectedMemberIds.length;
-            const kidsAttended = form.activity_type === 'goodnews_class' ? (Number(form.kids_attended) || 0) : 0;
             const nonMemberAttendance = Number(form.non_member_attendance) || 0;
-            const total = membersPresent + kidsAttended + nonMemberAttendance;
+            const total = membersPresent + nonMemberAttendance;
 
             // 1. Upload Attachment if present
             let attachmentUrl = form.attachment_url;
@@ -178,7 +189,8 @@ const Activities: React.FC = () => {
 
             fetchActivities();
             setIsModalOpen(false);
-            setForm(INITIAL_STATE);
+            clearFormDraft();
+            clearMembersDraft();
             setShowSuccessModal(true);
         } catch (err: any) {
             alert("Error saving activity: " + err.message);
@@ -188,6 +200,10 @@ const Activities: React.FC = () => {
     };
 
     const handleDelete = async () => {
+        if (!canManageActivities) {
+            alert("You have read-only access.");
+            return;
+        }
         if (!confirmDelete.id) return;
         setSaving(true);
         try {
@@ -215,7 +231,6 @@ const Activities: React.FC = () => {
 
     const getTypeLabel = (type: string) => {
         switch (type) {
-            case 'goodnews_class': return 'Good News Class';
             case 'soul_winning': return 'Soul Winning';
             case 'bible_study': return 'Bible Study';
             case 'outreach': return 'Outreach';
@@ -531,7 +546,6 @@ const Activities: React.FC = () => {
                                         onChange={(e) => setForm({ ...form, activity_type: e.target.value })}
                                         className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                     >
-                                        <option value="goodnews_class">Good News Class</option>
                                         <option value="soul_winning">Soul Winning</option>
                                         <option value="bible_study">Bible Study</option>
                                         <option value="outreach">Outreach</option>
@@ -862,18 +876,7 @@ const Activities: React.FC = () => {
 
                             {/* Stats Row */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
-                                {form.activity_type === 'goodnews_class' ? (
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Kids Attended</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={form.kids_attended || ''}
-                                            onChange={(e) => setForm({ ...form, kids_attended: parseInt(e.target.value) || 0 })}
-                                            className="w-full bg-white border border-gray-200 rounded-lg p-3 text-center text-xl font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                        />
-                                    </div>
-                                ) : (form.activity_type === 'soul_winning' || form.activity_type === 'outreach') ? (
+                                {(form.activity_type === 'soul_winning' || form.activity_type === 'outreach') ? (
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Total Tracts Distributed</label>
                                         <input

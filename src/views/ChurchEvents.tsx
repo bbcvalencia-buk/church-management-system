@@ -28,6 +28,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import SuccessModal from "@/components/SuccessModal";
 import MemberAttendancePicker from "@/components/MemberAttendancePicker";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSessionDraft, useSessionValue } from "@/hooks/useSessionDraft";
 import { UserRole } from "../types";
 import type { ChurchEvent } from "../types";
 
@@ -53,11 +54,11 @@ const ChurchEvents: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<ChurchEvent | null>(null);
-    const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+    const [selectedMemberIds, setSelectedMemberIds, clearMembersDraft] = useSessionValue<string[]>('church-events-members', []);
     const [uploading, setUploading] = useState(false);
 
     // Form state
-    const [form, setForm] = useState<Partial<ChurchEvent>>({
+    const [form, setForm, clearFormDraft] = useSessionDraft<Partial<ChurchEvent>>('church-events-form', {
         event_name: '',
         event_type: 'fellowship',
         event_date: new Date().toISOString().split('T')[0],
@@ -113,6 +114,8 @@ const ChurchEvents: React.FC = () => {
             fetchEventAttendance(event.id);
             setSelectedEvent(event);
         } else {
+            clearFormDraft();
+            clearMembersDraft();
             setForm({
                 event_name: '',
                 event_type: 'fellowship',
@@ -175,7 +178,9 @@ const ChurchEvents: React.FC = () => {
 
             fetchEvents();
             setIsModalOpen(false);
-            if (isNew) setShowSuccessModal(true);
+            clearFormDraft();
+            clearMembersDraft();
+            setShowSuccessModal(true);
         } catch (err: any) {
             alert("Error saving event: " + err.message);
         } finally {
