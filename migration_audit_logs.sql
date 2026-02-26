@@ -115,8 +115,11 @@ BEGIN
     FOR t IN 
         SELECT unnest(ARRAY['services', 'financial_records', 'members', 'church_events', 'goodnews_classes', 'sunday_school_sessions', 'activities'])
     LOOP
-        EXECUTE format('DROP TRIGGER IF EXISTS trigger_audit_log ON public.%I', t);
-        EXECUTE format('CREATE TRIGGER trigger_audit_log AFTER INSERT OR UPDATE OR DELETE ON public.%I FOR EACH ROW EXECUTE FUNCTION public.log_audit_event()', t);
+        -- Only add triggers if the table exists
+        IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = t) THEN
+            EXECUTE format('DROP TRIGGER IF EXISTS trigger_audit_log ON public.%I', t);
+            EXECUTE format('CREATE TRIGGER trigger_audit_log AFTER INSERT OR UPDATE OR DELETE ON public.%I FOR EACH ROW EXECUTE FUNCTION public.log_audit_event()', t);
+        END IF;
     END LOOP;
 END;
 $$;
