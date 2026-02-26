@@ -93,6 +93,10 @@ const FinancialRecordForm: React.FC = () => {
     // Search Members
     useEffect(() => {
         const query = memberSearch.trim();
+        if (selectedMember && query === `${selectedMember.first_name} ${selectedMember.surname}`.trim()) {
+            return;
+        }
+
         if (query.length > 0) {
             const timeoutId = setTimeout(async () => {
                 try {
@@ -171,10 +175,14 @@ const FinancialRecordForm: React.FC = () => {
         try {
             await submitFinancialMutation('INSERT', { records: recordsToInsert });
 
-            clearFormDraft();
+            // Keep the same date for the next entry, but reset amounts
+            setForm({
+                ...INITIAL_STATE,
+                transaction_date: form.transaction_date
+            });
             clearMemberDraft();
+            setMemberSearch("");
             showToast("Records saved successfully!", 'success');
-            navigate('/finance', { replace: true, state: { refreshedAt: Date.now() } });
         } catch (err: any) {
             showToast("Error saving records: " + err.message, 'error');
         } finally {
