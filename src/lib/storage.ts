@@ -14,7 +14,7 @@ export const uploadFile = async (file: File, folder: string): Promise<string> =>
         formData.append('file', file);
         formData.append('folder', folder);
 
-        const response = await fetch('/api/upload', {
+        const response = await fetch('/.netlify/functions/upload', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${session.access_token}`
@@ -48,7 +48,7 @@ export const deleteFile = async (fileUrl: string): Promise<void> => {
 
         const key = fileUrl.replace(`${R2_PUBLIC_URL}/`, '');
 
-        const response = await fetch('/api/delete-file', {
+        const response = await fetch('/.netlify/functions/delete-file', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

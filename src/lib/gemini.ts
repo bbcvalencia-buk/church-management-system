@@ -11,7 +11,7 @@ export const callGemini = async (prompt: string, feature: GeminiFeature): Promis
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Unauthorized");
 
-        const response = await fetch('/api/gemini', {
+        const response = await fetch('/.netlify/functions/gemini', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
