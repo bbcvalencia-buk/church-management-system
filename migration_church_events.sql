@@ -54,9 +54,24 @@ BEFORE INSERT ON public.church_events
 FOR EACH ROW EXECUTE FUNCTION public.set_church_event_number();
 
 -- 4. Update attendance_log
--- First, change event_id from UUID to TEXT
--- We need to check if it's already text. In schema_v2 it was UUID.
+-- First, drop policies that depend on this column to allow the type change
+DROP POLICY IF EXISTS services_select_policy ON public.services;
+DROP POLICY IF EXISTS sunday_school_sessions_select_policy ON public.sunday_school_sessions;
+
+-- Now change event_id from UUID to TEXT
 ALTER TABLE public.attendance_log ALTER COLUMN event_id TYPE TEXT USING event_id::TEXT;
+
+-- Recreate the dropped policies with the column casted back for comparing against UUID ids
+CREATE POLICY services_select_policy ON public.services FOR SELECT USING (
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'treasurer', 'sunday_school_admin'])
+  OR EXISTS (SELECT 1 FROM public.attendance_log al WHERE al.event_type = 'service' AND al.event_id = public.services.id::TEXT AND al.member_id = public.app_current_member_id())
+);
+
+CREATE POLICY sunday_school_sessions_select_policy ON public.sunday_school_sessions FOR SELECT USING (
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin'])
+  OR public.app_can_manage_sunday_school_department(public.sunday_school_sessions.department)
+  OR EXISTS (SELECT 1 FROM public.attendance_log al WHERE al.event_type = 'sunday_school' AND al.event_id = public.sunday_school_sessions.id::TEXT AND al.member_id = public.app_current_member_id())
+);
 
 -- Update event_type constraint
 ALTER TABLE public.attendance_log DROP CONSTRAINT IF EXISTS attendance_log_event_type_check;
