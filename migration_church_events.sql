@@ -51,15 +51,50 @@ $$;
 DROP TRIGGER IF EXISTS trigger_set_church_event_number ON public.church_events;
 CREATE TRIGGER trigger_set_church_event_number
 BEFORE INSERT ON public.church_events
-FOR EACH ROW EXECUTE FUNCTION public.set_church_event_number();
-
--- 4. Update attendance_log
 -- First, drop policies that depend on this column to allow the type change
 DROP POLICY IF EXISTS services_select_policy ON public.services;
 DROP POLICY IF EXISTS sunday_school_sessions_select_policy ON public.sunday_school_sessions;
+DROP POLICY IF EXISTS attendance_log_select_policy ON public.attendance_log;
+DROP POLICY IF EXISTS attendance_log_insert_policy ON public.attendance_log;
+DROP POLICY IF EXISTS attendance_log_update_policy ON public.attendance_log;
+DROP POLICY IF EXISTS attendance_log_delete_policy ON public.attendance_log;
 
 -- Now change event_id from UUID to TEXT
 ALTER TABLE public.attendance_log ALTER COLUMN event_id TYPE TEXT USING event_id::TEXT;
+
+-- Recreate the dropped policies with the column casted back for comparing against UUID ids
+CREATE POLICY attendance_log_select_policy ON public.attendance_log FOR SELECT USING (
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
+  OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
+  OR (public.app_has_role('music_minister') AND event_type = 'music_practice')
+  OR member_id = public.app_current_member_id()
+);
+
+CREATE POLICY attendance_log_insert_policy ON public.attendance_log FOR INSERT WITH CHECK (
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
+  OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
+  OR (public.app_has_role('music_minister') AND event_type = 'music_practice')
+);
+
+CREATE POLICY attendance_log_update_policy ON public.attendance_log FOR UPDATE USING (
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
+  OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
+  OR (public.app_has_role('music_minister') AND event_type = 'music_practice')
+) WITH CHECK (
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
+  OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
+  OR (public.app_has_role('music_minister') AND event_type = 'music_practice')
+);
+
+CREATE POLICY attendance_log_delete_policy ON public.attendance_log FOR DELETE USING (
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
+  OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
+);
 
 -- Recreate the dropped policies with the column casted back for comparing against UUID ids
 CREATE POLICY services_select_policy ON public.services FOR SELECT USING (
