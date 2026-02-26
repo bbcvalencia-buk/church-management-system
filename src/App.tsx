@@ -32,6 +32,7 @@ import Login from './views/Login';
 import Register from './views/Register';
 import ResetPassword from './views/ResetPassword';
 import ChangePassword from './views/ChangePassword';
+import AuditLogs from './views/AuditLogs';
 import { UserRole } from './types';
 import { deriveTeacherDepartments, SUNDAY_SCHOOL_POSITION_CATEGORIES } from './lib/sundaySchoolAccess';
 
@@ -427,6 +428,10 @@ function App() {
                 <Route
                   path="settings"
                   element={<RequireRolesOrRedirect allowedRoles={ADMIN_ROLES} redirectTo="/announcements"><SystemSettings /></RequireRolesOrRedirect>}
+                />
+                <Route
+                  path="audit-logs"
+                  element={<RequireRoles allowedRoles={ADMIN_ROLES}><AuditLogs /></RequireRoles>}
                 />
                 <Route
                   path="users"

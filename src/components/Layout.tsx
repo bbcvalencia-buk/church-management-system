@@ -20,7 +20,8 @@ import {
     CreditCard,
     UserPlus,
     KeyRound,
-    MessageSquare
+    MessageSquare,
+    ActivitySquare
 } from 'lucide-react';
 
 const Layout: React.FC = () => {
@@ -175,6 +176,7 @@ const Layout: React.FC = () => {
             section: 'ADMINISTRATIVE',
             items: [
                 { to: '/users', icon: Users, label: 'Role Management', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR] },
+                { to: '/audit-logs', icon: ActivitySquare, label: 'System Audit Logs', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR] },
                 { to: '/settings', icon: Settings, label: 'System Settings', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR] }
             ]
         }
