@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ConfirmModal from '@/components/ConfirmModal';
-import SuccessModal from '@/components/SuccessModal';
+import { useToast } from '@/contexts/ToastContext';
 
 export const ROLES: GoodnewsSessionRole[] = ['teacher', 'helper', 'musician', 'accompanist', 'driver', 'other'];
 export const ROLE_LABELS: Record<GoodnewsSessionRole, string> = {
@@ -37,6 +37,7 @@ export const ROLE_LABELS: Record<GoodnewsSessionRole, string> = {
 
 const GoodnewsClass = () => {
     const { roles, member } = useAuth();
+    const { showToast } = useToast();
     const canManageSessions = roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.CHURCH_CLERK);
     const isTeacher = roles.includes(UserRole.GOODNEWS_TEACHER);
 
@@ -69,6 +70,7 @@ const GoodnewsClass = () => {
     const [sessionMembers, setSessionMembers] = useState<any[]>([]);
 
     const [submitting, setSubmitting] = useState(false);
+    const [actionNotice, setActionNotice] = useState<string | null>(null);
 
     // Deletion Modal
     const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean, type: 'series' | 'session', id: string | null }>({ isOpen: false, type: 'series', id: null });
@@ -88,7 +90,7 @@ const GoodnewsClass = () => {
                 }
                 const assignments = await goodnewsService.getGoodnewsAssignmentsByMember(member.id);
                 const seen = new Map<string, GoodnewsSeries>();
-                for (const row of assignments as any[]) {
+                for (const row of (assignments || []) as any[]) {
                     const series = row?.session?.series;
                     if (series?.id && !seen.has(series.id)) {
                         seen.set(series.id, series);
@@ -99,7 +101,7 @@ const GoodnewsClass = () => {
             }
 
             const data = await goodnewsService.getGoodnewsSeries();
-            setSeriesList(data as any[]);
+            setSeriesList((data || []) as any[]);
         } catch (e) {
             console.error("Goodnews series not found", e);
         } finally {
@@ -110,7 +112,7 @@ const GoodnewsClass = () => {
     const fetchMembers = async () => {
         try {
             const data = await memberService.getActiveMembers();
-            setMembers(data);
+            setMembers(data || []);
         } catch (e) {
             console.error("Error fetching members:", e);
         }
@@ -120,13 +122,14 @@ const GoodnewsClass = () => {
         setViewingSeries(series);
         try {
             const data = await goodnewsService.getGoodnewsSessionsBySeries(series.id);
-            setSeriesSessions(data);
+            setSeriesSessions(data || []);
         } catch (e) { /* ignore */ }
     };
 
     const handleSaveSeries = async () => {
         setSubmitting(true);
         try {
+            const isEditing = !!seriesForm.id;
             const payload = {
                 id: seriesForm.id,
                 title: seriesForm.area, // Title is now automatically the area
@@ -143,6 +146,12 @@ const GoodnewsClass = () => {
 
             fetchSeries();
             setShowSeriesForm(false);
+            const areaName = payload.area || 'Goodnews Area';
+            const notice = isEditing
+                ? `Goodnews Area updated: ${areaName}`
+                : `Goodnews Area created: ${areaName}`;
+            setActionNotice(notice);
+            showToast(notice, 'success');
             if (viewingSeries && seriesForm.id === viewingSeries.id) {
                 setViewingSeries({ ...viewingSeries, ...payload } as any);
             }
@@ -156,6 +165,7 @@ const GoodnewsClass = () => {
     const handleSaveSession = async () => {
         setSubmitting(true);
         try {
+            const isEditing = !!sessionForm.id;
             const sessionPayload = {
                 id: sessionForm.id,
                 series_id: viewingSeries?.id,
@@ -176,6 +186,9 @@ const GoodnewsClass = () => {
 
             if (viewingSeries) loadSeriesDetails(viewingSeries);
             setShowSessionForm(false);
+            const notice = isEditing ? 'Session updated successfully.' : 'Session created successfully.';
+            setActionNotice(notice);
+            showToast(notice, 'success');
         } catch (e: any) {
             alert('Error saving session: ' + e.message);
         } finally {
@@ -188,12 +201,19 @@ const GoodnewsClass = () => {
         setSubmitting(true);
         try {
             if (confirmDelete.type === 'series') {
+                const deletedSeriesName = viewingSeries?.area || 'Goodnews Area';
                 await goodnewsService.deleteGoodnewsSeries(confirmDelete.id);
                 fetchSeries();
                 setViewingSeries(null);
+                const notice = `Goodnews Area deleted: ${deletedSeriesName}`;
+                setActionNotice(notice);
+                showToast(notice, 'success');
             } else if (confirmDelete.type === 'session') {
                 await goodnewsService.deleteGoodnewsSession(confirmDelete.id);
                 if (viewingSeries) loadSeriesDetails(viewingSeries);
+                const notice = 'Session deleted successfully.';
+                setActionNotice(notice);
+                showToast(notice, 'success');
             }
             setConfirmDelete({ isOpen: false, type: 'series', id: null });
         } catch (e) {
@@ -205,6 +225,17 @@ const GoodnewsClass = () => {
 
     return (
         <div className="max-w-[1200px] mx-auto space-y-6 pb-20 font-sans">
+            {actionNotice && (
+                <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-xl flex items-center justify-between">
+                    <div className="text-sm font-semibold">{actionNotice}</div>
+                    <button
+                        onClick={() => setActionNotice(null)}
+                        className="text-xs font-bold px-2 py-1 rounded border border-green-300 hover:bg-green-100"
+                    >
+                        Dismiss
+                    </button>
+                </div>
+            )}
             <div className="flex justify-between items-start">
                 <div>
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
@@ -218,7 +249,7 @@ const GoodnewsClass = () => {
                         onClick={() => { setSeriesForm({ status: 'ongoing', start_date: new Date().toISOString().split('T')[0] }); setShowSeriesForm(true); }}
                         className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
                     >
-                        <Plus size={18} /> New Series
+                        <Plus size={18} /> Goodnews Area
                     </button>
                 )}
             </div>
@@ -244,7 +275,7 @@ const GoodnewsClass = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {loading ? <p className="text-gray-500 col-span-full">Loading...</p> :
                             seriesList.filter(s => s.status === activeTab).length === 0 ?
-                                <p className="text-gray-500 col-span-full py-8 text-center italic border border-dashed border-gray-200 rounded-xl bg-gray-50">No {activeTab} series found.</p> :
+                                <p className="text-gray-500 col-span-full py-8 text-center italic border border-dashed border-gray-200 rounded-xl bg-gray-50">No {activeTab} Goodnews areas found.</p> :
                                 seriesList.filter(s => s.status === activeTab).map(series => (
                                     <div
                                         key={series.id}
@@ -303,7 +334,7 @@ const GoodnewsClass = () => {
                         onClick={() => setViewingSeries(null)}
                         className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors bg-white px-4 py-2 border border-gray-200 rounded-full shadow-sm w-max"
                     >
-                        <ArrowLeft size={16} /> Back to Series List
+                        <ArrowLeft size={16} /> Back to Goodnews Areas
                     </button>
 
                     <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-8">
@@ -505,7 +536,7 @@ const GoodnewsClass = () => {
                             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                                 <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
                                     <BookOpen size={20} className="text-blue-600" />
-                                    {seriesForm.id ? 'Edit Goodnews Series' : 'Create New Series'}
+                                    {seriesForm.id ? 'Edit Goodnews Area' : 'Create Goodnews Area'}
                                 </h2>
                                 <button onClick={() => setShowSeriesForm(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 bg-white rounded-md border border-gray-200">
                                     <X size={20} />
@@ -621,7 +652,7 @@ const GoodnewsClass = () => {
                                         disabled={submitting || !seriesForm.area || !seriesForm.start_date}
                                         className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
                                     >
-                                        {submitting ? 'Saving...' : 'Save Series'}
+                                        {submitting ? 'Saving...' : 'Save Area'}
                                     </button>
                                 </div>
                             </div>
@@ -820,9 +851,9 @@ const GoodnewsClass = () => {
 
             <ConfirmModal
                 isOpen={confirmDelete.isOpen}
-                title={`Delete ${confirmDelete.type === 'series' ? 'Series' : 'Session'}`}
-                message={`Are you sure you want to delete this ${confirmDelete.type}? This action cannot be undone.`}
-                confirmText={`Delete ${confirmDelete.type}`}
+                title={`Delete ${confirmDelete.type === 'series' ? 'Goodnews Area' : 'Session'}`}
+                message={`Are you sure you want to delete this ${confirmDelete.type === 'series' ? 'Goodnews Area' : 'session'}? This action cannot be undone.`}
+                confirmText={`Delete ${confirmDelete.type === 'series' ? 'Area' : 'Session'}`}
                 isDanger={true}
                 onConfirm={handleDelete}
                 onCancel={() => setConfirmDelete({ isOpen: false, type: 'series', id: null })}

@@ -188,7 +188,7 @@ const SundaySchool: React.FC = () => {
                 ? DEPARTMENTS.map((department) => department.id)
                 : managedDepartmentIds;
 
-            for (const row of studentAssignments) {
+            for (const row of (studentAssignments || [])) {
                 const department = normalizeSundaySchoolDepartment(row);
                 if (!department || !scopeDepartmentIds.includes(department)) continue;
                 if (isSundaySchoolTeacherAssignment(row)) continue;
