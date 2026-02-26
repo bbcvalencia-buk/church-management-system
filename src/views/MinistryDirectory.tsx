@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import * as memberService from "@/services/memberService";
 import type { ChurchPosition } from "@/types";
 import {
   Shield,
@@ -147,21 +147,29 @@ const MinistryDirectory: React.FC = () => {
   const [groupDraftSchedule, setGroupDraftSchedule] = useState('');
   const [savingGroupMeta, setSavingGroupMeta] = useState(false);
   const [savingHeadAssignmentId, setSavingHeadAssignmentId] = useState<string | null>(null);
+  const [participationRates, setParticipationRates] = useState<Record<string, number>>({});
+  const [attendanceRates, setAttendanceRates] = useState<Record<string, { count: number, rate: string, total: number }>>({});
 
   useEffect(() => {
     fetchPositions();
     fetchMembers();
+    fetchParticipation();
   }, []);
+
+  const fetchParticipation = async () => {
+    try {
+      const counts = await memberService.getServiceAssignmentCounts();
+      setParticipationRates(counts);
+      const rates = await memberService.getMemberAttendanceRates();
+      setAttendanceRates(rates);
+    } catch (err) {
+      console.error("Error fetching participation/attendance:", err);
+    }
+  };
 
   const fetchPositions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('church_positions')
-        .select('*, members(id, first_name, surname, profile_picture_url)')
-        .eq('is_active', true)
-        .order('position_name', { ascending: true });
-
-      if (error) throw error;
+      const data = await memberService.getChurchPositions();
       setPositions(data as unknown as PositionWithMember[]);
     } catch (err) {
       console.error("Error fetching ministries:", err);
@@ -171,8 +179,12 @@ const MinistryDirectory: React.FC = () => {
   };
 
   const fetchMembers = async () => {
-    const { data } = await supabase.from('members').select('id, first_name, surname, profile_picture_url, member_number').order('surname');
-    if (data) setMembers(data);
+    try {
+      const data = await memberService.getAllMembers();
+      setMembers(data as any[]);
+    } catch (err) {
+      console.error("Error fetching members:", err);
+    }
   };
 
   const handleOpenModal = (groupName?: string | null, posToEdit?: any) => {
@@ -218,8 +230,7 @@ const MinistryDirectory: React.FC = () => {
         return payload;
       });
 
-      const { error } = await supabase.from('church_positions').upsert(insertData);
-      if (error) throw error;
+      await memberService.upsertChurchPosition(insertData);
 
       setIsModalOpen(false);
       fetchPositions();
@@ -234,12 +245,11 @@ const MinistryDirectory: React.FC = () => {
     if (!confirmRemove.assignment) return;
     const id = confirmRemove.assignment.id;
     try {
-      const { error } = await supabase
-        .from('church_positions')
-        .update({ is_active: false, end_date: new Date().toISOString().split('T')[0] })
-        .eq('id', id);
+      await memberService.updateChurchPositions([id], {
+        is_active: false,
+        end_date: new Date().toISOString().split('T')[0]
+      });
 
-      if (error) throw error;
       setConfirmRemove({ isOpen: false, assignment: null });
       fetchPositions();
     } catch (err: any) {
@@ -267,15 +277,11 @@ const MinistryDirectory: React.FC = () => {
 
     setSavingGroupMeta(true);
     try {
-      const { error } = await supabase
-        .from('church_positions')
-        .update({
-          department: nextName,
-          assignment_reason: nextSchedule || null
-        })
-        .in('id', positionIds);
+      await memberService.updateChurchPositions(positionIds, {
+        department: nextName,
+        assignment_reason: nextSchedule || null
+      });
 
-      if (error) throw error;
       setManageGroup(null);
       await fetchPositions();
     } catch (err: any) {
@@ -299,20 +305,13 @@ const MinistryDirectory: React.FC = () => {
 
     setSavingHeadAssignmentId(targetId);
     try {
-      const { error: clearError } = await supabase
-        .from('church_positions')
-        .update({ is_ministry_head: false })
-        .in('id', positionIds);
-      if (clearError) throw clearError;
+      // Clear all heads first
+      await memberService.updateChurchPositions(positionIds, { is_ministry_head: false });
 
       const nextHeadId = isCurrentlyHead ? null : targetId;
 
       if (nextHeadId) {
-        const { error: setError } = await supabase
-          .from('church_positions')
-          .update({ is_ministry_head: true })
-          .eq('id', nextHeadId);
-        if (setError) throw setError;
+        await memberService.updateChurchPositions([nextHeadId], { is_ministry_head: true });
       }
 
       setManageGroup((prev: any) => {
@@ -505,9 +504,26 @@ const MinistryDirectory: React.FC = () => {
                         <p className="text-[9px] uppercase font-bold text-gray-400 tracking-wider mb-0.5">
                           {preview.full_pos?.is_ministry_head ? `Head - ${preview.specific_role || 'Member'}` : (preview.specific_role || 'Member')}
                         </p>
-                        <Link to={`/members/${preview.id}`} onClick={(e) => e.stopPropagation()} className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors truncate block">
-                          {preview.first_name} {preview.surname}
-                        </Link>
+                        <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                          <Link to={`/members/${preview.id}`} onClick={(e) => e.stopPropagation()} className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors truncate">
+                            {preview.first_name} {preview.surname}
+                          </Link>
+                          {attendanceRates[preview.id] && (
+                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[preview.id].rate.replace('%', '')) >= 80
+                              ? 'bg-green-50 text-green-700 border-green-200'
+                              : Number(attendanceRates[preview.id].rate.replace('%', '')) >= 50
+                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                : 'bg-red-50 text-red-700 border-red-200'
+                              }`} title={`Attended ${attendanceRates[preview.id].count} out of ${attendanceRates[preview.id].total} services`}>
+                              {attendanceRates[preview.id].rate} Attendance
+                            </span>
+                          )}
+                          {participationRates[preview.id] && (
+                            <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100/50 shadow-sm whitespace-nowrap" title="Service Participation Count">
+                              {participationRates[preview.id]}x Serviced
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -668,6 +684,18 @@ const MinistryDirectory: React.FC = () => {
                         {m.specific_role}
                         {m.full_pos?.is_ministry_head && <span className="ml-2 text-amber-600">HEAD</span>}
                       </p>
+                      {attendanceRates[m.id] && (
+                        <div className="mt-1">
+                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[m.id].rate.replace('%', '')) >= 80
+                              ? 'bg-green-50 text-green-700 border-green-200'
+                              : Number(attendanceRates[m.id].rate.replace('%', '')) >= 50
+                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                : 'bg-red-50 text-red-700 border-red-200'
+                            }`} title={`Attended ${attendanceRates[m.id].count} out of ${attendanceRates[m.id].total} services`}>
+                            {attendanceRates[m.id].rate} Attendance
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

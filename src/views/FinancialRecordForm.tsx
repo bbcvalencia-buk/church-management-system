@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import * as memberService from "@/services/memberService";
 import { submitFinancialMutation } from "@/lib/financial";
 import { getLatestSundayISODate } from "@/lib/date";
 import type { FinancialRecord, Member } from "@/types";
@@ -54,14 +53,12 @@ const FinancialRecordForm: React.FC = () => {
 
     useEffect(() => {
         const fetchMemberRegistryCount = async () => {
-            const { count, error } = await supabase
-                .from('members')
-                .select('id', { count: 'exact', head: true });
-            if (error) {
+            try {
+                const count = await memberService.getMemberCount();
+                setMemberRegistryCount(count);
+            } catch (error) {
                 console.error("Error counting members:", error);
-                return;
             }
-            setMemberRegistryCount(count ?? 0);
         };
 
         fetchMemberRegistryCount();
@@ -72,21 +69,15 @@ const FinancialRecordForm: React.FC = () => {
         const query = memberSearch.trim();
         if (query.length > 0) {
             const timeoutId = setTimeout(async () => {
-                const { data, error } = await supabase
-                    .from('members')
-                    .select('*')
-                    .or(`first_name.ilike.%${query}%,surname.ilike.%${query}%`)
-                    .order('surname', { ascending: true })
-                    .order('first_name', { ascending: true })
-                    .limit(20);
-                if (error) {
+                try {
+                    const data = await memberService.searchMembers(query);
+                    setMembers(data as Member[]);
+                    setShowMemberResults(true);
+                } catch (error) {
                     console.error("Error searching members:", error);
                     setMembers([]);
                     setShowMemberResults(true);
-                    return;
                 }
-                if (data) setMembers(data as Member[]);
-                setShowMemberResults(true);
             }, 300);
             return () => clearTimeout(timeoutId);
         } else {

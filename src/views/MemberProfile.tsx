@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Link, useBlocker, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
     User, Heart, Shield, Users, ArrowLeft, Save, Upload, Trash2,
-    MapPin, TrendingUp, Star, Mail, Edit3, Printer, CheckCircle2, Phone, Home, BookOpen, Clock, Activity, FileText, Calendar, Eye, MessageSquare, AlertCircle
+    MapPin, TrendingUp, Star, Mail, Edit3, Printer, CheckCircle2, Phone, Home, BookOpen, Clock, Activity, FileText, Calendar, Eye, MessageSquare, AlertCircle, Mic
 } from "lucide-react";
 
-import { supabase } from "../lib/supabase";
 import { uploadFile, deleteFile } from "../lib/storage";
+import * as memberService from "../services/memberService";
+import * as financeService from "../services/financeService";
+import * as serviceService from "../services/serviceService";
+import * as sundaySchoolService from "../services/sundaySchoolService";
+import * as goodnewsService from "../services/goodnewsService";
+import * as requestService from "../services/requestService";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -181,17 +186,37 @@ const MemberProfile: React.FC = () => {
         setDraftFound(null);
     };
 
-    const blocker = useBlocker(({ currentLocation, nextLocation }) =>
-        isDirty && !isViewing && currentLocation.pathname !== nextLocation.pathname
-    );
-
     useEffect(() => {
-        if (blocker.state === "blocked") {
+        if (isViewing || !isDirty) return;
+
+        const handleInAppNavigation = (event: MouseEvent) => {
+            const target = event.target as HTMLElement | null;
+            const anchor = target?.closest('a[href]') as HTMLAnchorElement | null;
+            if (!anchor) return;
+
+            const hrefAttr = anchor.getAttribute('href');
+            if (!hrefAttr) return;
+            if (hrefAttr.startsWith('#') || hrefAttr.startsWith('mailto:') || hrefAttr.startsWith('tel:')) return;
+            if (anchor.target === '_blank') return;
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+            const nextUrl = new URL(anchor.href, window.location.href);
+            const currentUrl = new URL(window.location.href);
+            const isSameRoute = nextUrl.pathname === currentUrl.pathname && nextUrl.search === currentUrl.search && nextUrl.hash === currentUrl.hash;
+            const isExternal = nextUrl.origin !== currentUrl.origin;
+
+            if (isSameRoute || isExternal) return;
+
             const shouldLeave = window.confirm("You have unsaved changes. Are you sure you want to leave this page?");
-            if (shouldLeave) blocker.proceed();
-            else blocker.reset();
-        }
-    }, [blocker]);
+            if (!shouldLeave) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        };
+
+        document.addEventListener('click', handleInAppNavigation, true);
+        return () => document.removeEventListener('click', handleInAppNavigation, true);
+    }, [isDirty, isViewing]);
     const [loading, setLoading] = useState(isEditMode);
     const [saving, setSaving] = useState(false);
     const { showToast } = useToast();
@@ -208,13 +233,19 @@ const MemberProfile: React.FC = () => {
     const [showMinistryMatesModal, setShowMinistryMatesModal] = useState(false);
     const [selectedMinistryName, setSelectedMinistryName] = useState("");
     const [selectedMinistryMates, setSelectedMinistryMates] = useState<any[]>([]);
+    const [serviceAssignments, setServiceAssignments] = useState<any[]>([]);
+    const [goodnewsAssignments, setGoodnewsAssignments] = useState<any[]>([]);
 
 
     const canManageProfiles = roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.CHURCH_CLERK);
     const isOwnProfile = Boolean(id && currentMember?.id === id);
 
     useEffect(() => {
-        if (isEditMode) fetchMemberData(id);
+        if (isEditMode) {
+            fetchMemberData(id);
+            fetchServiceAssignments(id);
+            fetchGoodnewsAssignments(id);
+        }
     }, [id]);
 
     useEffect(() => {
@@ -229,20 +260,10 @@ const MemberProfile: React.FC = () => {
         setShowMinistryMatesModal(true);
         setLoadingMates(true);
         try {
-            const { data, error } = await supabase
-                .from("church_positions")
-                .select(`
-                    position_name,
-                    is_ministry_head,
-                    members!inner(id, first_name, surname, profile_picture_url)
-                `)
-                .eq("department", department)
-                .eq("is_active", true);
-
-            if (error) throw error;
+            const data = await memberService.getTeammates(department);
 
             // Render only mates (exclude current member)
-            const mates = data?.filter((d: any) => d.members?.id !== member.id).map((d: any) => ({
+            const mates = data?.filter((d: any) => d.members?.id !== (id || currentMember?.id)).map((d: any) => ({
                 id: d.members.id,
                 name: `${d.members.first_name} ${d.members.surname}`,
                 position: d.position_name,
@@ -285,26 +306,14 @@ const MemberProfile: React.FC = () => {
         );
 
         try {
-            const [serviceResult, sundaySchoolResult] = await Promise.all([
+            const [services, sundaySchoolSessions] = await Promise.all([
                 serviceIds.length > 0
-                    ? supabase
-                        .from("services")
-                        .select("id, service_date, service_type")
-                        .in("id", serviceIds)
-                    : Promise.resolve({ data: [], error: null } as any),
+                    ? serviceService.getServicesByIds(serviceIds)
+                    : Promise.resolve([] as any[]),
                 sundaySchoolIds.length > 0
-                    ? supabase
-                        .from("sunday_school_sessions")
-                        .select("id, session_date, department")
-                        .in("id", sundaySchoolIds)
-                    : Promise.resolve({ data: [], error: null } as any)
+                    ? sundaySchoolService.getSundaySchoolSessionsByIds(sundaySchoolIds)
+                    : Promise.resolve([] as any[])
             ]);
-
-            if (serviceResult.error) throw serviceResult.error;
-            if (sundaySchoolResult.error) throw sundaySchoolResult.error;
-
-            const services = serviceResult.data || [];
-            const sundaySchoolSessions = sundaySchoolResult.data || [];
             const childDepartments = new Set(["beginners", "nursery", "kinder", "primary", "junior"]);
 
             const sundayMorningServiceDates = new Set(
@@ -359,19 +368,28 @@ const MemberProfile: React.FC = () => {
         }
     };
 
+    const fetchServiceAssignments = async (memberId: string) => {
+        const data = await serviceService.getServiceAssignmentsByMember(memberId);
+        if (data) setServiceAssignments(data);
+    };
+
+    const fetchGoodnewsAssignments = async (memberId: string) => {
+        const data = await goodnewsService.getGoodnewsAssignmentsByMember(memberId);
+        if (data) setGoodnewsAssignments(data);
+    };
+
     const fetchMemberData = async (memberId: string) => {
         setLoading(true);
         try {
-            const { data, error } = await supabase.from("members").select("*").eq("id", memberId).single();
-            if (error) throw error;
+            const data = await memberService.getMemberById(memberId);
             if (data.profile_picture_url) setPreviewUrl(data.profile_picture_url);
             if (data.attachment_url) setAttachmentPreview(data.attachment_url);
 
-            const { data: posData } = await supabase.from("church_positions").select("*").eq("member_id", memberId);
-            const { data: famData } = await supabase.from("family_relationships").select("*").eq("member_id", memberId);
+            const posData = await memberService.getMemberPositions(memberId);
+            const famData = await memberService.getFamilyRelationships(memberId);
 
-            const { data: commData } = await supabase.from('faith_promise_commitments').select('*').eq('member_id', memberId).order('year', { ascending: false });
-            const { data: finData } = await supabase.from('financial_records').select('amount, transaction_date').eq('member_id', memberId).eq('transaction_type', 'faith_promise').is('deleted_at', null);
+            const commData = await financeService.getFaithPromiseCommitments(memberId);
+            const finData = await financeService.getFaithPromiseGiving(memberId);
 
             const summary: Record<number, number> = {};
             finData?.forEach((record: any) => {
@@ -409,7 +427,7 @@ const MemberProfile: React.FC = () => {
                 setInitialPositionIds([]);
             }
 
-            const { data: attData } = await supabase.from("attendance_log").select("*").eq("member_id", memberId);
+            const attData = await memberService.getMemberAttendanceLogs(memberId);
             if (attData) {
                 setAttendance(attData);
                 await computeAttendanceInsights(attData);
@@ -467,8 +485,7 @@ const MemberProfile: React.FC = () => {
             }
 
             const memberData = { ...member, profile_picture_url: imageUrl, attachment_url: attachmentUrl, updated_at: new Date().toISOString() };
-            const { data: savedMember, error: memberError } = await supabase.from("members").upsert(memberData).select().single();
-            if (memberError) throw memberError;
+            const savedMember = await memberService.upsertMember(memberData);
 
             const sanitizedPositions = positions
                 .map((pos: any) => ({
@@ -481,7 +498,7 @@ const MemberProfile: React.FC = () => {
 
             for (const pos of sanitizedPositions) {
                 const payload = { ...pos, member_id: savedMember.id };
-                await supabase.from("church_positions").upsert(payload);
+                await memberService.upsertChurchPosition(payload);
             }
 
             const keptIds = new Set(
@@ -492,32 +509,22 @@ const MemberProfile: React.FC = () => {
             const removedPositionIds = initialPositionIds.filter((posId) => !keptIds.has(posId));
 
             if (removedPositionIds.length > 0) {
-                const { error: removePositionsError } = await supabase
-                    .from("church_positions")
-                    .delete()
-                    .eq("member_id", savedMember.id)
-                    .in("id", removedPositionIds);
-
-                if (removePositionsError) throw removePositionsError;
+                await memberService.deleteChurchPositions(savedMember.id, removedPositionIds);
             }
 
             const savedFamilyIds = savedData.familyData.relationships.map((f: any) => f.id).filter(Boolean);
             const currentFamilyIds = formData.familyData.relationships.map((f: any) => f.id).filter(Boolean);
             const removedFamilyIds = savedFamilyIds.filter((id: string) => !currentFamilyIds.includes(id));
             if (removedFamilyIds.length > 0) {
-                await supabase.from("family_relationships").delete().in("id", removedFamilyIds);
+                await memberService.deleteFamilyRelationships(removedFamilyIds);
             }
 
             for (const rel of family) {
                 if (!rel.member_id) rel.member_id = savedMember.id;
-                await supabase.from("family_relationships").upsert(rel);
+                await memberService.upsertFamilyRelationship(rel);
             }
 
-            const { data: latestPosData, error: latestPosError } = await supabase
-                .from("church_positions")
-                .select("*")
-                .eq("member_id", savedMember.id);
-            if (latestPosError) throw latestPosError;
+            const latestPosData = await memberService.getMemberPositions(savedMember.id);
             if (latestPosData) {
                 setInitialPositionIds(latestPosData.map((p: any) => p.id).filter(Boolean));
             }
@@ -528,7 +535,7 @@ const MemberProfile: React.FC = () => {
             const removedCommitments = savedCommitments.filter((id: string) => !currentCommitmentIds.includes(id));
 
             if (removedCommitments.length > 0) {
-                await supabase.from("faith_promise_commitments").delete().in("id", removedCommitments);
+                await financeService.deleteFaithPromiseCommitments(removedCommitments);
             }
 
             const commitmentsToSave = formData.faithPromiseData.commitments;
@@ -537,8 +544,7 @@ const MemberProfile: React.FC = () => {
                 if (comm.id && !comm.id.startsWith('temp_')) {
                     (payload as any).id = comm.id;
                 }
-                const { error: commSaveErr } = await supabase.from("faith_promise_commitments").upsert(payload, { onConflict: (payload as any).id ? 'id' : 'member_id, year' });
-                if (commSaveErr) throw commSaveErr;
+                await financeService.upsertFaithPromiseCommitment(payload);
             }
 
             await fetchMemberData(savedMember.id);
@@ -561,12 +567,13 @@ const MemberProfile: React.FC = () => {
             showToast("Read-only profile. You are not allowed to delete this profile.", 'error');
             return;
         }
+        if (!id) return;
+
         setSaving(true);
         try {
             if (member.profile_picture_url) await deleteFile(member.profile_picture_url);
             if (member.attachment_url) await deleteFile(member.attachment_url);
-            const { error } = await supabase.from('members').delete().eq('id', id);
-            if (error) throw error;
+            await memberService.deleteMember(id);
             showToast("Member deleted successfully.", 'success');
             navigate('/members');
         } catch (err: any) {
@@ -590,15 +597,11 @@ const MemberProfile: React.FC = () => {
 
         setSubmittingEditRequest(true);
         try {
-            const { error } = await supabase
-                .from("member_profile_edit_requests")
-                .insert([{
-                    target_member_id: id,
-                    requested_by_member_id: currentMember?.id || null,
-                    request_message: message
-                }]);
-
-            if (error) throw error;
+            await requestService.createEditRequest({
+                target_member_id: id,
+                requested_by_member_id: currentMember?.id || null,
+                request_message: message
+            });
 
             setShowEditRequestModal(false);
             setEditRequestMessage("");
@@ -711,269 +714,410 @@ const MemberProfile: React.FC = () => {
                         </div>
                     </div>
 
+                    {/* Tabs Navigation */}
+                    <div className="flex items-center gap-8 mt-4 border-t border-gray-100 px-8">
+                        {['Overview', 'Attendance'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`py-4 px-1 text-sm font-bold border-b-2 transition-all ${activeTab === tab
+                                    ? 'border-blue-600 text-blue-600'
+                                    : 'border-transparent text-gray-400 hover:text-gray-600'
+                                    }`}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                {/* 3 Columns Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {activeTab === 'Overview' ? (
+                    /* 3 Columns Grid - Overview Tab */
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 
-                    {/* Left Column */}
-                    <div className="space-y-6">
-                        {/* Biographical */}
-                        <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
-                            <div className="flex justify-between items-start mb-6">
-                                <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
-                                    <User size={18} className="text-[#4f46e5]" /> Biographical
-                                </h3>
+                        {/* Left Column */}
+                        <div className="space-y-6">
+                            {/* Biographical */}
+                            <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
+                                <div className="flex justify-between items-start mb-6">
+                                    <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+                                        <User size={18} className="text-[#4f46e5]" /> Biographical
+                                    </h3>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Nickname</p>
+                                        <p className="font-semibold text-gray-900 text-sm">{member.nickname || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Civil Status</p>
+                                        <p className="font-semibold text-gray-900 text-sm">{member.civil_status || 'Single'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Date of Birth</p>
+                                        <p className="font-semibold text-gray-900 text-sm">
+                                            {member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Not specified'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Gender</p>
+                                        <p className="font-semibold text-gray-900 text-sm">{member.gender || 'Not specified'}</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Nationality</p>
+                                        <p className="font-semibold text-gray-900 text-sm">{member.nationality || 'Filipino'}</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Place of Birth</p>
+                                        <p className="font-semibold text-gray-900 text-sm italic">{member.place_of_birth || 'Not specified'}</p>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Nickname</p>
-                                    <p className="font-semibold text-gray-900 text-sm">{member.nickname || 'N/A'}</p>
+                            {/* Emergency Contact */}
+                            <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
+                                <div className="flex justify-between items-start mb-6">
+                                    <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+                                        <Heart size={18} className="text-red-500" /> Emergency Contact
+                                    </h3>
                                 </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Civil Status</p>
-                                    <p className="font-semibold text-gray-900 text-sm">{member.civil_status || 'Single'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Date of Birth</p>
-                                    <p className="font-semibold text-gray-900 text-sm">
-                                        {member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Not specified'}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Gender</p>
-                                    <p className="font-semibold text-gray-900 text-sm">{member.gender || 'Not specified'}</p>
-                                </div>
-                                <div className="col-span-2">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Nationality</p>
-                                    <p className="font-semibold text-gray-900 text-sm">{member.nationality || 'Filipino'}</p>
-                                </div>
-                                <div className="col-span-2">
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Place of Birth</p>
-                                    <p className="font-semibold text-gray-900 text-sm italic">{member.place_of_birth || 'Not specified'}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Emergency Contact */}
-                        <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
-                            <div className="flex justify-between items-start mb-6">
-                                <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
-                                    <Heart size={18} className="text-red-500" /> Emergency Contact
-                                </h3>
-                            </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Name</p>
-                                    <p className="font-semibold text-gray-900 text-sm">{member.emergency_contact_name || 'Not Listed'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Relationship</p>
-                                    <p className="font-semibold text-gray-900 text-sm">{member.emergency_contact_relationship || 'Not Listed'}</p>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Phone</p>
-                                    <p className="font-semibold text-gray-900 text-sm">{member.emergency_contact_phone || 'Not Listed'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Middle Column */}
-                    <div className="space-y-6">
-                        {/* Contact Details */}
-                        <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
-                            <div className="flex justify-between items-start mb-6">
-                                <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
-                                    <MapPin size={18} className="text-blue-500" /> Contact Details
-                                </h3>
-                            </div>
-                            <div className="space-y-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-                                        <Home size={14} className="text-blue-500" />
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Name</p>
+                                        <p className="font-semibold text-gray-900 text-sm">{member.emergency_contact_name || 'Not Listed'}</p>
                                     </div>
-                                    <div className="flex-1">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Home Address</p>
-                                        <p className="font-semibold text-gray-900 text-sm leading-snug">{member.home_address || 'Not specified'}</p>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Relationship</p>
+                                        <p className="font-semibold text-gray-900 text-sm">{member.emergency_contact_relationship || 'Not Listed'}</p>
                                     </div>
-                                </div>
-                                <div className="flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
-                                        <Phone size={14} className="text-purple-500" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Phone Number</p>
-                                        <p className="font-semibold text-gray-900 text-sm">{member.phone_number || 'Not specified'}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-start gap-4">
-                                    <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
-                                        <Mail size={14} className="text-green-500" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Email Address</p>
-                                        <p className="font-semibold text-gray-900 text-sm break-all">{member.email || 'Not specified'}</p>
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Phone</p>
+                                        <p className="font-semibold text-gray-900 text-sm">{member.emergency_contact_phone || 'Not Listed'}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Spiritual Journey */}
-                        <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
-                            <div className="flex justify-between items-start mb-6">
-                                <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
-                                    <Star size={18} className="text-amber-500" /> Spiritual Journey
-                                </h3>
-                            </div>
-
-                            <div className="relative pl-3 border-l-2 border-gray-100 space-y-6 mb-8">
-                                <div className="relative">
-                                    <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-[#4f46e5] ring-4 ring-white"></div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Salvation Date</p>
-                                    <p className="font-semibold text-gray-900 text-sm">
-                                        {member.salvation_date ? new Date(member.salvation_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Pending'}
-                                    </p>
+                        {/* Middle Column */}
+                        <div className="space-y-6">
+                            {/* Contact Details */}
+                            <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
+                                <div className="flex justify-between items-start mb-6">
+                                    <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+                                        <MapPin size={18} className="text-blue-500" /> Contact Details
+                                    </h3>
                                 </div>
-                                <div className="relative">
-                                    <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-gray-300 ring-4 ring-white"></div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Baptism Date</p>
-                                    <p className="font-semibold text-gray-500 text-sm italic">
-                                        {member.baptism_date ? new Date(member.baptism_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Pending'}
-                                    </p>
-                                </div>
-                                <div className="relative">
-                                    <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-gray-300 ring-4 ring-white"></div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Membership Date</p>
-                                    <p className="font-semibold text-gray-500 text-sm italic">
-                                        {member.membership_date ? new Date(member.membership_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Pending'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="pt-6 border-t border-gray-50 space-y-4">
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Previous Religion</p>
-                                    <p className="font-semibold text-gray-900 text-sm">{member.previous_religion || 'Catholic'}</p>
-                                </div>
-                                <div className="bg-gray-50 rounded-xl p-4">
-                                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Membership Status</p>
-                                    <span className="bg-blue-100 text-blue-700 text-[11px] px-3 py-1.5 rounded-md font-bold">
-                                        {member.is_regular_member ? 'Regular Member' : 'New Member'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Right Column */}
-                    <div className="space-y-6">
-                        {/* Ministries */}
-                        <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
-                            <div className="flex justify-between items-start mb-6">
-                                <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
-                                    <Users size={18} className="text-[#4f46e5]" /> Ministries
-                                </h3>
-                            </div>
-
-                            {positions.length > 0 ? (
-                                <div className="space-y-4 mb-6">
-                                    {positions.map((pos, i) => (
-                                        <div key={i} onClick={() => handleViewMinistryMates(pos.department)} className="group border border-gray-100 rounded-xl p-5 flex flex-col gap-1 shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
-                                            <h4 className="font-bold text-[#111827] text-[15px] group-hover:text-blue-600 transition-colors">
-                                                {pos.position_name || pos.position_title || 'Ministry Member'}
-                                            </h4>
-                                            <p className="text-[14px] text-gray-500">
-                                                {formatMinistryCategory(pos.position_category)} - Since {new Date(pos.start_date || pos.created_at || new Date()).toISOString().split('T')[0]}
-                                            </p>
-                                            <p className="text-[14px] text-gray-500">
-                                                Ministry: {formatMinistryDepartment(pos.department) || pos.department}
-                                            </p>
+                                <div className="space-y-6">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                                            <Home size={14} className="text-blue-500" />
                                         </div>
-                                    ))}
+                                        <div className="flex-1">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Home Address</p>
+                                            <p className="font-semibold text-gray-900 text-sm leading-snug">{member.home_address || 'Not specified'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-8 h-8 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
+                                            <Phone size={14} className="text-purple-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Phone Number</p>
+                                            <p className="font-semibold text-gray-900 text-sm">{member.phone_number || 'Not specified'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
+                                            <Mail size={14} className="text-green-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Email Address</p>
+                                            <p className="font-semibold text-gray-900 text-sm break-all">{member.email || 'Not specified'}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                            ) : (
-                                <p className="text-[12px] font-semibold text-gray-400 italic mb-6">No ministry involvements recorded yet.</p>
-                            )}
-
-                            <Link to="/members" className="w-full py-2.5 border border-blue-200 rounded-xl text-blue-700 text-sm font-bold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
-                                <Eye size={15} /> View All Members
-                            </Link>
-                        </div>
-
-                        {/* Activity & Attendance */}
-                        <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
-                            <div className="flex justify-between items-start mb-6">
-                                <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
-                                    <Activity size={18} className="text-green-500" /> Activity Tracking
-                                </h3>
                             </div>
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between border-b border-gray-50 pb-3">
-                                    <div>
-                                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Services</p>
-                                        <p className="font-bold text-gray-900 text-[13px]">Sunday Morning (Service + Children)</p>
-                                        <p className="text-[11px] text-gray-500 mt-0.5">
-                                            Raw {attendanceInsights.sundayMorningRaw} • Deduped {attendanceInsights.sundayMorningNet}
+
+                            {/* Spiritual Journey */}
+                            <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
+                                <div className="flex justify-between items-start mb-6">
+                                    <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+                                        <Star size={18} className="text-amber-500" /> Spiritual Journey
+                                    </h3>
+                                </div>
+
+                                <div className="relative pl-3 border-l-2 border-gray-100 space-y-6 mb-8">
+                                    <div className="relative">
+                                        <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-[#4f46e5] ring-4 ring-white"></div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Salvation Date</p>
+                                        <p className="font-semibold text-gray-900 text-sm">
+                                            {member.salvation_date ? new Date(member.salvation_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Pending'}
                                         </p>
                                     </div>
-                                    <div className="bg-green-50 text-green-700 font-black text-lg px-3 py-1 rounded-xl border border-green-100">
-                                        {attendanceInsights.sundayMorningNet}
-                                    </div>
-                                </div>
-                                <div className="flex items-center justify-between border-b border-gray-50 pb-3">
-                                    <div>
-                                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Services</p>
-                                        <p className="font-bold text-gray-900 text-[13px]">Sunday Afternoon Service</p>
-                                    </div>
-                                    <div className="bg-blue-50 text-blue-700 font-black text-lg px-3 py-1 rounded-xl border border-blue-100">
-                                        {attendanceInsights.sundayAfternoon}
-                                    </div>
-                                </div>
-                                <div className="flex items-center justify-between border-b border-gray-50 pb-3">
-                                    <div>
-                                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Services</p>
-                                        <p className="font-bold text-gray-900 text-[13px]">Wednesday Prayer Meeting</p>
-                                    </div>
-                                    <div className="bg-purple-50 text-purple-700 font-black text-lg px-3 py-1 rounded-xl border border-purple-100">
-                                        {attendanceInsights.wednesdayPrayer}
-                                    </div>
-                                </div>
-                                <div className="flex items-center justify-between pb-1">
-                                    <div>
-                                        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Smart Summary</p>
-                                        <p className="font-bold text-gray-900 text-[13px]">Total Primary Attendance</p>
-                                        <p className="text-[11px] text-gray-500 mt-0.5">
-                                            Children Dept: {attendanceInsights.childrenDepartmentDates} • Overlap Removed: {attendanceInsights.sundayMorningDedupe}
+                                    <div className="relative">
+                                        <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-gray-300 ring-4 ring-white"></div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Baptism Date</p>
+                                        <p className="font-semibold text-gray-500 text-sm italic">
+                                            {member.baptism_date ? new Date(member.baptism_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Pending'}
                                         </p>
                                     </div>
-                                    <div className="bg-amber-50 text-amber-700 font-black text-lg px-3 py-1 rounded-xl border border-amber-100">
-                                        {attendanceInsights.totalPrimaryServices}
+                                    <div className="relative">
+                                        <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-gray-300 ring-4 ring-white"></div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Membership Date</p>
+                                        <p className="font-semibold text-gray-500 text-sm italic">
+                                            {member.membership_date ? new Date(member.membership_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Pending'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="pt-6 border-t border-gray-50 space-y-4">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Previous Religion</p>
+                                        <p className="font-semibold text-gray-900 text-sm">{member.previous_religion || 'Catholic'}</p>
+                                    </div>
+                                    <div className="bg-gray-50 rounded-xl p-4">
+                                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Membership Status</p>
+                                        <span className="bg-blue-100 text-blue-700 text-[11px] px-3 py-1.5 rounded-md font-bold">
+                                            {member.is_regular_member ? 'Regular Member' : 'New Member'}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Record Info */}
-                        <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
-                            <div className="flex justify-between items-start mb-6">
-                                <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
-                                    <FileText size={18} className="text-gray-500" /> Record Info
-                                </h3>
+                        {/* Right Column */}
+                        <div className="space-y-6">
+                            {/* Ministries */}
+                            <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
+                                <div className="flex justify-between items-start mb-6">
+                                    <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+                                        <Users size={18} className="text-[#4f46e5]" /> Ministries
+                                    </h3>
+                                </div>
+
+                                {positions.length > 0 ? (
+                                    <div className="space-y-4 mb-6">
+                                        {positions.map((pos, i) => (
+                                            <div key={i} onClick={() => handleViewMinistryMates(pos.department)} className="group border border-gray-100 rounded-xl p-5 flex flex-col gap-1 shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
+                                                <h4 className="font-bold text-[#111827] text-[15px] group-hover:text-blue-600 transition-colors">
+                                                    {pos.position_name || pos.position_title || 'Ministry Member'}
+                                                </h4>
+                                                <p className="text-[14px] text-gray-500">
+                                                    {formatMinistryCategory(pos.position_category)} - Since {new Date(pos.start_date || pos.created_at || new Date()).toISOString().split('T')[0]}
+                                                </p>
+                                                <p className="text-[14px] text-gray-500">
+                                                    Ministry: {formatMinistryDepartment(pos.department) || pos.department}
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-[12px] font-semibold text-gray-400 italic mb-6">No ministry involvements recorded yet.</p>
+                                )}
+
+                                <Link to="/members" className="w-full py-2.5 border border-blue-200 rounded-xl text-blue-700 text-sm font-bold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
+                                    <Eye size={15} /> View All Members
+                                </Link>
                             </div>
-                            <div className="space-y-4">
-                                <div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Record Created</p>
-                                    <p className="font-semibold text-gray-900 text-sm">
-                                        {member.created_at ? new Date(member.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Feb 19, 2026'}
-                                    </p>
-                                    <p className="text-[11px] text-gray-500 mt-1">Information added to the system directory.</p>
+
+                            {/* Record Info */}
+                            <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
+                                <div className="flex justify-between items-start mb-6">
+                                    <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
+                                        <FileText size={18} className="text-gray-500" /> Record Info
+                                    </h3>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Record Created</p>
+                                        <p className="font-semibold text-gray-900 text-sm">
+                                            {member.created_at ? new Date(member.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : 'Feb 19, 2026'}
+                                        </p>
+                                        <p className="text-[11px] text-gray-500 mt-1">Information added to the system directory.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                ) : (
+                    /* Attendance Tab View */
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        {/* Left/Main Column - Participation History */}
+                        <div className="lg:col-span-8 space-y-6">
+                            <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-8 overflow-hidden">
+                                <h3 className="text-[18px] font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                    <Mic size={22} className="text-indigo-500" /> Detailed Service Participation
+                                </h3>
+
+                                {serviceAssignments.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {/* Detailed Summary */}
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            {Object.entries(serviceAssignments.reduce((acc: any, curr: any) => {
+                                                acc[curr.role] = (acc[curr.role] || 0) + 1;
+                                                return acc;
+                                            }, {})).map(([role, count]: [string, any]) => (
+                                                <div key={role} className="bg-indigo-50/50 border border-indigo-100/50 p-4 rounded-2xl transition-all hover:bg-indigo-50">
+                                                    <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">{role.replace('_', ' ')}</p>
+                                                    <p className="text-2xl font-black text-indigo-700">{count}<span className="text-xs ml-1 opacity-60">times</span></p>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="overflow-hidden rounded-2xl border border-gray-100">
+                                            <table className="w-full text-left">
+                                                <thead className="bg-gray-50/50 border-b border-gray-100">
+                                                    <tr>
+                                                        <th className="px-6 py-4 text-xs font-black uppercase text-gray-400 tracking-widest">Date & Service Type</th>
+                                                        <th className="px-6 py-4 text-xs font-black uppercase text-gray-400 tracking-widest">Assigned Role</th>
+                                                        <th className="px-6 py-4 text-xs font-black uppercase text-gray-400 tracking-widest text-right">Notes</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-50">
+                                                    {serviceAssignments.map((a, i) => (
+                                                        <tr key={i} className="hover:bg-gray-50/30 transition-colors group">
+                                                            <td className="px-6 py-5">
+                                                                <p className="font-bold text-gray-900">{a.service?.service_date ? new Date(a.service.service_date).toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' }) : 'N/A'}</p>
+                                                                <p className="text-[11px] font-bold text-blue-600 uppercase tracking-tighter mt-0.5">{a.service?.service_type?.replace('_', ' ')}</p>
+                                                            </td>
+                                                            <td className="px-6 py-5">
+                                                                <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-black uppercase text-[10px] tracking-tight">{a.role.replace('_', ' ')}</span>
+                                                            </td>
+                                                            <td className="px-6 py-5 text-right">
+                                                                <p className="text-sm text-gray-500 italic font-medium">{a.notes ? `"${a.notes}"` : '—'}</p>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-20 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
+                                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
+                                            <Users className="text-gray-300" size={28} />
+                                        </div>
+                                        <p className="text-gray-900 font-bold">No Service Roles Recorded</p>
+                                        <p className="text-sm text-gray-500 mt-1">This member hasn't been assigned to any service roles yet.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Goodnews Class Participation */}
+                            <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-8 overflow-hidden">
+                                <h3 className="text-[18px] font-bold text-gray-900 mb-6 flex items-center gap-3">
+                                    <BookOpen size={22} className="text-green-500" /> Goodnews Class Participation
+                                </h3>
+
+                                {goodnewsAssignments.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {/* Detailed Summary */}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="bg-green-50/50 border border-green-100/50 p-4 rounded-2xl transition-all hover:bg-green-50">
+                                                <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Total Sessions Participated</p>
+                                                <p className="text-2xl font-black text-green-700">{goodnewsAssignments.length}<span className="text-xs ml-1 opacity-60">sessions</span></p>
+                                            </div>
+                                            <div className="bg-blue-50/50 border border-blue-100/50 p-4 rounded-2xl transition-all hover:bg-blue-50">
+                                                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Unique Series Reached</p>
+                                                <p className="text-2xl font-black text-blue-700">{new Set(goodnewsAssignments.map(a => a.session?.series_id)).size}<span className="text-xs ml-1 opacity-60">series</span></p>
+                                            </div>
+                                        </div>
+
+                                        <div className="overflow-hidden rounded-2xl border border-gray-100">
+                                            <table className="w-full text-left">
+                                                <thead className="bg-gray-50/50 border-b border-gray-100">
+                                                    <tr>
+                                                        <th className="px-6 py-4 text-xs font-black uppercase text-gray-400 tracking-widest">Date & Series</th>
+                                                        <th className="px-6 py-4 text-xs font-black uppercase text-gray-400 tracking-widest">Assigned Role</th>
+                                                        <th className="px-6 py-4 text-xs font-black uppercase text-gray-400 tracking-widest text-right">Notes</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-50">
+                                                    {goodnewsAssignments.map((a, i) => (
+                                                        <tr key={i} className="hover:bg-gray-50/30 transition-colors group">
+                                                            <td className="px-6 py-5">
+                                                                <p className="font-bold text-gray-900">{a.session?.date ? new Date(a.session.date).toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' }) : 'N/A'}</p>
+                                                                <p className="text-[11px] font-bold text-green-600 uppercase tracking-tighter mt-0.5">{a.session?.series?.title || 'Unknown Series'} - Vol {a.session?.session_number || '?'}</p>
+                                                            </td>
+                                                            <td className="px-6 py-5">
+                                                                <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 font-black uppercase text-[10px] tracking-tight">{a.role.replace('_', ' ')}</span>
+                                                            </td>
+                                                            <td className="px-6 py-5 text-right">
+                                                                <p className="text-sm text-gray-500 italic font-medium">{a.notes ? `"${a.notes}"` : '—'}</p>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-20 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200">
+                                        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
+                                            <BookOpen className="text-gray-300" size={28} />
+                                        </div>
+                                        <p className="text-gray-900 font-bold">No Goodnews Class Records</p>
+                                        <p className="text-sm text-gray-500 mt-1">This member hasn't participated in any Goodnews Classes yet.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Right Column - Attendance Insights */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6">
+                                <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                    <Activity size={16} className="text-green-500" /> Basic Attendance
+                                </h3>
+                                <div className="space-y-4">
+                                    <div className="p-4 rounded-2xl bg-green-50/50 border border-green-100 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Sunday Morning</p>
+                                            <p className="text-xs text-green-700/60 font-bold">Net Attendance</p>
+                                        </div>
+                                        <p className="text-3xl font-black text-green-700">{attendanceInsights.sundayMorningNet}</p>
+                                    </div>
+                                    <div className="p-4 rounded-2xl bg-blue-50/50 border border-blue-100 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Sunday Afternoon</p>
+                                            <p className="text-xs text-blue-700/60 font-bold">Total Services</p>
+                                        </div>
+                                        <p className="text-3xl font-black text-blue-700">{attendanceInsights.sundayAfternoon}</p>
+                                    </div>
+                                    <div className="p-4 rounded-2xl bg-purple-50/50 border border-purple-100 flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Wednesday Prayer</p>
+                                            <p className="text-xs text-purple-700/60 font-bold">Midweek Service</p>
+                                        </div>
+                                        <p className="text-3xl font-black text-purple-700">{attendanceInsights.wednesdayPrayer}</p>
+                                    </div>
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <div className="flex items-center justify-between px-2">
+                                            <p className="text-xs font-bold text-gray-400">Grand Total Services</p>
+                                            <p className="text-lg font-black text-gray-900">{attendanceInsights.totalPrimaryServices}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-indigo-600 rounded-[20px] p-6 text-white shadow-lg shadow-indigo-500/20">
+                                <h4 className="font-bold flex items-center gap-2 mb-2">
+                                    <Star size={18} className="text-indigo-200" /> Engagement Level
+                                </h4>
+                                <p className="text-xs text-indigo-100 leading-relaxed mb-4">
+                                    Member has participated in {serviceAssignments.length} service roles across multiple departments.
+                                </p>
+                                <div className="h-2 bg-indigo-900/30 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-indigo-200 rounded-full transition-all duration-1000"
+                                        style={{ width: `${Math.min(100, (serviceAssignments.length / 20) * 100)}%` }}
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Edit Request Modal (view mode) */}
                 {showEditRequestModal && (

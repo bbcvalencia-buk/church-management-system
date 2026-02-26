@@ -6,7 +6,7 @@ export interface AttendanceMember {
     first_name: string;
     surname: string;
     profile_picture_url?: string;
-    
+
 }
 
 interface MemberAttendancePickerProps {
@@ -54,7 +54,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
     const visibleMembers = useMemo(() => {
         if (!showVisitorToggle) return members;
         if (includeVisitors) return members;
-        return members.filter((m) => !false);
+        return members;
     }, [members, showVisitorToggle, includeVisitors]);
 
     useEffect(() => {
@@ -139,7 +139,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                     <div className="p-6 text-center text-sm text-gray-500">
                         {members.length === 0
                             ? "No members in the registry yet. Add members first in Members Directory."
-                            : (showVisitorToggle && !includeVisitors && visibleMembers.length === 0 && members.some((m) => false)
+                            : (showVisitorToggle && !includeVisitors && visibleMembers.length === 0
                                 ? "Only visitor records are available. Enable \"Include visitors in search\"."
                                 : `No members match "${searchTerm.trim()}".`)}
                     </div>

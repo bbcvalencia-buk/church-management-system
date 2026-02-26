@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
+import * as serviceService from "@/services/serviceService";
+import * as memberService from "@/services/memberService";
+import * as visitorService from "@/services/visitorService";
 import { getLatestSundayISODate } from "@/lib/date";
-import type { Service } from "@/types";
+import type { Service, ServiceRole, ServiceAssignment } from "@/types";
 import {
     Calendar,
     BookOpen,
@@ -11,7 +12,13 @@ import {
     Heart,
     ArrowLeft,
     Save,
-    Trash2
+    Trash2,
+    Shield,
+    Music,
+    UserCheck,
+    X as IconX,
+    Plus,
+    Mic
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImageUpload from "@/components/ImageUpload";
@@ -20,6 +27,7 @@ import AttendanceReportModal from "@/components/AttendanceReportModal";
 import { deleteFile } from "@/lib/storage";
 import { findExistingMemberForVisitor, splitVisitorName } from "@/lib/visitorDedup";
 import SuccessModal from "@/components/SuccessModal";
+import { SearchMemberModal } from "@/components/SearchMemberModal";
 
 // Initial state for a new service
 const INITIAL_STATE: Partial<Service> = {
@@ -50,6 +58,22 @@ const getServiceTypeLabel = (serviceType?: string) =>
 
 const PRIMARY_SERVICE_TYPES = new Set(['sunday_morning', 'sunday_afternoon', 'wednesday_prayer']);
 const isPrimaryServiceType = (serviceType?: string) => PRIMARY_SERVICE_TYPES.has(serviceType || '');
+
+const ROLE_LABELS: Record<ServiceRole, string> = {
+    songleader: 'Songleader',
+    pastor: 'Pastor',
+    moderator: 'Moderator',
+    pianist: 'Pianist',
+    technicals: 'Technicals',
+    mini_ensemble: 'Mini Ensemble',
+    usher: 'Usher',
+    choir: 'Choir',
+    preacher: 'Preacher',
+    worship_leader: 'Worship Leader',
+    other: 'Other'
+};
+
+const MULTI_MEMBER_ROLES: ServiceRole[] = ['choir', 'mini_ensemble', 'usher', 'technicals'];
 
 const inferVisitTimeFromService = (serviceType?: string): 'AM' | 'PM' =>
     serviceType === 'sunday_afternoon' ? 'PM' : 'AM';
@@ -94,6 +118,10 @@ const ServiceForm: React.FC = () => {
     const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
     const [newVisitors, setNewVisitors] = useState<DraftVisitor[]>([]);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    const [assignments, setAssignments] = useState<Partial<ServiceAssignment>[]>([]);
+    const [showRoleSearch, setShowRoleSearch] = useState<ServiceRole | null>(null);
+
     const visitorMemberIds = useMemo(
         () => new Set(members.filter(() => false).map((m) => m.id)),
         [members]
@@ -104,89 +132,87 @@ const ServiceForm: React.FC = () => {
         fetchMembers();
         if (isEditMode) {
             fetchService().then(data => {
-                if (data) fetchServiceAttendance(data.service_date, data.service_type);
+                if (data) {
+                    fetchServiceAttendance(data.service_date, data.service_type);
+                    fetchAssignments(data.id);
+                }
             });
         }
     }, [id]);
 
     const fetchMembers = async () => {
-        const { data, error } = await supabase.from('members')
-            .select('id, first_name, surname, profile_picture_url')
-            .order('surname', { ascending: true })
-            .order('first_name', { ascending: true });
-        if (error) {
+        try {
+            const data = await memberService.getAllMembers();
+            if (data) setMembers(data);
+        } catch (error) {
             console.error("Error fetching members:", error);
-            return;
         }
-        if (data) setMembers(data);
+    };
+
+    const fetchAssignments = async (serviceId: string) => {
+        try {
+            const data = await serviceService.getServiceAssignments(serviceId);
+            if (data) setAssignments(data);
+        } catch (error) {
+            console.error("Error fetching assignments:", error);
+        }
     };
 
     const fetchServiceAttendance = async (refDate: string, serviceType?: string) => {
-        const { data } = await supabase
-            .from('attendance_log')
-            .select('member_id')
-            .eq('event_id', id)
-            .eq('event_type', 'service');
+        try {
+            const data = await serviceService.getAttendanceLogsByEvent(id!);
+            const memberIds = data?.map(d => d.member_id) || [];
 
-        const memberIds = data?.map(d => d.member_id) || [];
-
-        // Primary linkage for newer records
-        let registeredVisitors: any[] = [];
-        if (id) {
-            const { data: linkedVisitors } = await supabase
-                .from('visitors')
-                .select('*')
-                .eq('service_id', id);
-
-            if (linkedVisitors?.length) {
-                registeredVisitors = linkedVisitors;
+            // Primary linkage for newer records
+            let registeredVisitors: any[] = [];
+            if (id) {
+                // Here we might need a visitorService.getVisitorsByService
+                // I'll check if I should add it or use raw for complex joins
+                // But for now let's see if I can find it in visitors table
+                // I will add getVisitorsByService to visitorService
+                const linkedVisitors = await visitorService.getVisitorsByService(id);
+                if (linkedVisitors?.length) {
+                    registeredVisitors = linkedVisitors;
+                }
             }
+
+            // Backward compatibility for older records
+            if (!registeredVisitors.length && memberIds.length > 0) {
+                const allVisitors = await visitorService.getVisitors();
+                registeredVisitors = allVisitors.filter(v => v.member_id && memberIds.includes(v.member_id) && v.visit_date === refDate);
+            }
+
+            const drafts: DraftVisitor[] = registeredVisitors.map(v => ({
+                id: v.id,
+                name: v.name,
+                address: v.address,
+                office_address: v.office_address,
+                contact: v.contact_number,
+                age: v.age,
+                date_of_birth: v.date_of_birth,
+                gender: v.gender,
+                marital_status: v.marital_status as any,
+                church_name: v.church_name,
+                invited_by: v.invited_by,
+                visit_time: (v.visit_time as 'AM' | 'PM') || inferVisitTimeFromService(serviceType || service.service_type),
+                visit_date: v.visit_date || refDate,
+                images: v.visitor_card_images || (v.visitor_card_image_url ? [v.visitor_card_image_url] : [])
+            }));
+
+            setNewVisitors(drafts);
+
+            const registeredMemberIds = registeredVisitors.map(v => v.member_id);
+            const remaining = memberIds.filter(mid => !registeredMemberIds.includes(mid));
+            setSelectedMemberIds(remaining);
+        } catch (error) {
+            console.error("Error fetching service attendance:", error);
         }
-
-        // Backward compatibility for older records
-        if (!registeredVisitors.length && memberIds.length > 0) {
-            const { data: visitorsData } = await supabase
-                .from('visitors')
-                .select('*')
-                .in('member_id', memberIds);
-
-            registeredVisitors = visitorsData?.filter(v => v.visit_date === refDate) || [];
-        }
-
-        const drafts: DraftVisitor[] = registeredVisitors.map(v => ({
-            id: v.id,
-            name: v.name,
-            address: v.address,
-            office_address: v.office_address,
-            contact: v.contact_number,
-            age: v.age,
-            date_of_birth: v.date_of_birth,
-            gender: v.gender,
-            marital_status: v.marital_status as any,
-            church_name: v.church_name,
-            invited_by: v.invited_by,
-            visit_time: (v.visit_time as 'AM' | 'PM') || inferVisitTimeFromService(serviceType || service.service_type),
-            visit_date: v.visit_date || refDate,
-            images: v.visitor_card_images || (v.visitor_card_image_url ? [v.visitor_card_image_url] : [])
-        }));
-
-        setNewVisitors(drafts);
-
-        const registeredMemberIds = registeredVisitors.map(v => v.member_id);
-        const remaining = memberIds.filter(mid => !registeredMemberIds.includes(mid));
-        setSelectedMemberIds(remaining);
     };
 
     const fetchService = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from('services')
-                .select('*')
-                .eq('id', id)
-                .single();
-
-            if (error) throw error;
+            const data = await serviceService.getServiceById(id!);
             setService(data);
             return data;
         } catch (err) {
@@ -286,92 +312,86 @@ const ServiceForm: React.FC = () => {
             const visitorsSaved = supportsVisitorsAndSouls ? (parseInt(service.visitors_saved as any) || 0) : 0;
 
             // 1. Save Service
-            const { data: savedService, error } = await supabase
-                .from('services')
-                .upsert({
-                    ...service,
-                    members_present: membersPresentCount,
-                    visitors_present: visitorsPresentCount,
-                    souls_saved: soulsSaved,
-                    visitors_saved: visitorsSaved,
-                    total_attendance: membersPresentCount + visitorsPresentCount
-                } as any)
-                .select()
-                .single();
+            const savedService = await serviceService.upsertService({
+                ...service,
+                members_present: membersPresentCount,
+                visitors_present: visitorsPresentCount,
+                souls_saved: soulsSaved,
+                visitors_saved: visitorsSaved,
+                total_attendance: membersPresentCount + visitorsPresentCount
+            });
 
-            if (error) throw error;
+            // 1b. Save Service Assignments
+            await serviceService.deleteServiceAssignments(savedService.id);
+            if (assignments.length > 0) {
+                const assignmentData = assignments.map(a => ({
+                    service_id: savedService.id,
+                    member_id: a.member_id,
+                    role: a.role,
+                    notes: a.notes
+                }));
+                await serviceService.createServiceAssignments(assignmentData);
+            }
 
             if (!supportsVisitorsAndSouls) {
-                const { error: clearLinkedVisitorsError } = await supabase
-                    .from('visitors')
-                    .update({ service_id: null })
-                    .eq('service_id', savedService.id);
-
-                if (clearLinkedVisitorsError) throw clearLinkedVisitorsError;
+                // Clear linked visitors if not supported
+                const serviceVisitors = await visitorService.getVisitorsByService(savedService.id);
+                for (const v of serviceVisitors) {
+                    await visitorService.upsertVisitor({ ...v, service_id: null as any });
+                }
             }
 
             // 2. Process New Visitors (Auto-Register with smart duplicate detection)
             const cardVisitorMemberIds: string[] = [];
             const cardRegularMemberIds: string[] = [];
-            const isVisitorCache = new Map<string, boolean>();
-            const getIsVisitorMember = async (memberId: string) => {
-                if (isVisitorCache.has(memberId)) return isVisitorCache.get(memberId)!;
-                const { data: memberData } = await supabase
-                    .from('members')
-                    .select('id')
-                    .eq('id', memberId)
-                    .single();
-                const flag = !!false;
-                isVisitorCache.set(memberId, flag);
-                return flag;
-            };
 
-            for (const visitor of preparedVisitors) {
+            for (const v of preparedVisitors) {
                 // If it has a UUID, it's an existing visitor -> Update
-                if (visitor.id && visitor.id.length > 20) {
-                    // Get existing visitor to find member_id
-                    const { data: vRecord } = await supabase.from('visitors').select('member_id').eq('id', visitor.id).single();
-                    if (vRecord) {
+                if (v.id && v.id.length > 20) {
+                    const vRecord = await visitorService.getVisitorById(v.id);
+                    if (vRecord && vRecord.member_id) {
                         // Update Visitor
-                        await supabase.from('visitors').update({
-                            name: visitor.name,
-                            contact_number: visitor.contact || '',
-                            age: visitor.age,
-                            gender: visitor.gender,
-                            visit_time: visitor.visit_time || inferVisitTimeFromService(savedService.service_type),
-                            visit_date: visitor.visit_date || savedService.service_date,
-                            marital_status: visitor.marital_status || 'Single',
-                            visitor_card_images: visitor.images || [],
-                            address: visitor.address || '',
-                            office_address: visitor.office_address || '',
-                            church_name: visitor.church_name || '',
-                            date_of_birth: visitor.date_of_birth,
-                            invited_by: visitor.invited_by || '',
+                        await visitorService.upsertVisitor({
+                            id: v.id,
+                            name: v.name,
+                            contact_number: v.contact || '',
+                            age: v.age,
+                            gender: v.gender,
+                            visit_time: v.visit_time || inferVisitTimeFromService(savedService.service_type),
+                            visit_date: v.visit_date || savedService.service_date,
+                            marital_status: v.marital_status || 'Single',
+                            visitor_card_images: v.images || [],
+                            address: v.address || '',
+                            office_address: v.office_address || '',
+                            church_name: v.church_name || '',
+                            date_of_birth: v.date_of_birth,
+                            invited_by: v.invited_by || '',
                             service_id: savedService.id,
-                            sunday_school_session_id: null
-                        } as any).eq('id', visitor.id);
+                            sunday_school_session_id: null as any
+                        });
 
                         // Update Shadow Member
-                        await supabase.from('members').update({
-                            first_name: visitor.name.split(' ')[0] || 'Visitor',
-                            surname: visitor.name.split(' ').slice(1).join(' ') || '',
-                            home_address: visitor.address || 'Unknown',
-                            phone_number: visitor.contact || 'N/A',
-                            gender: visitor.gender,
-                            civil_status: visitor.marital_status || 'Single',
-                            date_of_birth: visitor.date_of_birth || new Date().toISOString().split('T')[0]
-                        } as any).eq('id', vRecord.member_id);
+                        const parsedName = splitVisitorName(v.name);
+                        await memberService.updateMember(vRecord.member_id, {
+                            first_name: parsedName.firstName || 'Visitor',
+                            surname: parsedName.surname || '',
+                            home_address: v.address || 'Unknown',
+                            phone_number: v.contact || 'N/A',
+                            gender: v.gender,
+                            civil_status: v.marital_status || 'Single',
+                            date_of_birth: v.date_of_birth || new Date().toISOString().split('T')[0]
+                        });
 
-                        const isVisitorMember = await getIsVisitorMember(vRecord.member_id);
-                        if (isVisitorMember) cardVisitorMemberIds.push(vRecord.member_id);
+                        const isVisitor = await memberService.isVisitorMember(vRecord.member_id);
+                        if (isVisitor) cardVisitorMemberIds.push(vRecord.member_id);
                         else cardRegularMemberIds.push(vRecord.member_id);
                     }
                 } else {
                     const matchedMember = await findExistingMemberForVisitor({
-                        name: visitor.name,
-                        contact: visitor.contact,
-                        date_of_birth: visitor.date_of_birth,
-                        gender: visitor.gender
+                        name: v.name,
+                        contact: v.contact,
+                        date_of_birth: v.date_of_birth,
+                        gender: v.gender
                     });
 
                     if (matchedMember) {
@@ -380,59 +400,50 @@ const ServiceForm: React.FC = () => {
                         continue;
                     }
 
-                    const parsedName = splitVisitorName(visitor.name);
+                    const parsedName = splitVisitorName(v.name);
 
                     // Create Shadow Member
-                    const { data: memberData, error: mError } = await supabase
-                        .from('members')
-                        .insert([{
-                            first_name: parsedName.firstName || 'Visitor',
-                            surname: parsedName.surname || '',
+                    const memberData = await memberService.createMember({
+                        first_name: parsedName.firstName || 'Visitor',
+                        surname: parsedName.surname || '',
+                        is_regular_member: false,
+                        membership_status: 'active',
+                        home_address: v.address || 'Unknown',
+                        phone_number: v.contact || 'N/A',
+                        gender: v.gender,
+                        civil_status: v.marital_status || 'Single',
+                        date_of_birth: v.date_of_birth || new Date().toISOString().split('T')[0]
+                    });
 
-                            is_regular_member: false,
-                            membership_status: 'active',
-                            home_address: visitor.address || 'Unknown',
-                            phone_number: visitor.contact || 'N/A',
-                            gender: visitor.gender,
-                            civil_status: visitor.marital_status || 'Single',
-                            date_of_birth: visitor.date_of_birth || new Date().toISOString().split('T')[0]
-                        } as any])
-                        .select()
-                        .single();
-
-                    if (mError) throw mError;
                     cardVisitorMemberIds.push(memberData.id);
 
                     // Create Visitor Record
-                    await supabase.from('visitors').insert([{
+                    await visitorService.upsertVisitor({
                         member_id: memberData.id,
-                        name: visitor.name,
-                        contact_number: visitor.contact || '',
-                        age: visitor.age,
-                        gender: visitor.gender,
-                        visit_date: visitor.visit_date || savedService.service_date,
-                        visit_time: visitor.visit_time || inferVisitTimeFromService(savedService.service_type),
-                        marital_status: visitor.marital_status || 'Single',
-                        visitor_card_images: visitor.images || [],
-                        address: visitor.address || '',
-                        office_address: visitor.office_address || '',
-                        church_name: visitor.church_name || '',
-                        date_of_birth: visitor.date_of_birth,
-                        invited_by: visitor.invited_by || '',
+                        name: v.name,
+                        contact_number: v.contact || '',
+                        age: v.age,
+                        gender: v.gender,
+                        visit_date: v.visit_date || savedService.service_date,
+                        visit_time: v.visit_time || inferVisitTimeFromService(savedService.service_type),
+                        marital_status: v.marital_status || 'Single',
+                        visitor_card_images: v.images || [],
+                        address: v.address || '',
+                        office_address: v.office_address || '',
+                        church_name: v.church_name || '',
+                        date_of_birth: v.date_of_birth,
+                        invited_by: v.invited_by || '',
                         service_id: savedService.id,
-                        sunday_school_session_id: null,
+                        sunday_school_session_id: null as any,
                         is_saved: false,
                         is_prospect_for_baptism: false,
                         follow_up_status: 'pending'
-                    } as any]);
+                    });
                 }
             }
 
             // 2. Clear old attendance
-            await supabase.from('attendance_log')
-                .delete()
-                .eq('event_id', savedService.id)
-                .eq('event_type', 'service');
+            await serviceService.deleteAttendanceLogs(savedService.id);
 
             // 4. Save new attendance (Existing + New)
             const uniqueVisitorIds = supportsVisitorsAndSouls
@@ -445,18 +456,14 @@ const ServiceForm: React.FC = () => {
             const finalMembersCount = uniqueRegularIds.length;
             const allMemberIds = Array.from(new Set([...uniqueRegularIds, ...uniqueVisitorIds]));
 
-            const { error: serviceCountUpdateError } = await supabase
-                .from('services')
-                .update({
-                    members_present: finalMembersCount,
-                    visitors_present: finalVisitorsCount,
-                    souls_saved: soulsSaved,
-                    visitors_saved: visitorsSaved,
-                    total_attendance: finalMembersCount + finalVisitorsCount
-                })
-                .eq('id', savedService.id);
-
-            if (serviceCountUpdateError) throw serviceCountUpdateError;
+            await serviceService.upsertService({
+                id: savedService.id,
+                members_present: finalMembersCount,
+                visitors_present: finalVisitorsCount,
+                souls_saved: soulsSaved,
+                visitors_saved: visitorsSaved,
+                total_attendance: finalMembersCount + finalVisitorsCount
+            });
 
             if (allMemberIds.length > 0) {
                 const logs = allMemberIds.map(mid => ({
@@ -466,7 +473,7 @@ const ServiceForm: React.FC = () => {
                     event_date: savedService.service_date,
                     was_present: true
                 }));
-                await supabase.from('attendance_log').insert(logs);
+                await serviceService.createAttendanceLogs(logs);
             }
 
             if (!id) {
@@ -489,9 +496,7 @@ const ServiceForm: React.FC = () => {
                 await deleteFile(service.visitor_card_url).catch(console.warn);
             }
 
-            await supabase.from('attendance_log').delete().eq('event_id', id).eq('event_type', 'service');
-            const { error } = await supabase.from('services').delete().eq('id', id);
-            if (error) throw error;
+            await serviceService.deleteService(id!);
             navigate('/services');
         } catch (err: any) {
             console.error("Error deleting service:", err);
@@ -499,7 +504,50 @@ const ServiceForm: React.FC = () => {
         }
     };
 
+    const handleSelectMemberForRole = (memberId: string) => {
+        if (!showRoleSearch) return;
+
+        const role = showRoleSearch;
+        const member = members.find(m => m.id === memberId);
+
+        if (MULTI_MEMBER_ROLES.includes(role)) {
+            // Check if already assigned this role
+            if (assignments.some(a => a.role === role && a.member_id === memberId)) {
+                setShowRoleSearch(null);
+                return;
+            }
+            setAssignments(prev => [...prev, {
+                member_id: memberId,
+                role: role,
+                member: member
+            }]);
+        } else {
+            // Replace existing single assignment for this role
+            setAssignments(prev => [
+                ...prev.filter(a => a.role !== role),
+                {
+                    member_id: memberId,
+                    role: role,
+                    member: member
+                }
+            ]);
+        }
+        setShowRoleSearch(null);
+    };
+
+    const removeAssignment = (memberId: string, role: string) => {
+        setAssignments(prev => prev.filter(a => !(a.member_id === memberId && a.role === role)));
+    };
+
+    const updateAssignmentNotes = (memberId: string, role: string, notes: string) => {
+        setAssignments(prev => prev.map(a =>
+            (a.member_id === memberId && a.role === role) ? { ...a, notes } : a
+        ));
+    };
+
     if (loading) return <div className="p-8 text-center text-[var(--color-text-muted)]">Loading...</div>;
+
+    const ROLES: ServiceRole[] = ['pastor', 'preacher', 'songleader', 'moderator', 'worship_leader', 'pianist', 'technicals', 'choir', 'mini_ensemble', 'usher', 'other'];
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20">
@@ -582,6 +630,82 @@ const ServiceForm: React.FC = () => {
                                     />
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Service Roles */}
+                    <div className="card-panel p-6 space-y-4 bg-white">
+                        <h3 className="text-[1.22rem] leading-6 font-semibold tracking-tight flex items-center gap-2 mb-4 text-[var(--color-text-main)]">
+                            <UserCheck className="text-[var(--color-primary)]" size={20} />
+                            Service Roles / Roster
+                        </h3>
+
+                        <div className="space-y-6">
+                            {ROLES.map(role => {
+                                const roleAssignments = assignments.filter(a => a.role === role);
+                                const isMulti = MULTI_MEMBER_ROLES.includes(role);
+
+                                return (
+                                    <div key={role} className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
+                                                {role === 'pastor' && <Shield size={14} className="text-blue-500" />}
+                                                {role === 'preacher' && <BookOpen size={14} className="text-purple-500" />}
+                                                {role === 'choir' && <Music size={14} className="text-indigo-500" />}
+                                                {role === 'songleader' && <Mic size={14} className="text-pink-500" />}
+                                                {ROLE_LABELS[role]}
+                                            </label>
+                                            {(isMulti || roleAssignments.length === 0) && (
+                                                <button
+                                                    onClick={() => setShowRoleSearch(role)}
+                                                    className="text-[11px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 px-2 py-1 bg-blue-50 rounded-lg transition-colors"
+                                                >
+                                                    <Plus size={12} /> Assign {isMulti ? 'More' : ''}
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {roleAssignments.map((a, idx) => (
+                                                <div key={`${a.member_id}-${idx}`} className="flex flex-col gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100 group">
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 border border-white shadow-sm">
+                                                                {a.member?.profile_picture_url ? (
+                                                                    <img src={a.member.profile_picture_url} alt="" className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                                        <Users size={14} />
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <span className="text-sm font-bold text-gray-900">
+                                                                {a.member?.first_name} {a.member?.surname}
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => removeAssignment(a.member_id!, role)}
+                                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                        >
+                                                            <IconX size={14} />
+                                                        </button>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Notes/Assignments (e.g. Lead, Alto, etc.)"
+                                                        value={a.notes || ''}
+                                                        onChange={(e) => updateAssignmentNotes(a.member_id!, role, e.target.value)}
+                                                        className="text-xs bg-white border border-gray-100 rounded-lg px-2 py-1.5 focus:border-blue-200 outline-none placeholder:text-gray-300"
+                                                    />
+                                                </div>
+                                            ))}
+                                            {roleAssignments.length === 0 && (
+                                                <div className="text-[11px] italic text-gray-400 pl-1">No one assigned</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -778,6 +902,12 @@ const ServiceForm: React.FC = () => {
                 isOpen={showSuccessModal}
                 onDone={() => navigate('/services')}
                 onView={() => navigate(`/services`)}
+            />
+
+            <SearchMemberModal
+                isOpen={!!showRoleSearch}
+                onClose={() => setShowRoleSearch(null)}
+                onSelect={handleSelectMemberForRole}
             />
         </div >
     );

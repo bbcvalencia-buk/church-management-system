@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import * as visitorService from "@/services/visitorService";
 import type { Visitor } from "../types";
 import { Plus, Search, Filter, MapPin, Phone, UserPlus, Calendar, Trash2, Download, MoreHorizontal, Mail, ChevronDown, ChevronLeft, ChevronRight, User } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
@@ -15,6 +14,7 @@ const VisitorList: React.FC = () => {
         id: null,
         name: ''
     });
+    const [deleting, setDeleting] = useState(false); // Added deleting state
     const [filterStatus, setFilterStatus] = useState<string>("all");
     const [showConverted, setShowConverted] = useState<boolean>(false);
 
@@ -23,19 +23,12 @@ const VisitorList: React.FC = () => {
     }, []);
 
     const fetchVisitors = async () => {
+        setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from("visitors")
-                .select("*")
-                .order("visit_date", { ascending: false });
-
-            if (error) {
-                console.error("Error fetching visitors:", error);
-            } else {
-                setVisitors(data as Visitor[]);
-            }
+            const data = await visitorService.getVisitors();
+            setVisitors(data || []);
         } catch (err) {
-            console.error("Unexpected error:", err);
+            console.error("Error fetching visitors:", err);
         } finally {
             setLoading(false);
         }
@@ -43,8 +36,11 @@ const VisitorList: React.FC = () => {
 
     const handleDelete = async () => {
         if (!confirmDelete.id) return;
+        setDeleting(true);
         try {
-            // Delete card images from R2 if exists
+            // The R2 deletion logic should ideally be part of the visitorService.deleteVisitor
+            // For now, keeping it here if visitorService doesn't handle it.
+            // If visitorService.deleteVisitor handles R2 deletion, this block can be removed.
             const visitorToDelete = visitors.find(v => v.id === confirmDelete.id);
 
             // Legacy single image
@@ -67,12 +63,13 @@ const VisitorList: React.FC = () => {
                 }
             }
 
-            const { error } = await supabase.from("visitors").delete().eq("id", confirmDelete.id);
-            if (error) throw error;
+            await visitorService.deleteVisitor(confirmDelete.id);
+            setVisitors(prev => prev.filter(v => v.id !== confirmDelete.id));
             setConfirmDelete({ isOpen: false, id: null, name: "" });
-            fetchVisitors();
         } catch (err: any) {
             alert("Delete failed: " + err.message);
+        } finally {
+            setDeleting(false);
         }
     };
 

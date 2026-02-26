@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/lib/supabase";
-import { submitFinancialMutation } from "@/lib/financial";
+import * as financeService from "@/services/financeService";
 import type { FinancialRecord, Member } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { PinConfirmModal } from "@/components/PinConfirmModal";
@@ -21,13 +20,15 @@ import {
     Trash2,
     RefreshCcw,
     AlertTriangle,
-    Heart
+    Heart,
+    Upload
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
 import FaithPromiseLedgerTab from "@/components/finance/FaithPromiseLedgerTab";
 import FaithPromiseQuickAdd from "@/components/finance/FaithPromiseQuickAdd";
 import FaithPromisePledgeForm from "@/components/finance/FaithPromisePledgeForm";
+import { FaithPromiseImport } from "@/components/finance/FaithPromiseImport";
 
 interface FinancialRecordWithMember extends FinancialRecord {
     members?: Pick<Member, 'first_name' | 'surname'> | null;
@@ -93,40 +94,44 @@ const TreasuryDashboard: React.FC = () => {
 
     const [quickAddMember, setQuickAddMember] = useState<{ id: string, name: string } | null>(null);
     const [showPledgeForm, setShowPledgeForm] = useState(false);
+    const [showImport, setShowImport] = useState(false);
 
     useEffect(() => {
         fetchRecords();
         fetchPeriodLocks();
-    }, [selectedYear, activeTab]);
+    }, [selectedYear, activeTab, selectedMonth]); // Added selectedMonth to dependencies for fetchRecords
 
     const fetchPeriodLocks = async () => {
-        const { data, error } = await supabase.from('financial_period_locks').select('*');
+        const data = await financeService.getFinancialPeriodLocks();
         if (data) setPeriodLocks(data);
     };
 
     const fetchRecords = async () => {
         setLoading(true);
         try {
-            const startStr = `${selectedYear}-01-01`;
-            const endStr = `${selectedYear}-12-31`;
+            const formatDate = (date: Date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
 
-            let query = supabase
-                .from('financial_records')
-                .select('id, member_id, transaction_date, transaction_type, amount, pledge_purpose, deleted_at, members(first_name, surname)')
-                .gte('transaction_date', startStr)
-                .lte('transaction_date', endStr)
-                .order('transaction_date', { ascending: false });
+            let start: string;
+            let end: string;
 
-            if (activeTab === 'deleted') {
-                query = query.not('deleted_at', 'is', null);
+            if (selectedMonth === 'all') {
+                start = `${selectedYear}-01-01`;
+                end = `${selectedYear}-12-31`;
             } else {
-                query = query.is('deleted_at', null);
+                const monthIndex = parseInt(selectedMonth, 10);
+                const monthStart = new Date(selectedYear, monthIndex, 1);
+                const monthEnd = new Date(selectedYear, monthIndex + 1, 0);
+                start = formatDate(monthStart);
+                end = formatDate(monthEnd);
             }
 
-            const { data, error } = await query;
-
-            if (error) throw error;
-            setRawRecords((data || []) as unknown as FinancialRecordWithMember[]);
+            const data = await financeService.getFinancialRecords(start, end, activeTab);
+            setRawRecords(data || []);
         } catch (err) {
             console.error("Error fetching financial records:", err);
             showToast('Failed to load financial records.', 'error');
@@ -149,14 +154,14 @@ const TreasuryDashboard: React.FC = () => {
                 return;
             }
 
-            const key = `${record.member_id}_${record.transaction_date}`;
+            const key = `${record.member_id}_${record.transaction_date} `;
 
             if (!map.has(key)) {
                 map.set(key, {
                     key,
                     member_id: record.member_id,
                     date: record.transaction_date,
-                    member_name: record.members ? `${record.members.first_name} ${record.members.surname}` : 'Unknown',
+                    member_name: record.members ? `${record.members.first_name} ${record.members.surname} ` : 'Unknown',
                     tithe: 0,
                     faith_promise: 0,
                     love_gift: 0,
@@ -219,36 +224,22 @@ const TreasuryDashboard: React.FC = () => {
     };
 
     const executeLockUnlock = async () => {
-        const monthNum = parseInt(selectedMonth) + 1;
+        setLoading(true);
         try {
             if (isCurrentPeriodLocked) {
                 // Unlock
-                const { error } = await supabase
-                    .from('financial_period_locks')
-                    .update({ unlocked_at: new Date().toISOString(), unlocked_by: user?.id })
-                    .eq('year', selectedYear)
-                    .eq('month', monthNum)
-                    .is('unlocked_at', null);
-
-                if (error) throw error;
-                showToast("Period unlocked successfully.", "success");
+                await financeService.unlockFinancialPeriod(selectedYear, parseInt(selectedMonth) + 1, user?.id || '');
+                showToast(`Period ${selectedYear}-${parseInt(selectedMonth) + 1} unlocked successfully.`, 'success');
             } else {
                 // Lock
-                const { error } = await supabase
-                    .from('financial_period_locks')
-                    .insert([{
-                        year: selectedYear,
-                        month: monthNum,
-                        locked_by: user?.id
-                    }]);
-
-                if (error) throw error;
-                showToast("Period locked successfully.", "success");
+                await financeService.lockFinancialPeriod(selectedYear, parseInt(selectedMonth) + 1, user?.id || '');
+                showToast(`Period ${selectedYear}-${parseInt(selectedMonth) + 1} locked successfully.`, 'success');
             }
             fetchPeriodLocks();
         } catch (err: any) {
-            showToast(err.message, "error");
+            showToast("Failed to toggle period lock: " + err.message, 'error');
         } finally {
+            setLoading(false);
             setPinModalAction({ isOpen: false, action: null });
         }
     };
@@ -301,9 +292,9 @@ const TreasuryDashboard: React.FC = () => {
 
         try {
             // Revert existing (soft delete wrapper handles Netlify call)
-            await submitFinancialMutation('DELETE', { member_id: editingRow.member_id, transaction_date: editingRow.date });
+            await financeService.submitFinancialMutation('DELETE', { member_id: editingRow.member_id, transaction_date: editingRow.date });
             // Insert new 
-            await submitFinancialMutation('INSERT', { records: recordsToInsert });
+            await financeService.submitFinancialMutation('INSERT', { records: recordsToInsert });
 
             showToast('Transaction history updated.', 'success');
             closeEditModal();
@@ -331,12 +322,16 @@ const TreasuryDashboard: React.FC = () => {
 
     const executeDeleteTransaction = async () => {
         setPinModalAction({ isOpen: false, action: null });
+        setUpdating(true); // Using updating state for delete
         try {
-            await submitFinancialMutation('DELETE', { member_id: confirmRevert.member_id, transaction_date: confirmRevert.date });
+            await financeService.submitFinancialMutation('DELETE', { member_id: confirmRevert.member_id, transaction_date: confirmRevert.date });
             showToast('Transaction history reverted.', 'success');
             fetchRecords();
+            setConfirmRevert({ isOpen: false, member_id: null, date: null, name: '' }); // Reset confirmRevert
         } catch (err: any) {
             showToast(err.message, 'error');
+        } finally {
+            setUpdating(false);
         }
     };
 
@@ -347,18 +342,15 @@ const TreasuryDashboard: React.FC = () => {
     const executeRestore = async () => {
         const row = pinModalAction.payload;
         setPinModalAction({ isOpen: false, action: null });
+        setUpdating(true); // Using updating state for restore
         try {
-            // Restore requires clearing deleted_at. Since submitFinancialMutation doesn't explicitly expose restore, we can hack UPDATE
-            const { error } = await supabase.from('financial_records')
-                .update({ deleted_at: null, deleted_by: null })
-                .eq('member_id', row.member_id)
-                .eq('transaction_date', row.date);
-
-            if (error) throw error;
-            showToast('Transaction restored successfully.', 'success');
+            await financeService.restoreFinancialTransaction(row.member_id, row.date);
+            showToast("Transaction restored successfully.", 'success');
             fetchRecords();
         } catch (err: any) {
-            showToast(err.message, 'error');
+            showToast("Restore failed: " + err.message, 'error');
+        } finally {
+            setUpdating(false);
         }
     };
 
@@ -413,13 +405,24 @@ const TreasuryDashboard: React.FC = () => {
                         <span>Reports</span>
                     </Link>
                     {activeTab === 'faith_promise' ? (
-                        <button
-                            onClick={() => setShowPledgeForm(true)}
-                            className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20 font-bold"
-                        >
-                            <Plus size={18} />
-                            <span>New Pledge</span>
-                        </button>
+                        <>
+                            {(roles.includes('church_administrator') || roles.includes('treasurer')) && (
+                                <button
+                                    onClick={() => setShowImport(true)}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold"
+                                >
+                                    <Upload size={18} />
+                                    <span>Import</span>
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setShowPledgeForm(true)}
+                                className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20 font-bold"
+                            >
+                                <Plus size={18} />
+                                <span>New Pledge</span>
+                            </button>
+                        </>
                     ) : (
                         <Link
                             to="/finance/new"
@@ -461,21 +464,21 @@ const TreasuryDashboard: React.FC = () => {
             <div className="card-panel p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white">
                 <div className="flex gap-4">
                     <button
-                        className={`font-bold text-lg pb-1 transition-colors ${activeTab === 'active' ? 'text-black border-b-2 border-black' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`font - bold text - lg pb - 1 transition - colors ${activeTab === 'active' ? 'text-black border-b-2 border-black' : 'text-gray-400 hover:text-gray-600'} `}
                         onClick={() => setActiveTab('active')}
                     >
                         Transaction History
                     </button>
                     {isChurchAdmin && (
                         <button
-                            className={`font-bold text-lg pb-1 transition-colors flex items-center gap-2 ${activeTab === 'deleted' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400 hover:text-gray-600'}`}
+                            className={`font - bold text - lg pb - 1 transition - colors flex items - center gap - 2 ${activeTab === 'deleted' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400 hover:text-gray-600'} `}
                             onClick={() => setActiveTab('deleted')}
                         >
                             <Trash2 size={18} /> Deleted Records
                         </button>
                     )}
                     <button
-                        className={`font-bold text-lg pb-1 transition-colors flex items-center gap-2 ${activeTab === 'faith_promise' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`font - bold text - lg pb - 1 transition - colors flex items - center gap - 2 ${activeTab === 'faith_promise' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'} `}
                         onClick={() => setActiveTab('faith_promise')}
                     >
                         <Heart size={18} /> Faith Promise Ledger
@@ -554,11 +557,11 @@ const TreasuryDashboard: React.FC = () => {
                     onQuickAdd={(memberId, memberName) => setQuickAddMember({ id: memberId, name: memberName })}
                 />
             ) : (
-                <div className={`card-panel overflow-hidden bg-white ${activeTab === 'deleted' ? 'border border-red-200 shadow-red-500/10' : ''}`}>
+                <div className={`card - panel overflow - hidden bg - white ${activeTab === 'deleted' ? 'border border-red-200 shadow-red-500/10' : ''} `}>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className={`border-b border-[var(--color-border)] text-xs font-bold uppercase tracking-wider ${activeTab === 'deleted' ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-[var(--color-text-muted)]'}`}>
+                                <tr className={`border - b border - [var(--color - border)]text - xs font - bold uppercase tracking - wider ${activeTab === 'deleted' ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-[var(--color-text-muted)]'} `}>
                                     <th className="p-4">Date</th>
                                     <th className="p-4">Member</th>
                                     <th className="p-4 text-right">Tithe</th>
@@ -571,16 +574,27 @@ const TreasuryDashboard: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-[var(--color-border)]">
                                 {loading ? (
-                                    <tr><td colSpan={8} className="p-8 text-center">Loading records...</td></tr>
+                                    Array.from({ length: 5 }).map((_, i) => (
+                                        <tr key={i} className="animate-pulse bg-white">
+                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
+                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
+                                        </tr>
+                                    ))
                                 ) : aggregatedData.length === 0 ? (
                                     <tr>
-                                        <td colSpan={8} className={`p-8 text-center font-medium ${activeTab === 'deleted' ? 'text-red-400' : 'text-gray-400'}`}>
+                                        <td colSpan={8} className={`p - 8 text - center font - medium ${activeTab === 'deleted' ? 'text-red-400' : 'text-gray-400'} `}>
                                             No {activeTab} records found for the selected period.
                                         </td>
                                     </tr>
                                 ) : (
                                     aggregatedData.map((row) => (
-                                        <tr key={row.key} className={`text-sm group transition-colors ${activeTab === 'deleted' ? 'hover:bg-red-50/50' : 'hover:bg-gray-50'}`}>
+                                        <tr key={row.key} className={`text - sm group transition - colors ${activeTab === 'deleted' ? 'hover:bg-red-50/50' : 'hover:bg-gray-50'} `}>
                                             <td className="p-4 font-mono text-gray-500">{row.date}</td>
                                             <td className="p-4 font-medium text-gray-800 flex items-center gap-2">
                                                 {row.member_name}
@@ -657,10 +671,21 @@ const TreasuryDashboard: React.FC = () => {
                 />
             )}
 
+            {showImport && (
+                <FaithPromiseImport
+                    isOpen={showImport}
+                    onClose={() => setShowImport(false)}
+                    onSuccess={() => {
+                        setShowImport(false);
+                        fetchRecords();
+                    }}
+                />
+            )}
+
             <ConfirmModal
                 isOpen={confirmRevert.isOpen}
                 title="Revert Transaction"
-                message={`Are you sure you want to revert (delete) all transactions for ${confirmRevert.name} on ${confirmRevert.date}?`}
+                message={`Are you sure you want to revert(delete) all transactions for ${confirmRevert.name} on ${confirmRevert.date}?`}
                 confirmText="Proceed to Delete"
                 isDanger={true}
                 onConfirm={promptDeletePin}

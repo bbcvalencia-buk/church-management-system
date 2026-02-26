@@ -9,7 +9,7 @@ export interface VisitorMatchInput {
 
 export interface MatchedMember {
     id: string;
-    
+    is_visitor?: boolean;
 }
 
 interface MemberCandidate extends MatchedMember {

@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useMemo } from "react";
-import { supabase } from "@/lib/supabase";
+import * as musicService from "@/services/musicService";
+import * as memberService from "@/services/memberService";
 import { getLatestSundayISODate } from "@/lib/date";
 import { exportToCSV } from "@/lib/csv";
 import {
@@ -138,7 +138,9 @@ const INITIAL_STATE: Partial<PracticeSession> = {
 const MusicMinistry: React.FC = () => {
     // Data State
     const [sessions, setSessions] = useState<PracticeSession[]>([]);
-    const [allMusicMembers, setAllMusicMembers] = useState<Member[]>([]);
+    const [allMembers, setAllMembers] = useState<Member[]>([]); // All members from memberService
+    const [musicAssignments, setMusicAssignments] = useState<MusicPositionAssignment[]>([]); // All music ministry assignments
+    const [allMusicMembers, setAllMusicMembers] = useState<Member[]>([]); // Filtered music members
     const [membersByPracticeType, setMembersByPracticeType] = useState<Record<string, Member[]>>({});
     const [form, setForm] = useState<Partial<PracticeSession>>(INITIAL_STATE);
     const [memberSearchTerm, setMemberSearchTerm] = useState("");
@@ -162,89 +164,78 @@ const MusicMinistry: React.FC = () => {
 
     const fetchSessions = async () => {
         setLoading(true);
-        const { data } = await supabase
-            .from('music_practice_sessions')
-            .select('*')
-            .order('practice_date', { ascending: false });
-        if (data) setSessions(data as PracticeSession[]);
-        setLoading(false);
+        try {
+            const data = await musicService.getMusicSessions();
+            setSessions(data || []);
+        } catch (err) {
+            console.error("Error fetching sessions:", err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const fetchMembers = async () => {
-        // Fetch active music ministry assignments and derive rosters per practice type.
-        const { data: positionsData, error: positionsError } = await supabase
-            .from('church_positions')
-            .select('member_id, department, position_name')
-            .eq('position_category', 'music_ministry')
-            .eq('is_active', true);
+        try {
+            const [allMembersData, musicAssignmentsData] = await Promise.all([
+                memberService.getAllMembers(),
+                musicService.getMusicMinistryAssignments()
+            ]);
 
-        if (positionsError) {
-            console.error("Error fetching music ministry assignments:", positionsError);
-            setAllMusicMembers([]);
-            setMembersByPracticeType({});
-            return;
-        }
+            setAllMembers(allMembersData || []);
+            setMusicAssignments(musicAssignmentsData || []);
 
-        const assignments = (positionsData || []) as MusicPositionAssignment[];
-        const allMusicMemberIds = new Set<string>();
-        const groupedMemberIds = new Map<string, Set<string>>();
+            const allMusicMemberIds = new Set<string>();
+            const groupedMemberIds = new Map<string, Set<string>>();
 
-        for (const assignment of assignments) {
-            if (!assignment.member_id) continue;
-            allMusicMemberIds.add(assignment.member_id);
+            for (const assignment of musicAssignmentsData || []) {
+                if (!assignment.member_id) continue;
+                allMusicMemberIds.add(assignment.member_id);
 
-            const practiceKey = resolvePracticeTypeKey(assignment.department || assignment.position_name);
-            if (!practiceKey) continue;
-            if (!groupedMemberIds.has(practiceKey)) {
-                groupedMemberIds.set(practiceKey, new Set<string>());
+                const practiceKey = resolvePracticeTypeKey(assignment.department || assignment.position_name);
+                if (!practiceKey) continue;
+                if (!groupedMemberIds.has(practiceKey)) {
+                    groupedMemberIds.set(practiceKey, new Set<string>());
+                }
+                groupedMemberIds.get(practiceKey)!.add(assignment.member_id);
             }
-            groupedMemberIds.get(practiceKey)!.add(assignment.member_id);
-        }
 
-        const musicMemberIds = Array.from(allMusicMemberIds);
-        if (musicMemberIds.length === 0) {
+            const musicMemberIds = Array.from(allMusicMemberIds);
+            if (musicMemberIds.length === 0) {
+                setAllMusicMembers([]);
+                setMembersByPracticeType({});
+                return;
+            }
+
+            const filteredMusicMembers = (allMembersData || []).filter(member => musicMemberIds.includes(member.id));
+            const sortedMembers = sortMembersByName(filteredMusicMembers);
+            setAllMusicMembers(sortedMembers);
+
+            const memberById = new Map(sortedMembers.map((member) => [member.id, member]));
+            const groupedRosters: Record<string, Member[]> = {};
+
+            groupedMemberIds.forEach((memberIds, practiceKey) => {
+                const roster = Array.from(memberIds)
+                    .map((memberId) => memberById.get(memberId))
+                    .filter((member): member is Member => Boolean(member));
+                groupedRosters[practiceKey] = sortMembersByName(roster);
+            });
+
+            setMembersByPracticeType(groupedRosters);
+
+        } catch (err) {
+            console.error("Error fetching members/assignments:", err);
             setAllMusicMembers([]);
             setMembersByPracticeType({});
-            return;
         }
-
-        const { data, error } = await supabase
-            .from('members')
-            .select('id, first_name, surname, profile_picture_url, member_number')
-            .in('id', musicMemberIds)
-            .order('surname', { ascending: true })
-            .order('first_name', { ascending: true });
-
-        if (error) {
-            console.error("Error fetching music ministry members:", error);
-            setAllMusicMembers([]);
-            setMembersByPracticeType({});
-            return;
-        }
-
-        const sortedMembers = sortMembersByName((data || []) as Member[]);
-        setAllMusicMembers(sortedMembers);
-
-        const memberById = new Map(sortedMembers.map((member) => [member.id, member]));
-        const groupedRosters: Record<string, Member[]> = {};
-
-        groupedMemberIds.forEach((memberIds, practiceKey) => {
-            const roster = Array.from(memberIds)
-                .map((memberId) => memberById.get(memberId))
-                .filter((member): member is Member => Boolean(member));
-            groupedRosters[practiceKey] = sortMembersByName(roster);
-        });
-
-        setMembersByPracticeType(groupedRosters);
     };
 
     const fetchSessionAttendance = async (sessionId: string) => {
-        const { data } = await supabase
-            .from('attendance_log')
-            .select('member_id')
-            .eq('event_id', sessionId)
-            .eq('event_type', 'music_practice');
-        if (data) setSelectedMemberIds(data.map(d => d.member_id));
+        try {
+            const data = await musicService.getMusicSessionAttendanceLogs(sessionId);
+            setSelectedMemberIds(data);
+        } catch (err) {
+            console.error("Error fetching attendance:", err);
+        }
     };
 
     const handleOpenModal = (session?: PracticeSession) => {
@@ -267,12 +258,8 @@ const MusicMinistry: React.FC = () => {
     const handleViewSession = async (session: PracticeSession) => {
         setViewSession(session);
         // Fetch attendance for this specific session view
-        const { data } = await supabase
-            .from('attendance_log')
-            .select('member_id')
-            .eq('event_id', session.id)
-            .eq('event_type', 'music_practice');
-        if (data) setViewSessionAttendance(data.map(d => d.member_id));
+        const data = await musicService.getMusicSessionAttendanceLogs(session.id);
+        if (data) setViewSessionAttendance(data);
     };
 
     const handleSave = async () => {
@@ -282,49 +269,27 @@ const MusicMinistry: React.FC = () => {
             const practiceStartTime = normalizeTimeInputValue(form.practice_start_time, DEFAULT_PRACTICE_START_TIME);
             const practiceEndTime = normalizeTimeInputValue(form.practice_end_time, DEFAULT_PRACTICE_END_TIME);
 
-            // 1. Save Session
-            const { data: savedSession, error } = await supabase
-                .from('music_practice_sessions')
-                .upsert({
-                    ...form,
-                    practice_start_time: practiceStartTime,
-                    practice_end_time: practiceEndTime,
-                    members_present: selectedMemberIds.length,
-                    non_member_attendance: nonMemberAttendance
-                } as any)
-                .select()
-                .single();
+            const sessionsToSave = {
+                ...form,
+                practice_start_time: practiceStartTime,
+                practice_end_time: practiceEndTime,
+                members_present: selectedMemberIds.length,
+                non_member_attendance: nonMemberAttendance
+            };
 
-            if (error) throw error;
+            const savedSession = await musicService.upsertMusicSession(sessionsToSave as PracticeSession);
 
-            // 2. Clear old attendance
-            await supabase.from('attendance_log')
-                .delete()
-                .eq('event_id', savedSession.id)
-                .eq('event_type', 'music_practice');
-
-            // 3. Save new attendance
-            if (selectedMemberIds.length > 0) {
-                const logs = selectedMemberIds.map(mid => ({
-                    member_id: mid,
-                    event_type: 'music_practice',
-                    event_id: savedSession.id,
-                    event_date: savedSession.practice_date,
-                    was_present: true
-                }));
-                await supabase.from('attendance_log').insert(logs);
-            }
+            await musicService.updateMusicSessionAttendanceLogs(savedSession.id, savedSession.practice_date, selectedMemberIds);
 
             fetchSessions();
             setIsModalOpen(false);
+            setForm(INITIAL_STATE); // Reset form after successful save
+            setShowSuccessModal(true);
 
             if (viewSession && viewSession.id === savedSession.id) {
                 handleViewSession(savedSession as PracticeSession);
             }
 
-            if (!form.id) {
-                setShowSuccessModal(true);
-            }
         } catch (err: any) {
             alert("Error saving session: " + err.message);
         } finally {
@@ -334,18 +299,17 @@ const MusicMinistry: React.FC = () => {
 
     const handleDelete = async () => {
         if (!confirmDelete.id) return;
+        setSaving(true);
         try {
-            const id = confirmDelete.id;
-            await supabase.from('attendance_log').delete().eq('event_id', id).eq('event_type', 'music_practice');
-            const { error } = await supabase.from('music_practice_sessions').delete().eq('id', id);
-            if (error) throw error;
-
+            await musicService.deleteMusicSession(confirmDelete.id);
             setConfirmDelete({ isOpen: false, id: null });
             setIsModalOpen(false);
-            setViewSession(null);
+            setViewSession(null); // Clear view if the deleted session was being viewed
             fetchSessions();
         } catch (err: any) {
             alert("Delete failed: " + err.message);
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -738,7 +702,7 @@ const MusicMinistry: React.FC = () => {
                                                 onClick={() => handleViewSession(session)}
                                                 className="p-6 flex items-center gap-6 hover:bg-gray-50 transition-colors cursor-pointer group"
                                             >
-                                                <div className={`w-14 h-14 rounded-[12px] flex items-center justify-center shrink-0 ${typeConfig.bg} ${typeConfig.text}`}>
+                                                <div className={`w - 14 h - 14 rounded - [12px] flex items - center justify - center shrink - 0 ${typeConfig.bg} ${typeConfig.text} `}>
                                                     <typeConfig.icon size={24} />
                                                 </div>
 
@@ -767,7 +731,7 @@ const MusicMinistry: React.FC = () => {
                                                         </p>
                                                     )}
                                                     <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                                                        <div className={`h-1.5 rounded-full ${isLow ? 'bg-orange-400' : 'bg-green-500'}`} style={{ width: `${attendanceRatio * 100}%` }}></div>
+                                                        <div className={`h - 1.5 rounded - full ${isLow ? 'bg-orange-400' : 'bg-green-500'} `} style={{ width: `${attendanceRatio * 100}% ` }}></div>
                                                     </div>
                                                 </div>
 
@@ -789,7 +753,7 @@ const MusicMinistry: React.FC = () => {
                                 <div className="space-y-6">
                                     {needsAttention.length > 0 ? needsAttention.map((item, i) => (
                                         <div key={i} className="flex items-start gap-4">
-                                            <div className={`w-8 h-8 rounded-[10px] flex items-center justify-center shrink-0 border mt-0.5 ${item.colorClass}`}>
+                                            <div className={`w - 8 h - 8 rounded - [10px] flex items - center justify - center shrink - 0 border mt - 0.5 ${item.colorClass} `}>
                                                 {item.node}
                                             </div>
                                             <div>

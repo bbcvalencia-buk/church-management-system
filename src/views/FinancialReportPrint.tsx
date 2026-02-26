@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import * as memberService from "@/services/memberService";
+import * as systemService from "@/services/systemService";
+import * as financeService from "@/services/financeService";
 import type { FinancialRecord, Member, SystemSettings } from "@/types";
 import { Printer, ArrowLeft, Download, Loader2 } from "lucide-react";
 // @ts-ignore
@@ -135,24 +137,23 @@ const FinancialReportPrint: React.FC = () => {
     };
 
     const fetchMembers = async () => {
-        const { data } = await supabase.from("members").select("*").order("surname");
-        if (data) setMembers(data as Member[]);
+        try {
+            const data = await memberService.getAllMembers();
+            setMembers(data as Member[]);
+        } catch (err) {
+            console.error("Error fetching members:", err);
+        }
     };
 
     const fetchSystemSettings = async () => {
         try {
-            const { data, error } = await supabase
-                .from("system_settings")
-                .select("church_name, church_address")
-                .maybeSingle();
-
-            if (error) throw error;
-            if (!data) return;
-
-            setChurchSettings({
-                church_name: data.church_name || "Bible Baptist Church",
-                church_address: data.church_address || ""
-            });
+            const data = await systemService.getSettings();
+            if (data) {
+                setChurchSettings({
+                    church_name: data.church_name || "Bible Baptist Church",
+                    church_address: data.church_address || ""
+                });
+            }
         } catch (err) {
             console.error("Failed to fetch system settings for statement header:", err);
         }
@@ -162,22 +163,8 @@ const FinancialReportPrint: React.FC = () => {
         setLoading(true);
 
         try {
-            let query = supabase
-                .from("financial_records")
-                .select("*, members(*)")
-                .is("deleted_at", null)
-                .gte("transaction_date", `${year}-01-01`)
-                .lte("transaction_date", `${year}-12-31`)
-                .order("transaction_date");
+            const records = await financeService.getFinancialRecordsByYear(year, selectedMemberId);
 
-            if (selectedMemberId !== "all") {
-                query = query.eq("member_id", selectedMemberId);
-            }
-
-            const { data, error } = await query;
-            if (error) throw error;
-
-            const records = (data || []) as RecordWithMember[];
             const grouped = new Map<string, ReportData>();
 
             if (selectedMemberId !== "all") {
@@ -187,7 +174,7 @@ const FinancialReportPrint: React.FC = () => {
                 }
             }
 
-            records.forEach((record) => {
+            records.forEach((record: RecordWithMember) => {
                 const memberData = record.members || members.find((m) => m.id === record.member_id);
                 if (!memberData) return;
 
@@ -217,13 +204,7 @@ const FinancialReportPrint: React.FC = () => {
                 return;
             }
 
-            const { data: commitmentRows, error: commitmentError } = await supabase
-                .from("faith_promise_commitments")
-                .select("member_id, promised_amount")
-                .eq("year", year)
-                .in("member_id", memberIds);
-
-            if (commitmentError) throw commitmentError;
+            const commitmentRows = await financeService.getFaithPromiseCommitmentsByYear(year, memberIds);
 
             const commitmentMap: Record<string, number> = {};
             ((commitmentRows || []) as FaithPromiseCommitmentRow[]).forEach((row) => {

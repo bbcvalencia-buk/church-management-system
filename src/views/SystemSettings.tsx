@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import * as systemService from "@/services/systemService";
+import * as roleService from "@/services/roleService";
 import { supabase } from "@/lib/supabase";
 import {
     Settings,
@@ -38,56 +40,45 @@ const SystemSettings: React.FC = () => {
     const [userRole, setUserRole] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchUserRole = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data } = await supabase.rpc('app_has_role', { target_role: 'church_administrator' });
-                if (data) setUserRole('church_administrator');
-            }
+        const fetchUserData = async () => {
+            const isAdmin = await roleService.hasRole('church_administrator');
+            if (isAdmin) setUserRole('church_administrator');
         };
-        fetchUserRole();
+        fetchUserData();
         fetchSettings();
         fetchAuditLogs();
     }, []);
 
     const fetchSettings = async () => {
-        const { data } = await supabase.from('system_settings').select('*').maybeSingle();
-        if (data) {
-            setSettings({
-                church_name: data.church_name || '',
-                church_address: data.church_address || '',
-                system_name: data.system_name || '',
-                system_version: data.system_version || 'v1.0.0',
-                church_logo_url: data.church_logo_url || ''
-            });
+        try {
+            const data = await systemService.getSettings();
+            if (data) {
+                setSettings({
+                    church_name: data.church_name || '',
+                    church_address: data.church_address || '',
+                    system_name: data.system_name || '',
+                    system_version: data.system_version || 'v1.0.0',
+                    church_logo_url: data.church_logo_url || ''
+                });
+            }
+        } catch (err) {
+            console.error(err);
         }
     };
 
     const fetchAuditLogs = async () => {
-        const { data } = await supabase
-            .from('audit_log')
-            .select('*')
-            .order('timestamp', { ascending: false })
-            .limit(20);
-
-        if (data) setAuditLogs(data);
+        try {
+            const data = await systemService.getAuditLogs();
+            setAuditLogs(data);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
     const handleSaveSettings = async () => {
         setLoading(true);
         try {
-            // Save DB settings
-            const { count } = await supabase.from('system_settings').select('*', { count: 'exact', head: true });
-
-            if (count === 0) {
-                await supabase.from('system_settings').insert(settings);
-            } else {
-                const { data } = await supabase.from('system_settings').select('id').maybeSingle();
-                if (data?.id) {
-                    await supabase.from('system_settings').update(settings).eq('id', data.id);
-                }
-            }
-
+            await systemService.upsertSettings(settings);
             showToast("Settings saved successfully.", 'success');
         } catch (err) {
             console.error(err);
@@ -124,10 +115,7 @@ const SystemSettings: React.FC = () => {
             setSettings(prev => ({ ...prev, church_logo_url: url }));
 
             // Save to DB immediately
-            const { data } = await supabase.from('system_settings').select('id').maybeSingle();
-            if (data?.id) {
-                await supabase.from('system_settings').update({ church_logo_url: url }).eq('id', data.id);
-            }
+            await systemService.upsertSettings({ church_logo_url: url });
 
             showToast("Church logo uploaded successfully.", 'success');
         } catch (err) {
@@ -148,10 +136,7 @@ const SystemSettings: React.FC = () => {
             await deleteFile(settings.church_logo_url);
             setSettings(prev => ({ ...prev, church_logo_url: '' }));
 
-            const { data } = await supabase.from('system_settings').select('id').maybeSingle();
-            if (data?.id) {
-                await supabase.from('system_settings').update({ church_logo_url: null }).eq('id', data.id);
-            }
+            await systemService.upsertSettings({ church_logo_url: "" });
 
             showToast("Logo removed.", 'success');
         } catch (err) {
@@ -164,14 +149,9 @@ const SystemSettings: React.FC = () => {
 
     const handleBackup = async () => {
         const tables = ['members', 'services', 'financial_records', 'visitors'];
-        const backup: any = {};
-
         setLoading(true);
         try {
-            for (const table of tables) {
-                const { data } = await supabase.from(table).select('*');
-                if (data) backup[table] = data;
-            }
+            const backup = await systemService.getBackupData(tables);
 
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);

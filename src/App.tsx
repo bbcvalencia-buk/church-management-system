@@ -17,13 +17,16 @@ import FinancialReportPrint from './views/FinancialReportPrint';
 import FaithPromiseStatementPrint from './views/FaithPromiseStatementPrint';
 import SystemSettings from './views/SystemSettings';
 import Activities from './views/Activities';
+import GoodnewsClass from './views/GoodnewsClass';
 import MusicMinistry from './views/MusicMinistry';
 import Dashboard from './views/Dashboard';
 import Announcements from './views/Announcements';
 import RoleManagement from './views/RoleManagement';
+import ChurchEvents from './views/ChurchEvents';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { supabase } from './lib/supabase';
+import ErrorBoundary from './components/ErrorBoundary';
 import Login from './views/Login';
 import Register from './views/Register';
 import ResetPassword from './views/ResetPassword';
@@ -37,8 +40,10 @@ const DASHBOARD_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRol
 const SUNDAY_SCHOOL_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.SUNDAY_SCHOOL_ADMIN];
 const ACTIVITY_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.ACTIVITY_COORDINATOR, UserRole.RECORDING_SECRETARY];
 const MUSIC_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.MUSIC_MINISTER];
+const GOODNEWS_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.GOODNEWS_TEACHER];
 const TREASURY_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.TREASURER];
 const ADMIN_ROLES = [UserRole.CHURCH_ADMINISTRATOR];
+const CHURCH_EVENT_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.ACTIVITY_COORDINATOR, UserRole.PASTOR, UserRole.RECORDING_SECRETARY];
 const MEMBER_ROLES = [UserRole.MEMBER];
 const MEMBER_PROFILE_MANAGER_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.SUNDAY_SCHOOL_ADMIN];
 
@@ -291,133 +296,143 @@ const MyProfileRedirect: React.FC = () => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <ToastProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-
-            <Route
-              path="/"
-              element={
-                <RequireAuth>
-                  <Layout />
-                </RequireAuth>
-              }
-            >
-              <Route index element={<HomeLanding />} />
-              <Route path="unauthorized" element={<AccessDenied />} />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <AuthProvider>
+          <ToastProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               <Route
-                path="members"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><MembersDirectory /></RequireRoles>}
-              />
-              <Route
-                path="members/new"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><MemberProfile /></RequireRoles>}
-              />
-              <Route
-                path="members/:id"
-                element={<RequireMemberProfileAccess><MemberProfile /></RequireMemberProfileAccess>}
-              />
-              <Route path="profile" element={<MyProfileRedirect />} />
-              <Route path="change-password" element={<ChangePassword />} />
-              <Route path="announcements" element={<Announcements />} />
-              <Route
-                path="families/:surname"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><FamilyProfile /></RequireRoles>}
-              />
-              <Route
-                path="visitors"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><VisitorList /></RequireRoles>}
-              />
-              <Route
-                path="visitors/new"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><VisitorForm /></RequireRoles>}
-              />
-              <Route
-                path="visitors/:id"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><VisitorForm /></RequireRoles>}
-              />
+                path="/"
+                element={
+                  <RequireAuth>
+                    <Layout />
+                  </RequireAuth>
+                }
+              >
+                <Route index element={<HomeLanding />} />
+                <Route path="unauthorized" element={<AccessDenied />} />
+
+                <Route
+                  path="members"
+                  element={<RequireRoles allowedRoles={CLERK_ROLES}><MembersDirectory /></RequireRoles>}
+                />
+                <Route
+                  path="members/new"
+                  element={<RequireRoles allowedRoles={CLERK_ROLES}><MemberProfile /></RequireRoles>}
+                />
+                <Route
+                  path="members/:id"
+                  element={<RequireMemberProfileAccess><MemberProfile /></RequireMemberProfileAccess>}
+                />
+                <Route path="profile" element={<MyProfileRedirect />} />
+                <Route path="change-password" element={<ChangePassword />} />
+                <Route path="announcements" element={<Announcements />} />
+                <Route
+                  path="families/:surname"
+                  element={<RequireRoles allowedRoles={CLERK_ROLES}><FamilyProfile /></RequireRoles>}
+                />
+                <Route
+                  path="visitors"
+                  element={<RequireRoles allowedRoles={CLERK_ROLES}><VisitorList /></RequireRoles>}
+                />
+                <Route
+                  path="visitors/new"
+                  element={<RequireRoles allowedRoles={CLERK_ROLES}><VisitorForm /></RequireRoles>}
+                />
+                <Route
+                  path="visitors/:id"
+                  element={<RequireRoles allowedRoles={CLERK_ROLES}><VisitorForm /></RequireRoles>}
+                />
+
+                <Route
+                  path="ministries"
+                  element={<RequireRoles allowedRoles={CLERK_ROLES}><MinistryDirectory /></RequireRoles>}
+                />
+
+                <Route
+                  path="services"
+                  element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceList /></RequireRoles>}
+                />
+                <Route
+                  path="services/new"
+                  element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceForm /></RequireRoles>}
+                />
+                <Route
+                  path="services/:id"
+                  element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceForm /></RequireRoles>}
+                />
+                <Route
+                  path="sunday-school"
+                  element={<RequireSundaySchoolAccess><SundaySchool /></RequireSundaySchoolAccess>}
+                />
+                <Route
+                  path="activities"
+                  element={<RequireRoles allowedRoles={ACTIVITY_ROLES}><Activities /></RequireRoles>}
+                />
+                <Route
+                  path="church-events"
+                  element={<RequireRoles allowedRoles={CHURCH_EVENT_ROLES}><ChurchEvents /></RequireRoles>}
+                />
+                <Route
+                  path="goodnews-class"
+                  element={<RequireRoles allowedRoles={GOODNEWS_ROLES}><GoodnewsClass /></RequireRoles>}
+                />
+                <Route
+                  path="music-ministry"
+                  element={<RequireRoles allowedRoles={MUSIC_ROLES}><MusicMinistry /></RequireRoles>}
+                />
+                <Route
+                  path="finance"
+                  element={<RequireRoles allowedRoles={TREASURY_ROLES}><TreasuryDashboard /></RequireRoles>}
+                />
+                <Route
+                  path="finance/new"
+                  element={<RequireRoles allowedRoles={TREASURY_ROLES}><FinancialRecordForm /></RequireRoles>}
+                />
+                <Route
+                  path="finance/:id"
+                  element={<RequireRoles allowedRoles={TREASURY_ROLES}><FinancialRecordForm /></RequireRoles>}
+                />
+                <Route
+                  path="finance/reports"
+                  element={<RequireRoles allowedRoles={TREASURY_ROLES}><FinancialReportPrint /></RequireRoles>}
+                />
+                <Route
+                  path="finance/faith-promise-print"
+                  element={<RequireRoles allowedRoles={TREASURY_ROLES}><FaithPromiseStatementPrint /></RequireRoles>}
+                />
+
+                <Route
+                  path="settings"
+                  element={<RequireRoles allowedRoles={ADMIN_ROLES}><SystemSettings /></RequireRoles>}
+                />
+                <Route
+                  path="users"
+                  element={<RequireRoles allowedRoles={ADMIN_ROLES}><RoleManagement /></RequireRoles>}
+                />
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
 
               <Route
-                path="ministries"
-                element={<RequireRoles allowedRoles={CLERK_ROLES}><MinistryDirectory /></RequireRoles>}
+                path="members/:id/print-id"
+                element={
+                  <RequireAuth>
+                    <RequireRoles allowedRoles={CLERK_ROLES}>
+                      <MemberIDPrint />
+                    </RequireRoles>
+                  </RequireAuth>
+                }
               />
-
-              <Route
-                path="services"
-                element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceList /></RequireRoles>}
-              />
-              <Route
-                path="services/new"
-                element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceForm /></RequireRoles>}
-              />
-              <Route
-                path="services/:id"
-                element={<RequireRoles allowedRoles={SERVICE_ROLES}><ServiceForm /></RequireRoles>}
-              />
-              <Route
-                path="sunday-school"
-                element={<RequireSundaySchoolAccess><SundaySchool /></RequireSundaySchoolAccess>}
-              />
-              <Route
-                path="activities"
-                element={<RequireRoles allowedRoles={ACTIVITY_ROLES}><Activities /></RequireRoles>}
-              />
-              <Route
-                path="music-ministry"
-                element={<RequireRoles allowedRoles={MUSIC_ROLES}><MusicMinistry /></RequireRoles>}
-              />
-              <Route
-                path="finance"
-                element={<RequireRoles allowedRoles={TREASURY_ROLES}><TreasuryDashboard /></RequireRoles>}
-              />
-              <Route
-                path="finance/new"
-                element={<RequireRoles allowedRoles={TREASURY_ROLES}><FinancialRecordForm /></RequireRoles>}
-              />
-              <Route
-                path="finance/:id"
-                element={<RequireRoles allowedRoles={TREASURY_ROLES}><FinancialRecordForm /></RequireRoles>}
-              />
-              <Route
-                path="finance/reports"
-                element={<RequireRoles allowedRoles={TREASURY_ROLES}><FinancialReportPrint /></RequireRoles>}
-              />
-              <Route
-                path="finance/faith-promise-print"
-                element={<RequireRoles allowedRoles={TREASURY_ROLES}><FaithPromiseStatementPrint /></RequireRoles>}
-              />
-
-              <Route
-                path="settings"
-                element={<RequireRoles allowedRoles={ADMIN_ROLES}><SystemSettings /></RequireRoles>}
-              />
-              <Route
-                path="users"
-                element={<RequireRoles allowedRoles={ADMIN_ROLES}><RoleManagement /></RequireRoles>}
-              />
-
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-
-            <Route
-              path="members/:id/print-id"
-              element={
-                <RequireAuth>
-                  <RequireRoles allowedRoles={CLERK_ROLES}>
-                    <MemberIDPrint />
-                  </RequireRoles>
-                </RequireAuth>
-              }
-            />
-          </Routes>
-        </ToastProvider>
-      </AuthProvider>
-    </BrowserRouter>
+            </Routes>
+          </ToastProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

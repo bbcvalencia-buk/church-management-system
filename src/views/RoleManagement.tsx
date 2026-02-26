@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import * as roleService from '@/services/roleService';
+import * as memberService from '@/services/memberService';
 import {
     Shield,
     User,
@@ -85,55 +86,16 @@ const RoleManagement: React.FC = () => {
         setLoading(true);
         try {
             // 1. Fetch all members for search
-            const { data: mData, error: mError } = await supabase
-                .from('members')
-                .select('id, first_name, surname, profile_picture_url')
-                .order('surname');
-
-            if (mError) throw mError;
+            const mData = await memberService.getAllMembers();
             setMembers(mData || []);
 
             // 2. Fetch current role assignments
-            const { data: rData, error: rError } = await supabase
-                .from('user_roles')
-                .select('member_id, role, members(first_name, surname, profile_picture_url)');
-
-            if (rError) {
-                // If table doesn't exist yet, handle gracefully
-                if (rError.code === '42P01') {
-                    console.warn("user_roles table missing");
-                    setError("System Error: user_roles table is missing. Please run the migration.");
-                } else {
-                    throw rError;
-                }
-            } else {
-                // Flatten structure
-                const roles = (rData || []).map((r: any) => ({
-                    member_id: r.member_id,
-                    role: r.role,
-                    member: r.members
-                }));
-                setAssignedRoles(roles);
-            }
+            const roles = await roleService.getAllUserRoles();
+            setAssignedRoles(roles as any);
 
             // 3. Fetch pending profile edit requests (admin notification feed)
-            const { data: reqData, error: reqError } = await supabase
-                .from('member_profile_edit_requests')
-                .select('id, target_member_id, requested_by_member_id, request_message, status, created_at')
-                .eq('status', 'pending')
-                .order('created_at', { ascending: false })
-                .limit(20);
-
-            if (reqError) {
-                if (reqError.code === '42P01') {
-                    console.warn("member_profile_edit_requests table missing");
-                    setEditRequests([]);
-                } else {
-                    throw reqError;
-                }
-            } else {
-                setEditRequests((reqData || []) as ProfileEditRequest[]);
-            }
+            const reqData = await roleService.getPendingProfileEditRequests();
+            setEditRequests(reqData as ProfileEditRequest[]);
         } catch (err: any) {
             console.error(err);
             setError("Failed to load data: " + err.message);
@@ -151,17 +113,9 @@ const RoleManagement: React.FC = () => {
         setSaving(true);
         try {
             if (create) {
-                const { error } = await supabase
-                    .from('user_roles')
-                    .insert({ member_id: memberId, role });
-                if (error) throw error;
+                await roleService.assignRole(memberId, role);
             } else {
-                const { error } = await supabase
-                    .from('user_roles')
-                    .delete()
-                    .eq('member_id', memberId)
-                    .eq('role', role);
-                if (error) throw error;
+                await roleService.removeRole(memberId, role);
             }
             // Refresh local state
             fetchData();
@@ -177,19 +131,7 @@ const RoleManagement: React.FC = () => {
     const resolveProfileEditRequest = async (requestId: string, status: 'approved' | 'rejected') => {
         setResolvingRequestId(requestId);
         try {
-            const { data: userResult } = await supabase.auth.getUser();
-            const adminUserId = userResult.user?.id || null;
-
-            const { error } = await supabase
-                .from('member_profile_edit_requests')
-                .update({
-                    status,
-                    resolved_at: new Date().toISOString(),
-                    resolved_by: adminUserId
-                })
-                .eq('id', requestId);
-
-            if (error) throw error;
+            await roleService.resolveProfileEditRequest(requestId, status);
             showToast(`Request ${status}.`, 'success');
             fetchData();
         } catch (err: any) {

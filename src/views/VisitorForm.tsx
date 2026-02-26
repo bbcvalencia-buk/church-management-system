@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import * as visitorService from '@/services/visitorService';
 import { getLatestSundayISODate } from '@/lib/date';
 import type { Visitor, Member } from '@/types';
 import MultiImageUpload from '@/components/MultiImageUpload';
@@ -48,13 +48,19 @@ const VisitorForm: React.FC = () => {
 
     const fetchVisitor = async () => {
         setLoading(true);
-        const { data } = await supabase.from('visitors').select('*').eq('id', id).single();
-        if (data) {
-            // Handle legacy single image -> array
-            const images = data.visitor_card_images || (data.visitor_card_image_url ? [data.visitor_card_image_url] : []);
-            setVisitor({ ...data, visitor_card_images: images });
+        try {
+            const data = await visitorService.getVisitorById(id!);
+            if (data) {
+                // Handle legacy single image -> array
+                const images = data.visitor_card_images || (data.visitor_card_image_url ? [data.visitor_card_image_url] : []);
+                setVisitor({ ...data, visitor_card_images: images });
+            }
+        } catch (err) {
+            console.error("Error fetching visitor:", err);
+            showToast("Failed to load visitor data", "error");
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
     const update = (field: keyof Visitor, value: any) => {
@@ -73,29 +79,20 @@ const VisitorForm: React.FC = () => {
 
         try {
             // Visitor card images are handled by MultiImageUpload component immediately
-            const visitorData = { ...visitor };
+            const visitorData = {
+                ...visitor,
+                name: visitor.name?.trim() || 'Unknown',
+                address: visitor.address?.trim() || 'Unknown',
+                contact_number: visitor.contact_number?.trim() || 'N/A',
+                visitor_card_images: visitor.visitor_card_images || []
+            };
 
-            if (isEditMode) {
-                const { error } = await supabase.from('visitors').update(visitorData).eq('id', id);
-                if (error) throw error;
-                showToast("Visitor updated successfully!", 'success');
-            } else {
-                // 1. Create Visitor directly. No need for shadow members anymore.
-                const { data: newVisitor, error } = await supabase
-                    .from('visitors')
-                    .insert([{
-                        ...visitorData,
-                        name: visitorData.name?.trim() || 'Unknown',
-                        address: visitorData.address?.trim() || 'Unknown',
-                        contact_number: visitorData.contact_number?.trim() || 'N/A',
-                        visitor_card_images: visitor.visitor_card_images || []
-                    }])
-                    .select()
-                    .single();
+            const savedVisitor = await visitorService.upsertVisitor(visitorData);
 
-                if (error) throw error;
-                showToast("Visitor added successfully!", 'success');
-                navigate(`/visitors/${newVisitor.id}`);
+            showToast(isEditMode ? "Visitor updated successfully!" : "Visitor added successfully!", 'success');
+
+            if (!isEditMode) {
+                navigate(`/visitors/${savedVisitor.id}`);
             }
         } catch (error: any) {
             console.error('Error saving visitor:', error);

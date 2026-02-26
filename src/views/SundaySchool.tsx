@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import * as sundaySchoolService from "@/services/sundaySchoolService";
+import * as memberService from "@/services/memberService";
 import { getLatestSundayISODate } from "@/lib/date";
 import type { SundaySchoolSession } from "@/types";
 import { UserRole } from "@/types";
@@ -138,22 +139,15 @@ const SundaySchool: React.FC = () => {
             }
 
             setAccessLoading(true);
-            const { data, error } = await supabase
-                .from("church_positions")
-                .select("position_category, department, position_name, specific_role, is_ministry_head")
-                .eq("member_id", currentMember.id)
-                .eq("is_active", true)
-                .in("position_category", [...SUNDAY_SCHOOL_POSITION_CATEGORIES]);
-
-            if (error) {
+            try {
+                const data = await sundaySchoolService.getTeacherAssignments(currentMember.id, [...SUNDAY_SCHOOL_POSITION_CATEGORIES]);
+                setTeacherDepartments(deriveTeacherDepartments((data || []) as any[]));
+            } catch (error) {
                 console.error("Error resolving Sunday School teacher departments:", error);
                 setTeacherDepartments([]);
+            } finally {
                 setAccessLoading(false);
-                return;
             }
-
-            setTeacherDepartments(deriveTeacherDepartments((data || []) as any[]));
-            setAccessLoading(false);
         };
 
         resolveTeacherAccess();
@@ -166,21 +160,10 @@ const SundaySchool: React.FC = () => {
     }, [accessLoading, hasSundaySchoolAccess, isSundaySchoolAdmin, teacherDepartments.join("|")]);
 
     const fetchSessions = async () => {
+        setLoading(true);
         try {
-            let query = supabase
-                .from('sunday_school_sessions')
-                .select('*')
-                .order('session_date', { ascending: false })
-                .limit(50);
-
-            if (!isSundaySchoolAdmin && managedDepartmentIds.length > 0) {
-                query = query.in('department', managedDepartmentIds as any);
-            }
-
-            const { data, error } = await query;
-
-            if (error) throw error;
-            setSessions(data as SundaySchoolSession[]);
+            const data = await sundaySchoolService.getSundaySchoolSessions(managedDepartmentIds, isSundaySchoolAdmin);
+            setSessions(data);
         } catch (err) {
             console.error("Error fetching sessions:", err);
         } finally {
@@ -189,40 +172,24 @@ const SundaySchool: React.FC = () => {
     };
 
     const fetchMembers = async () => {
-        if (isSundaySchoolAdmin) {
-            const { data: allMembers, error: allMembersError } = await supabase
-                .from("members")
-                .select("id, first_name, surname, profile_picture_url, phone_number, home_address, date_of_birth, gender, civil_status")
-                .order("surname", { ascending: true })
-                .order("first_name", { ascending: true });
+        try {
+            const [allMembers, studentAssignments] = await Promise.all([
+                memberService.getAllMembers(),
+                sundaySchoolService.getSundaySchoolStudentAssignments([...SUNDAY_SCHOOL_POSITION_CATEGORIES])
+            ]);
 
-            if (allMembersError) {
-                console.error("Error fetching members:", allMembersError);
-                setMembers([]);
-                setMembersByDepartment({});
-                return;
-            }
-
-            const normalizedMembers = allMembers || [];
-            setMembers(normalizedMembers);
-
-            // Keep department mapping so Student Profiles can still show department labels.
-            const { data: assignmentData, error: assignmentError } = await supabase
-                .from("church_positions")
-                .select("member_id, position_category, department, position_name, specific_role, is_ministry_head")
-                .eq("is_active", true)
-                .in("position_category", [...SUNDAY_SCHOOL_POSITION_CATEGORIES]);
-
-            if (assignmentError) {
-                console.error("Error fetching Sunday School assignments:", assignmentError);
-                setMembersByDepartment({});
-                return;
-            }
+            setMembers(allMembers || []);
 
             const idsByDepartment = new Map<string, Set<string>>();
-            for (const row of (assignmentData || []) as any[]) {
+            const allStudentIds = new Set<string>();
+
+            const scopeDepartmentIds = isSundaySchoolAdmin
+                ? DEPARTMENTS.map((department) => department.id)
+                : managedDepartmentIds;
+
+            for (const row of studentAssignments) {
                 const department = normalizeSundaySchoolDepartment(row);
-                if (!department) continue;
+                if (!department || !scopeDepartmentIds.includes(department)) continue;
                 if (isSundaySchoolTeacherAssignment(row)) continue;
                 if (!row.member_id) continue;
 
@@ -230,96 +197,26 @@ const SundaySchool: React.FC = () => {
                     idsByDepartment.set(department, new Set<string>());
                 }
                 idsByDepartment.get(department)!.add(row.member_id);
+                allStudentIds.add(row.member_id);
             }
 
-            const memberById = new Map(normalizedMembers.map((row: any) => [row.id, row]));
+            const studentById = new Map(allMembers.map((row: any) => [row.id, row]));
             const nextByDepartment: Record<string, any[]> = {};
 
             idsByDepartment.forEach((idSet, department) => {
                 nextByDepartment[department] = Array.from(idSet)
-                    .map((id) => memberById.get(id))
+                    .map((id) => studentById.get(id))
                     .filter(Boolean)
                     .sort((a: any, b: any) => `${a.surname || ""} ${a.first_name || ""}`.localeCompare(`${b.surname || ""} ${b.first_name || ""}`));
             });
 
             setMembersByDepartment(nextByDepartment);
-            return;
-        }
 
-        const scopeDepartmentIds = isSundaySchoolAdmin
-            ? DEPARTMENTS.map((department) => department.id)
-            : managedDepartmentIds;
-
-        if (scopeDepartmentIds.length === 0) {
+        } catch (err) {
+            console.error("Error fetching members/assignments:", err);
             setMembers([]);
             setMembersByDepartment({});
-            return;
         }
-
-        const { data: assignmentData, error: assignmentError } = await supabase
-            .from("church_positions")
-            .select("member_id, position_category, department, position_name, specific_role, is_ministry_head")
-            .eq("is_active", true)
-            .in("position_category", [...SUNDAY_SCHOOL_POSITION_CATEGORIES]);
-
-        if (assignmentError) {
-            console.error("Error fetching Sunday School assignments:", assignmentError);
-            setMembers([]);
-            setMembersByDepartment({});
-            return;
-        }
-
-        const assignmentRows = (assignmentData || []) as any[];
-        const idsByDepartment = new Map<string, Set<string>>();
-        const allStudentIds = new Set<string>();
-
-        for (const row of assignmentRows) {
-            const department = normalizeSundaySchoolDepartment(row);
-            if (!department || !scopeDepartmentIds.includes(department)) continue;
-            if (isSundaySchoolTeacherAssignment(row)) continue;
-            if (!row.member_id) continue;
-
-            if (!idsByDepartment.has(department)) {
-                idsByDepartment.set(department, new Set<string>());
-            }
-            idsByDepartment.get(department)!.add(row.member_id);
-            allStudentIds.add(row.member_id);
-        }
-
-        const studentIds = Array.from(allStudentIds);
-        if (studentIds.length === 0) {
-            setMembers([]);
-            setMembersByDepartment({});
-            return;
-        }
-
-        const { data: studentData, error: studentError } = await supabase
-            .from("members")
-            .select("id, first_name, surname, profile_picture_url, phone_number, home_address, date_of_birth, gender, civil_status")
-            .in("id", studentIds)
-            .order("surname", { ascending: true })
-            .order("first_name", { ascending: true });
-
-        if (studentError) {
-            console.error("Error fetching Sunday School students:", studentError);
-            setMembers([]);
-            setMembersByDepartment({});
-            return;
-        }
-
-        const students = studentData || [];
-        const studentById = new Map(students.map((row: any) => [row.id, row]));
-        const nextByDepartment: Record<string, any[]> = {};
-
-        idsByDepartment.forEach((idSet, department) => {
-            nextByDepartment[department] = Array.from(idSet)
-                .map((id) => studentById.get(id))
-                .filter(Boolean)
-                .sort((a: any, b: any) => `${a.surname || ""} ${a.first_name || ""}`.localeCompare(`${b.surname || ""} ${b.first_name || ""}`));
-        });
-
-        setMembersByDepartment(nextByDepartment);
-        setMembers(students);
     };
 
     const handleOpenModal = async (session?: SundaySchoolSession) => {
@@ -328,20 +225,12 @@ const SundaySchool: React.FC = () => {
             setNewSession(session);
 
             // Fetch attendance logs
-            const { data: logs } = await supabase
-                .from('attendance_log')
-                .select('member_id')
-                .eq('event_id', session.id)
-                .eq('event_type', 'sunday_school');
-
-            const memberIds = logs?.map(l => l.member_id) || [];
+            const logs = await sundaySchoolService.getAttendanceLogs(session.id, 'sunday_school');
+            const memberIds = logs?.map((l: any) => l.member_id) || [];
 
             // Primary linkage for newer records
             let registeredVisitors: any[] = [];
-            const { data: linkedVisitors } = await supabase
-                .from('visitors')
-                .select('*')
-                .eq('sunday_school_session_id', session.id);
+            const linkedVisitors = await sundaySchoolService.getVisitorsBySessionId(session.id);
 
             if (linkedVisitors?.length) {
                 registeredVisitors = linkedVisitors;
@@ -349,12 +238,8 @@ const SundaySchool: React.FC = () => {
 
             // Backward compatibility for older records
             if (!registeredVisitors.length && memberIds.length > 0) {
-                const { data: visitorsData } = await supabase
-                    .from('visitors')
-                    .select('*')
-                    .in('member_id', memberIds);
-
-                registeredVisitors = visitorsData?.filter(v => v.visit_date === session.session_date) || [];
+                const visitorsData = await sundaySchoolService.getVisitorsByMemberIds(memberIds);
+                registeredVisitors = visitorsData?.filter((v: any) => v.visit_date === session.session_date) || [];
             }
 
             const drafts: DraftVisitor[] = registeredVisitors.map(v => ({
@@ -396,6 +281,10 @@ const SundaySchool: React.FC = () => {
     };
 
     const handleSave = async () => {
+        if (!isSundaySchoolAdmin && !managedDepartmentIds.includes(newSession.department!)) {
+            return alert("You don't have permission to save to this department.");
+        }
+
         setSaving(true);
         try {
             const preparedVisitors = normalizeDraftVisitors(newVisitors);
@@ -406,11 +295,7 @@ const SundaySchool: React.FC = () => {
                 throw new Error(`Visitor card #${invalidCardIndex + 1} is incomplete. Name, Address, and Contact No. are required.`);
             }
 
-            const totalVisitors = new Set(
-                attendanceMembers.filter(() => false).map((m) => m.id)
-            ).size;
-
-            const visitorMemberIds = new Set<string>();
+            const visitorMemberIds = new Set<string>(); // This set needs to be populated if visitors are members
             const selectedVisitorIds = selectedMemberIds.filter((id) => visitorMemberIds.has(id));
             const selectedRegularIds = selectedMemberIds.filter((id) => !visitorMemberIds.has(id));
 
@@ -422,47 +307,29 @@ const SundaySchool: React.FC = () => {
             const membersPresent = selectedRegularIds.length;
             const total = membersPresent + visitorsPresent;
 
-            const { data: savedSession, error } = await supabase
-                .from('sunday_school_sessions')
-                .upsert({
-                    ...newSession,
-                    members_present: membersPresent,
-                    visitors_present: visitorsPresent,
-                    total_attendance: total
-                } as any)
-                .select()
-                .single();
+            const sessionToSave = {
+                ...newSession,
+                members_present: membersPresent,
+                visitors_present: visitorsPresent,
+                total_attendance: total
+            };
 
-            if (error) throw error;
+            const savedSession = await sundaySchoolService.upsertSundaySchoolSession(sessionToSave);
 
-            // 2. Clear old attendance
-            await supabase.from('attendance_log')
-                .delete()
-                .eq('event_id', savedSession.id)
-                .eq('event_type', 'sunday_school');
+            // Clear old attendance
+            await sundaySchoolService.deleteAttendanceLogs(savedSession.id, 'sunday_school');
 
-            // 3. Process New Visitors (Auto-Register with smart duplicate detection)
+            // Process New Visitors (Auto-Register with smart duplicate detection)
             const cardVisitorMemberIds: string[] = [];
             const cardRegularMemberIds: string[] = [];
-            const isVisitorCache = new Map<string, boolean>();
-            const getIsVisitorMember = async (memberId: string) => {
-                if (isVisitorCache.has(memberId)) return isVisitorCache.get(memberId)!;
-                const { data: memberData } = await supabase
-                    .from('members')
-                    .select('id')
-                    .eq('id', memberId)
-                    .single();
-                const flag = !!false;
-                isVisitorCache.set(memberId, flag);
-                return flag;
-            };
+
             for (const visitor of preparedVisitors) {
-                // Update if existing (UUID check)
                 if (visitor.id && visitor.id.length > 20) { // Assuming UUIDs are longer than 20 chars
-                    const { data: vRecord } = await supabase.from('visitors').select('member_id').eq('id', visitor.id).single();
+                    const vRecord = await sundaySchoolService.getVisitorById(visitor.id);
                     if (vRecord) {
                         // Update Visitor
-                        await supabase.from('visitors').update({
+                        await sundaySchoolService.updateVisitor({
+                            id: visitor.id,
                             name: visitor.name,
                             contact_number: visitor.contact || '',
                             age: visitor.age,
@@ -478,10 +345,10 @@ const SundaySchool: React.FC = () => {
                             invited_by: visitor.invited_by || '',
                             service_id: null,
                             sunday_school_session_id: savedSession.id
-                        } as any).eq('id', visitor.id);
+                        });
 
                         // Update Shadow Member
-                        await supabase.from('members').update({
+                        await memberService.updateMember(vRecord.member_id, {
                             first_name: visitor.name.split(' ')[0] || 'Visitor',
                             surname: visitor.name.split(' ').slice(1).join(' ') || '',
                             home_address: visitor.address || 'Unknown',
@@ -489,9 +356,9 @@ const SundaySchool: React.FC = () => {
                             gender: visitor.gender,
                             civil_status: visitor.marital_status || 'Single',
                             date_of_birth: visitor.date_of_birth || new Date().toISOString().split('T')[0]
-                        } as any).eq('id', vRecord.member_id);
+                        });
 
-                        const isVisitorMember = await getIsVisitorMember(vRecord.member_id);
+                        const isVisitorMember = await memberService.isVisitorMember(vRecord.member_id);
                         if (isVisitorMember) cardVisitorMemberIds.push(vRecord.member_id);
                         else cardRegularMemberIds.push(vRecord.member_id);
                     }
@@ -511,28 +378,22 @@ const SundaySchool: React.FC = () => {
 
                     const parsedName = splitVisitorName(visitor.name);
 
-                    // Create New
-                    const { data: memberData, error: mError } = await supabase
-                        .from('members')
-                        .insert([{
-                            first_name: parsedName.firstName || 'Visitor',
-                            surname: parsedName.surname || '',
+                    // Create New Member
+                    const memberData = await memberService.createMember({
+                        first_name: parsedName.firstName || 'Visitor',
+                        surname: parsedName.surname || '',
+                        is_regular_member: false,
+                        membership_status: 'active',
+                        home_address: visitor.address || 'Unknown',
+                        phone_number: visitor.contact || 'N/A',
+                        gender: visitor.gender,
+                        civil_status: visitor.marital_status || 'Single',
+                        date_of_birth: visitor.date_of_birth || new Date().toISOString().split('T')[0]
+                    });
 
-                            is_regular_member: false,
-                            membership_status: 'active',
-                            home_address: visitor.address || 'Unknown',
-                            phone_number: visitor.contact || 'N/A',
-                            gender: visitor.gender,
-                            civil_status: visitor.marital_status || 'Single',
-                            date_of_birth: visitor.date_of_birth || new Date().toISOString().split('T')[0]
-                        } as any])
-                        .select()
-                        .single();
-
-                    if (mError) throw mError;
                     cardVisitorMemberIds.push(memberData.id);
 
-                    await supabase.from('visitors').insert([{
+                    await sundaySchoolService.createVisitor({
                         member_id: memberData.id,
                         name: visitor.name,
                         contact_number: visitor.contact || '',
@@ -552,37 +413,25 @@ const SundaySchool: React.FC = () => {
                         is_saved: false,
                         is_prospect_for_baptism: false,
                         follow_up_status: 'pending'
-                    } as any]);
+                    });
                 }
             }
 
-            // 4. Save new attendance (Existing + New)
+            // Save new attendance (Existing + New)
             const uniqueVisitorIds = Array.from(new Set([...selectedVisitorIds, ...cardVisitorMemberIds]));
             const uniqueRegularIds = Array.from(new Set([...selectedRegularIds, ...cardRegularMemberIds]));
             const finalVisitorsCount = Math.max(uniqueVisitorIds.length, manualVisitorsInput);
             const finalMembersCount = uniqueRegularIds.length;
             const allMemberIds = Array.from(new Set([...uniqueRegularIds, ...uniqueVisitorIds]));
 
-            const { error: sessionCountUpdateError } = await supabase
-                .from('sunday_school_sessions')
-                .update({
-                    members_present: finalMembersCount,
-                    visitors_present: finalVisitorsCount,
-                    total_attendance: finalMembersCount + finalVisitorsCount
-                })
-                .eq('id', savedSession.id);
-
-            if (sessionCountUpdateError) throw sessionCountUpdateError;
+            await sundaySchoolService.updateSundaySchoolSession(savedSession.id, {
+                members_present: finalMembersCount,
+                visitors_present: finalVisitorsCount,
+                total_attendance: finalMembersCount + finalVisitorsCount
+            });
 
             if (allMemberIds.length > 0) {
-                const logs = allMemberIds.map(mid => ({
-                    member_id: mid,
-                    event_type: 'sunday_school',
-                    event_id: savedSession.id,
-                    event_date: savedSession.session_date,
-                    was_present: true
-                }));
-                await supabase.from('attendance_log').insert(logs);
+                await sundaySchoolService.updateSundaySchoolAttendanceLogs(savedSession.id, savedSession.session_date, allMemberIds);
             }
 
             setIsModalOpen(false);
@@ -600,22 +449,16 @@ const SundaySchool: React.FC = () => {
 
     const handleDelete = async () => {
         if (!confirmDelete.id) return;
+        setSaving(true);
         try {
-            const id = confirmDelete.id;
-            // Delete file from R2 if exists
-            const sessionToDelete = sessions.find(s => s.id === id);
-            if (sessionToDelete?.visitor_card_url) {
-                await deleteFile(sessionToDelete.visitor_card_url).catch(console.warn);
-            }
-
-            await supabase.from('attendance_log').delete().eq('event_id', id).eq('event_type', 'sunday_school');
-            const { error } = await supabase.from('sunday_school_sessions').delete().eq('id', id);
-            if (error) throw error;
+            await sundaySchoolService.deleteSundaySchoolSession(confirmDelete.id);
             setConfirmDelete({ isOpen: false, id: null });
-            fetchSessions();
             setIsModalOpen(false);
+            fetchSessions();
         } catch (err: any) {
             alert("Delete failed: " + err.message);
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -652,12 +495,7 @@ const SundaySchool: React.FC = () => {
                 throw new Error("First name and surname are required.");
             }
 
-            const { error } = await supabase
-                .from("members")
-                .update(payload as any)
-                .eq("id", editingStudent.id);
-
-            if (error) throw error;
+            await memberService.updateMember(editingStudent.id, payload as any);
 
             setIsStudentEditorOpen(false);
             setEditingStudent(null);
@@ -688,9 +526,7 @@ const SundaySchool: React.FC = () => {
 
     const paginatedSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
-    const visitorMemberIdsInModal = new Set(
-        attendanceMembers.filter((m) => false).map((m) => m.id)
-    );
+    const visitorMemberIdsInModal = new Set<string>();
     const selectedVisitorCountInModal = selectedMemberIds.filter((id) => visitorMemberIdsInModal.has(id)).length;
     const selectedRegularCountInModal = selectedMemberIds.length - selectedVisitorCountInModal;
     const visitorsCountInModalBase = newVisitors.length > 0 ? newVisitors.length : (Number(newSession.visitors_present) || 0);
@@ -837,48 +673,61 @@ const SundaySchool: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {paginatedSessions.map(session => (
-                                <tr key={session.id} className="hover:bg-gray-50 transition-colors text-sm group">
-                                    <td className="p-4 pl-6 text-gray-500">{new Date(session.session_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</td>
-                                    <td className="p-4 font-medium text-gray-900">
-                                        {DEPARTMENTS.find(d => d.id === session.department)?.label}
-                                    </td>
-                                    <td className="p-4 text-center text-gray-500">{session.members_present}</td>
-                                    <td className="p-4 text-center text-gray-500">{session.visitors_present}</td>
-                                    <td className="p-4 text-center font-bold text-blue-600">{session.total_attendance}</td>
-                                    <td className="p-4 text-center">
-                                        {(session.souls_saved || 0) > 0 ? (
-                                            <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold inline-block min-w-[28px]">
-                                                {session.souls_saved}
-                                            </span>
-                                        ) : (
-                                            <span className="text-gray-400">-</span>
-                                        )}
-                                    </td>
-                                    <td className="p-4 pr-6 text-right flex justify-end gap-2">
-                                        <button
-                                            onClick={() => handleOpenModal(session)}
-                                            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
-                                            title="View / Edit"
-                                        >
-                                            <Eye size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleOpenModal(session)}
-                                            className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
-                                            title="Edit"
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                            {paginatedSessions.length === 0 && (
+                            {loading ? (
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={i} className="animate-pulse bg-white">
+                                        <td className="p-4 pl-6"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
+                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
+                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded w-8 mx-auto"></div></td>
+                                        <td className="p-4 pr-6"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
+                                    </tr>
+                                ))
+                            ) : paginatedSessions.length === 0 ? (
                                 <tr>
                                     <td colSpan={7} className="p-8 text-center text-gray-500">
                                         No reports found.
                                     </td>
                                 </tr>
+                            ) : (
+                                paginatedSessions.map(session => (
+                                    <tr key={session.id} className="hover:bg-gray-50 transition-colors text-sm group">
+                                        <td className="p-4 pl-6 text-gray-500">{new Date(session.session_date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</td>
+                                        <td className="p-4 font-medium text-gray-900">
+                                            {DEPARTMENTS.find(d => d.id === session.department)?.label}
+                                        </td>
+                                        <td className="p-4 text-center text-gray-500">{session.members_present}</td>
+                                        <td className="p-4 text-center text-gray-500">{session.visitors_present}</td>
+                                        <td className="p-4 text-center font-bold text-blue-600">{session.total_attendance}</td>
+                                        <td className="p-4 text-center">
+                                            {(session.souls_saved || 0) > 0 ? (
+                                                <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold inline-block min-w-[28px]">
+                                                    {session.souls_saved}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400">-</span>
+                                            )}
+                                        </td>
+                                        <td className="p-4 pr-6 text-right flex justify-end gap-2">
+                                            <button
+                                                onClick={() => handleOpenModal(session)}
+                                                className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
+                                                title="View / Edit"
+                                            >
+                                                <Eye size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleOpenModal(session)}
+                                                className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
+                                                title="Edit"
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
                             )}
                         </tbody>
                     </table>

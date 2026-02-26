@@ -159,7 +159,9 @@ const Layout: React.FC = () => {
             items: [
                 { to: '/services', icon: Calendar, label: 'Services', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY] },
                 { to: '/sunday-school', icon: Users, label: 'Sunday School', requiresSundaySchoolAccess: true },
+                { to: '/goodnews-class', icon: Users, label: 'Goodnews Classes', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.GOODNEWS_TEACHER] },
                 { to: '/activities', icon: Calendar, label: 'Activities', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.ACTIVITY_COORDINATOR, UserRole.RECORDING_SECRETARY] },
+                { to: '/church-events', icon: Calendar, label: 'Church Events', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.ACTIVITY_COORDINATOR] },
                 { to: '/music-ministry', icon: UserPlus, label: 'Music Ministry', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.MUSIC_MINISTER] }
             ]
         },

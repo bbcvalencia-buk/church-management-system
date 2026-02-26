@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import * as announcementService from "@/services/announcementService";
 import { toISODateLocal } from "@/lib/date";
 import { Bell, Calendar, BookOpen, Activity, Users, Heart, UserPlus } from "lucide-react";
 
-type AnnouncementSource = "service" | "sunday_school" | "activity";
+type AnnouncementSource = "service" | "sunday_school" | "activity" | "church_event";
 
 interface AnnouncementItem {
     id: string;
@@ -37,8 +37,8 @@ const DEPARTMENT_LABELS: Record<string, string> = {
     adult: "Adult Department",
     beginners: "Beginners Department",
     nursery: "Nursery/Toddler Department",
-   kinder: "Kindergarten Department",
-   primary: "Primary Department",
+    kinder: "Kindergarten Department",
+    primary: "Primary Department",
     junior: "Junior Department"
 };
 
@@ -62,7 +62,8 @@ const formatLabel = (value: string) =>
 const SOURCE_META: Record<AnnouncementSource, { label: string; icon: React.ElementType; color: string }> = {
     service: { label: "Service", icon: Calendar, color: "bg-blue-100 text-blue-600" },
     sunday_school: { label: "Sunday School", icon: BookOpen, color: "bg-emerald-100 text-emerald-600" },
-    activity: { label: "Activity", icon: Activity, color: "bg-purple-100 text-purple-600" }
+    activity: { label: "Activity", icon: Activity, color: "bg-purple-100 text-purple-600" },
+    church_event: { label: "Church Event", icon: Calendar, color: "bg-orange-100 text-orange-600" }
 };
 
 const sumNumberField = (rows: any[], fieldName: string) =>
@@ -73,6 +74,7 @@ const Announcements: React.FC = () => {
     const [services, setServices] = useState<any[]>([]);
     const [sundaySchoolSessions, setSundaySchoolSessions] = useState<any[]>([]);
     const [activities, setActivities] = useState<any[]>([]);
+    const [churchEvents, setChurchEvents] = useState<any[]>([]);
     const [upcomingBirthdays, setUpcomingBirthdays] = useState<BirthdayItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [sourceWarnings, setSourceWarnings] = useState<string[]>([]);
@@ -82,27 +84,9 @@ const Announcements: React.FC = () => {
             setLoading(true);
             setSourceWarnings([]);
 
-            const [servicesResult, sundaySchoolResult, activitiesResult, birthdaysResult] = await Promise.all([
-                supabase
-                    .from("services")
-                    .select("id, service_type, service_date, total_attendance, visitors_present, souls_saved, prospects_for_baptism, members_who_prayed")
-                    .order("service_date", { ascending: false })
-                    .limit(60),
-                supabase
-                    .from("sunday_school_sessions")
-                    .select("id, department, session_date, total_attendance, visitors_present, souls_saved")
-                    .order("session_date", { ascending: false })
-                    .limit(60),
-                supabase
-                    .from("activities")
-                    .select("id, activity_type, activity_date, area, total_attendance, non_member_attendance, souls_saved")
-                    .order("activity_date", { ascending: false })
-                    .limit(60),
-                supabase
-                    .from("members")
-                    .select("id, first_name, surname, date_of_birth")
-                    .eq("membership_status", "active")
-            ]);
+            const results = await announcementService.getAnnouncementData(60);
+
+            const [servicesResult, sundaySchoolResult, activitiesResult, churchEventsResult, birthdaysResult] = results as any[];
 
             const nextWarnings: string[] = [];
 
@@ -114,6 +98,9 @@ const Announcements: React.FC = () => {
 
             const activityRows = activitiesResult.error ? [] : (activitiesResult.data || []);
             if (activitiesResult.error) nextWarnings.push("Activity results are not available for your account.");
+
+            const churchEventRows = churchEventsResult.error ? [] : (churchEventsResult.data || []);
+            if (churchEventsResult.error) nextWarnings.push("Church Event results are not available for your account.");
 
             const serviceItems: AnnouncementItem[] = serviceRows.map((row: any) => {
                 const isPrimaryService = isPrimaryServiceType(row.service_type);
@@ -158,8 +145,19 @@ const Announcements: React.FC = () => {
                 soulsSaved: 0
             }));
 
-            const merged = [...serviceItems, ...sundaySchoolItems, ...activityItems].sort(
-                (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+            const churchEventItems: AnnouncementItem[] = churchEventRows.map((row: any) => ({
+                id: `event-${row.id}`,
+                source: "church_event",
+                date: row.event_date,
+                title: row.event_name,
+                subtitle: `${row.event_type.charAt(0).toUpperCase() + row.event_type.slice(1)} Event`,
+                attendance: row.total_attendance || 0,
+                visitors: 0,
+                soulsSaved: 0
+            }));
+
+            const merged = [...serviceItems, ...sundaySchoolItems, ...activityItems, ...churchEventItems].sort(
+                (a: AnnouncementItem, b: AnnouncementItem) => new Date(b.date).getTime() - new Date(a.date).getTime()
             );
 
             const today = new Date();
@@ -191,13 +189,14 @@ const Announcements: React.FC = () => {
                         };
                     })
                     .filter((row: BirthdayItem | null): row is BirthdayItem => row !== null)
-                    .sort((a, b) => a.nextBirthday.localeCompare(b.nextBirthday))
+                    .sort((a: BirthdayItem, b: BirthdayItem) => a.nextBirthday.localeCompare(b.nextBirthday))
                     .slice(0, 8);
             }
 
             setServices(serviceRows);
             setSundaySchoolSessions(sundaySchoolRows);
             setActivities(activityRows);
+            setChurchEvents(churchEventRows);
             setUpcomingBirthdays(birthdayRows);
             setItems(merged);
             setSourceWarnings(nextWarnings);

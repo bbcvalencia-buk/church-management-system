@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import * as memberService from "../services/memberService";
 import type { Member } from "../types";
 import { MemberCard } from "../components/MemberCard";
 import { Plus, Search, Filter, Download } from "lucide-react";
@@ -19,16 +18,8 @@ const MembersDirectory: React.FC = () => {
 
     const fetchMembers = async () => {
         try {
-            const { data, error } = await supabase
-                .from("members")
-                .select("*")
-                .order("surname", { ascending: true });
-
-            if (error) {
-                console.error("Error fetching members:", error);
-            } else {
-                setMembers(data as Member[]);
-            }
+            const data = await memberService.getAllMembers();
+            setMembers(data || []);
         } catch (err) {
             console.error("Unexpected error:", err);
         } finally {
@@ -138,8 +129,16 @@ const MembersDirectory: React.FC = () => {
 
             {/* Grid */}
             {loading ? (
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="card-panel p-4 flex items-center gap-4 bg-white min-h-[96px] overflow-hidden border border-[var(--color-border)] shadow-sm">
+                            <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse shrink-0"></div>
+                            <div className="flex-1 space-y-2">
+                                <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                                <div className="h-3 bg-gray-100 rounded w-1/2 animate-pulse"></div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : filteredMembers.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

@@ -4,7 +4,7 @@ import {
     Users, Heart, Shield, ArrowLeft, Mail, Printer, Edit3, CheckCircle2, Phone, Home, BookOpen, Clock, Activity, FileText, TrendingUp, Calendar, User, Star, MapPin
 } from "lucide-react";
 
-import { supabase } from "../lib/supabase";
+import * as memberService from "@/services/memberService";
 import Skeleton from "@/components/Skeleton";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -39,16 +39,11 @@ const FamilyProfile: React.FC = () => {
     const fetchFamilyMembers = async (familySurname: string) => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
-                .from("members")
-                .select("id, first_name, surname, membership_status, profile_picture_url, date_of_birth, home_address, phone_number, created_at, email")
-                .ilike("surname", familySurname)
-                .order("date_of_birth", { ascending: true }); // older first (often head of household)
-
-            if (error) throw error;
+            const data = await memberService.getMembersBySurname(familySurname);
             setMembers(data as any[]);
         } catch (err: any) {
             console.error("Failed to load family members:", err);
+            showToast("Failed to load family members", "error");
         } finally {
             setLoading(false);
         }

@@ -1,9 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import type { Member } from '@/types';
 import { Shield, Download } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 
 const MemberIDPrint: React.FC = () => {
     const { id } = useParams();
@@ -93,6 +93,7 @@ const MemberIDPrint: React.FC = () => {
             ctx.fillStyle = '#ffffff';
             ctx.font = `bold ${9 * scale}px Arial`;
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'alphabetic'; // Reset to default
             ctx.fillText('BIBLE BAPTIST CHURCH', cardW / 2, churchNameY);
 
             ctx.fillStyle = '#93c5fd'; // blue-200
@@ -119,17 +120,31 @@ const MemberIDPrint: React.FC = () => {
             if (member.profile_picture_url) {
                 try {
                     const img = await loadImage(member.profile_picture_url);
-                    // Clip to circle
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(cardW / 2, photoCenterY, photoRadius, 0, Math.PI * 2);
                     ctx.clip();
-                    // Draw image centered and covering the circle
-                    const size = photoRadius * 2;
-                    ctx.drawImage(img, cardW / 2 - photoRadius, photoCenterY - photoRadius, size, size);
+
+                    // Maintain aspect ratio and cover
+                    const imgAspect = img.width / img.height;
+                    let drawW = photoRadius * 2;
+                    let drawH = photoRadius * 2;
+
+                    if (imgAspect > 1) {
+                        drawW = drawH * imgAspect;
+                    } else {
+                        drawH = drawW / imgAspect;
+                    }
+
+                    ctx.drawImage(
+                        img,
+                        cardW / 2 - drawW / 2,
+                        photoCenterY - drawH / 2,
+                        drawW,
+                        drawH
+                    );
                     ctx.restore();
                 } catch {
-                    // Photo failed to load, show placeholder
                     ctx.beginPath();
                     ctx.arc(cardW / 2, photoCenterY, photoRadius, 0, Math.PI * 2);
                     ctx.fillStyle = '#f3f4f6';
@@ -202,18 +217,22 @@ const MemberIDPrint: React.FC = () => {
             const joinedYear = member.membership_date ? new Date(member.membership_date).getFullYear().toString() : 'N/A';
             ctx.fillText(joinedYear, cardW - 16 * scale, footerY + 12 * scale);
 
-            // ── Download ──
+            // ── jsPDF Generation ──
             const data = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.href = data;
-            link.download = `MemberID-${member.surname}-${member.id_number}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+
+            // Create PDF with CR80 dimensions in inches (2.125 x 3.375)
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'in',
+                format: [2.125, 3.375]
+            });
+
+            pdf.addImage(data, 'PNG', 0, 0, 2.125, 3.375);
+            pdf.save(`MemberID-${member.surname}-${idNum}.pdf`);
 
         } catch (error) {
-            console.error("Error generating image:", error);
-            alert("Failed to generate image: " + (error as Error).message);
+            console.error("Error generating PDF:", error);
+            alert("Failed to generate PDF: " + (error as Error).message);
         } finally {
             setGenerating(false);
         }
@@ -232,10 +251,10 @@ const MemberIDPrint: React.FC = () => {
                         disabled={generating}
                         className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg shadow-purple-500/20 disabled:opacity-50"
                     >
-                        <Download size={18} /> {generating ? 'Generating...' : 'Download PNG'}
+                        <Download size={18} /> {generating ? 'Generating PDF...' : 'Download PDF'}
                     </button>
                 </div>
-                <p className="text-[var(--color-text-muted)] text-sm">Click "Download PNG" to save the ID card image.</p>
+                <p className="text-[var(--color-text-muted)] text-sm">Click "Download PDF" to save the ID card PDF.</p>
             </div>
 
             {/* ID Card Visual Preview */}

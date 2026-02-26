@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import * as dashboardService from "@/services/dashboardService";
 import {
     Users,
     Heart,
@@ -8,7 +7,8 @@ import {
     Calendar,
     ArrowRight,
     Activity,
-    DollarSign
+    DollarSign,
+    BookOpen
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -28,7 +28,11 @@ const Dashboard: React.FC = () => {
         activeMembers: 0,
         soulsSavedThisWeek: 0,
         tithesThisMonth: 0,
-        activitiesCount: 0
+        activitiesCount: 0,
+        churchEventsCount: 0,
+        activeGoodnewsSeries: 0,
+        goodnewsChildrenReached: 0,
+        goodnewsSoulsSaved: 0
     });
     const [birthdays, setBirthdays] = useState<any[]>([]);
     const [chartData, setChartData] = useState<any[]>([]);
@@ -41,105 +45,15 @@ const Dashboard: React.FC = () => {
     const fetchDashboardData = async () => {
         setLoading(true);
         try {
-            // 1. Members count
-            const { count: memberCount } = await supabase
-                .from('members')
-                .select('*', { count: 'exact', head: true })
-                .eq('membership_status', 'active');
-
-            // 2. Souls saved this week (Services + Activities)
-            const startOfWeek = new Date();
-            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-            const dateStr = startOfWeek.toISOString().split('T')[0];
-
-            const [serviceRes, activityRes] = await Promise.all([
-                supabase.from('services').select('souls_saved').gte('service_date', dateStr),
-                supabase.from('activities').select('souls_saved').gte('activity_date', dateStr)
+            const [baseData, charts, birthdaysData] = await Promise.all([
+                dashboardService.getDashboardData(),
+                dashboardService.getWeeklySoulsSaved(),
+                dashboardService.getUpcomingBirthdays(3)
             ]);
 
-            const sSouls = serviceRes.data?.reduce((sum, s) => sum + (s.souls_saved || 0), 0) || 0;
-            const aSouls = activityRes.data?.reduce((sum, a) => sum + (a.souls_saved || 0), 0) || 0;
-            const totalSouls = sSouls + aSouls;
-
-            // 3. Tithes this month
-            const startOfMonth = new Date();
-            startOfMonth.setDate(1);
-            const { data: monthTithes } = await supabase
-                .from('financial_records')
-                .select('amount')
-                .is('deleted_at', null)
-                .eq('transaction_type', 'tithe')
-                .gte('transaction_date', startOfMonth.toISOString().split('T')[0]);
-
-            const totalTithes = monthTithes?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
-
-            // 4. Activities count
-            const { count: activityCount } = await supabase
-                .from('activities')
-                .select('*', { count: 'exact', head: true });
-
-            // 5. Upcoming Birthdays (next 30 days)
-            const today = new Date();
-            const { data: bdays } = await supabase
-                .from('members')
-                .select('first_name, surname, date_of_birth')
-                .eq('membership_status', 'active');
-
-            const upcoming = bdays?.filter(m => {
-                const dob = new Date(m.date_of_birth);
-                const bdayThisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
-                const diffTime = (bdayThisYear.getTime() - today.getTime()) / (1000 * 3600 * 24);
-                return diffTime >= -1 && diffTime <= 30; // -1 to include today
-            }).sort((a, b) => {
-                const da = new Date(a.date_of_birth);
-                const db = new Date(b.date_of_birth);
-                return da.getMonth() - db.getMonth() || da.getDate() - db.getDate();
-            }).slice(0, 3) || [];
-
-            // 6. Chart Data (Last 7 Days)
-            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            const last7Days = Array.from({ length: 7 }, (_, i) => {
-                const d = new Date();
-                d.setDate(d.getDate() - (6 - i));
-                return d.toISOString().split('T')[0];
-            });
-
-            // Fetch daily stats
-            const { data: weekServices } = await supabase
-                .from('services')
-                .select('service_date, souls_saved')
-                .gte('service_date', last7Days[0]);
-
-            const { data: weekActivities } = await supabase
-                .from('activities')
-                .select('activity_date, souls_saved')
-                .gte('activity_date', last7Days[0]);
-
-            // Aggregate by date
-            const dailyStats = last7Days.map(dateStr => {
-                const dateObj = new Date(dateStr);
-                const dayName = days[dateObj.getDay()];
-
-                const sCount = weekServices
-                    ?.filter(s => s.service_date === dateStr)
-                    .reduce((sum, s) => sum + (s.souls_saved || 0), 0) || 0;
-
-                const aCount = weekActivities
-                    ?.filter(a => a.activity_date === dateStr)
-                    .reduce((sum, a) => sum + (a.souls_saved || 0), 0) || 0;
-
-                return { name: dayName, souls: sCount + aCount, fullDate: dateStr };
-            });
-
-            setChartData(dailyStats);
-
-            setStats({
-                activeMembers: memberCount || 0,
-                soulsSavedThisWeek: totalSouls,
-                tithesThisMonth: totalTithes,
-                activitiesCount: activityCount || 0
-            });
-            setBirthdays(upcoming);
+            setStats(baseData.stats);
+            setChartData(charts);
+            setBirthdays(birthdaysData);
 
         } catch (err) {
             console.error("Dashboard fetch error:", err);
@@ -200,6 +114,42 @@ const Dashboard: React.FC = () => {
                     color="violet"
                     trend="Next: Sat Outreach"
                     link="/activities"
+                />
+                <StatCard
+                    title="Church Events"
+                    value={stats.churchEventsCount}
+                    icon={Calendar}
+                    color="amber"
+                    trend="Special Programs"
+                    link="/church-events"
+                />
+            </div>
+
+            {/* Extended Stats Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <StatCard
+                    title="Active Goodnews"
+                    value={stats.activeGoodnewsSeries}
+                    icon={BookOpen}
+                    color="amber"
+                    trend="Ongoing areas"
+                    link="/goodnews-class"
+                />
+                <StatCard
+                    title="GN Children Reached"
+                    value={stats.goodnewsChildrenReached}
+                    icon={Users}
+                    color="sky"
+                    trend="Total attendees"
+                    link="/goodnews-class"
+                />
+                <StatCard
+                    title="GN Souls Saved"
+                    value={stats.goodnewsSoulsSaved}
+                    icon={Heart}
+                    color="rose"
+                    trend="Total conversions"
+                    link="/goodnews-class"
                 />
             </div>
 

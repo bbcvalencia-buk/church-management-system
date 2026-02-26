@@ -15,6 +15,19 @@ export enum UserRole {
 export type Gender = 'Male' | 'Female';
 export type MaritalStatus = 'Single' | 'Married' | 'Widow' | 'Widower' | 'Separated';
 
+export interface ChurchEvent {
+    id: string;
+    event_name: string;
+    event_type: 'fellowship' | 'bible_quiz' | 'camp' | 'anniversary' | 'special_program' | 'other';
+    event_date: string;
+    location: string;
+    total_attendance: number;
+    notes: string;
+    attachment_urls?: string[];
+    created_by: string;
+    created_at: string;
+}
+
 export interface Member {
     id: string;
     id_number: number;
@@ -116,7 +129,7 @@ export interface ChurchPosition {
     start_date: string;
     end_date?: string;
     is_active: boolean;
-    assignment_reason?: string;
+    assignment_reason?: string | null;
 }
 
 export interface FamilyRelationship {
@@ -140,6 +153,44 @@ export interface FinancialRecord {
     notes?: string;
     description?: string;
     created_at: string;
+}
+
+export type GoodnewsSeriesStatus = 'ongoing' | 'completed' | 'paused';
+export type GoodnewsSessionRole = 'teacher' | 'helper' | 'musician' | 'accompanist' | 'driver' | 'other';
+
+export interface GoodnewsSeries {
+    id: string;
+    title: string;
+    area: string;
+    location?: string;
+    start_date: string;
+    end_date?: string;
+    lead_member_id?: string;
+    status: GoodnewsSeriesStatus;
+    notes?: string;
+    created_at?: string;
+    lead_member?: Partial<Member>;
+}
+
+export interface GoodnewsSession {
+    id: string;
+    series_id: string;
+    session_number: number;
+    date: string;
+    lesson_topic?: string;
+    children_count: number;
+    souls_saved_count: number;
+    notes?: string;
+    created_at?: string;
+}
+
+export interface GoodnewsSessionMember {
+    id: string;
+    session_id: string;
+    member_id: string;
+    role: GoodnewsSessionRole;
+    notes?: string;
+    member?: Partial<Member>;
 }
 
 export interface FaithPromiseCommitment {
@@ -183,6 +234,17 @@ export interface FaithPromiseLedger {
 }
 
 export type ServiceType = 'sunday_morning' | 'sunday_afternoon' | 'wednesday_prayer' | 'pre_service' | 'funeral';
+export type ServiceRole = 'songleader' | 'pastor' | 'moderator' | 'pianist' | 'technicals' | 'mini_ensemble' | 'usher' | 'choir' | 'preacher' | 'worship_leader' | 'other';
+
+export interface ServiceAssignment {
+    id: string;
+    service_id: string;
+    member_id: string;
+    role: ServiceRole;
+    notes?: string;
+    created_at?: string;
+    member?: Partial<Member>; // For populated joins
+}
 
 export interface Service {
     id: string;
@@ -209,7 +271,7 @@ export interface Service {
 export interface AttendanceLog {
     id: string;
     member_id: string;
-    event_type: 'service' | 'activity' | 'sunday_school' | 'music_practice';
+    event_type: 'service' | 'activity' | 'sunday_school' | 'music_practice' | 'church_event';
     event_id: string;
     event_date: string;
     was_present: boolean;
@@ -219,7 +281,7 @@ export interface AttendanceLog {
 
 export interface Activity {
     id: string;
-    activity_type: 'goodnews_class' | 'soul_winning' | 'bible_study' | 'outreach';
+    activity_type: 'goodnews_class' | 'soul_winning' | 'bible_study' | 'outreach' | 'visitation';
     activity_date: string;
     members_present: number;
     non_member_attendance?: number;
@@ -229,8 +291,9 @@ export interface Activity {
     souls_saved: number;
     tracts_distributed?: number;
     facebook_post_link?: string;
+    activity_data?: any;
 
-    // Bible Study Specific
+    // Bible Study Specific (Legacy fields - mostly moving to activity_data)
     bible_study_type?: 'individual' | 'family';
     family_name?: string;
     mission_church_name?: string; // Outreach
