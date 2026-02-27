@@ -31,6 +31,11 @@ const invokeSupabaseFunction = async (
         Authorization: `Bearer ${session.access_token}`
     };
 
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    if (supabaseAnonKey) {
+        headers.apikey = supabaseAnonKey;
+    }
+
     if (options.contentType) {
         headers["Content-Type"] = options.contentType;
     }
