@@ -36,6 +36,29 @@ function sanitizePathPart(name: string): string {
     .join("/");
 }
 
+async function ensurePublicUrlReachable(url: string): Promise<void> {
+  let lastStatus = 0;
+  let lastError = "";
+
+  for (let i = 0; i < 3; i += 1) {
+    try {
+      const probeUrl = `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}-${i}`;
+      const res = await fetch(probeUrl, { method: "HEAD" });
+      lastStatus = res.status;
+      if (res.ok) return;
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : "Unknown probe error";
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 350));
+  }
+
+  const details = lastError
+    ? `public URL probe failed: ${lastError}`
+    : `public URL returned HTTP ${lastStatus}`;
+  throw new Error(`Upload completed but file is not publicly reachable (${details}). Check R2_PUBLIC_URL and bucket public access.`);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -110,7 +133,10 @@ Deno.serve(async (req) => {
       }),
     );
 
-    return jsonResponse(200, { url: `${publicUrl}/${key}`, key });
+    const url = `${publicUrl}/${key}`;
+    await ensurePublicUrlReachable(url);
+
+    return jsonResponse(200, { url, key });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
     return jsonResponse(500, { error: message });
