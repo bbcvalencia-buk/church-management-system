@@ -34,6 +34,7 @@ const SystemSettings: React.FC = () => {
 
     const [loading, setLoading] = useState(false);
     const [logoUploading, setLogoUploading] = useState(false);
+    const [logoPreviewError, setLogoPreviewError] = useState(false);
     const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
     // We'll need user role to determine if they can see the Import Review tab
@@ -112,6 +113,7 @@ const SystemSettings: React.FC = () => {
             }
 
             const url = await uploadFile(file, 'system/logo');
+            setLogoPreviewError(false);
             setSettings(prev => ({ ...prev, church_logo_url: url }));
 
             // Save to DB immediately
@@ -135,6 +137,7 @@ const SystemSettings: React.FC = () => {
         try {
             await deleteFile(settings.church_logo_url);
             setSettings(prev => ({ ...prev, church_logo_url: '' }));
+            setLogoPreviewError(false);
 
             await systemService.upsertSettings({ church_logo_url: "" });
 
@@ -236,16 +239,17 @@ const SystemSettings: React.FC = () => {
                                 <div className="flex items-start gap-6">
                                     {/* Logo Preview */}
                                     <div className="w-28 h-28 rounded-xl border-2 border-dashed border-gray-300 dark:border-white/20 flex items-center justify-center bg-white dark:bg-white/5 overflow-hidden flex-shrink-0">
-                                        {settings.church_logo_url ? (
+                                        {settings.church_logo_url && !logoPreviewError ? (
                                             <img
                                                 src={settings.church_logo_url}
                                                 alt="Church Logo"
                                                 className="w-full h-full object-contain p-2"
+                                                onError={() => setLogoPreviewError(true)}
                                             />
                                         ) : (
                                             <div className="text-center text-gray-400">
                                                 <Image size={28} className="mx-auto mb-1 opacity-40" />
-                                                <span className="text-[10px]">No logo</span>
+                                                <span className="text-[10px]">{logoPreviewError ? "Logo failed to load" : "No logo"}</span>
                                             </div>
                                         )}
                                     </div>
@@ -255,6 +259,11 @@ const SystemSettings: React.FC = () => {
                                         <p className="text-xs text-[var(--color-text-muted)]">
                                             Upload your church logo in PNG format. Recommended size: 512×512px. Max 2MB.
                                         </p>
+                                        {logoPreviewError && settings.church_logo_url && (
+                                            <p className="text-xs text-red-600 break-all">
+                                                Could not load logo URL: {settings.church_logo_url}
+                                            </p>
+                                        )}
                                         <div className="flex gap-2 flex-wrap">
                                             <button
                                                 type="button"
