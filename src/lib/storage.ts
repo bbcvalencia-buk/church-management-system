@@ -1,6 +1,16 @@
 
 import { supabase } from "./supabase";
 
+const parseResponseBody = async (response: Response): Promise<any> => {
+    const raw = await response.text();
+    if (!raw) return {};
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return { error: raw };
+    }
+};
+
 /**
  * Uploads a file to R2 via Netlify serverless function.
  * Moves sensitive credentials to the server-side.
@@ -22,12 +32,10 @@ export const uploadFile = async (file: File, folder: string): Promise<string> =>
             body: formData
         });
 
+        const data = await parseResponseBody(response);
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Upload failed');
+            throw new Error(data.error || `Upload failed (HTTP ${response.status})`);
         }
-
-        const data = await response.json();
         return data.url;
     } catch (error) {
         console.error("Error uploading file:", error);
@@ -58,8 +66,8 @@ export const deleteFile = async (fileUrl: string): Promise<void> => {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Delete failed:", errorData.error);
+            const errorData = await parseResponseBody(response);
+            console.error("Delete failed:", errorData.error || `HTTP ${response.status}`);
         }
     } catch (error) {
         console.error("Error deleting file:", error);

@@ -1,0 +1,394 @@
+-- ============================================================================
+-- SECTION: HELPER FUNCTIONS
+-- ============================================================================
+
+-- Get the member_id of the currently authenticated user based on their email
+CREATE OR REPLACE FUNCTION public.app_current_member_id()
+RETURNS UUID
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  result UUID;
+BEGIN
+  SELECT m.id INTO result
+  FROM public.members m
+  WHERE m.email IS NOT NULL
+    AND lower(m.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+  ORDER BY m.created_at ASC
+  LIMIT 1;
+  RETURN result;
+END;
+$$;
+
+-- Check if the current user has a specific role using member_id
+CREATE OR REPLACE FUNCTION public.app_has_role(target_role TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.user_roles ur
+    WHERE ur.member_id = public.app_current_member_id()
+      AND ur.role = target_role
+  );
+END;
+$$;
+
+-- Check if the current user has any of the specified roles using member_id
+CREATE OR REPLACE FUNCTION public.app_has_any_role(target_roles TEXT[])
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.user_roles ur
+    WHERE ur.member_id = public.app_current_member_id()
+      AND ur.role = ANY(target_roles)
+  );
+END;
+$$;
+
+-- ============================================================================
+-- SPECIFIC ROLE SHORTCUTS
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.app_is_church_admin()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('church_administrator'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_treasurer()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('treasurer'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_pastor()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('pastor'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_recording_secretary()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('recording_secretary'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_goodnews_teacher()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('goodnews_teacher'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_church_clerk()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('church_clerk'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_activity_coordinator()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('activity_coordinator'); END; $$;
+
+-- ============================================================================
+-- SUNDAY SCHOOL SPECIFIC HELPERS
+-- ============================================================================
+
+-- Normalize Sunday School department names
+CREATE OR REPLACE FUNCTION public.app_normalize_sunday_school_department(target_department TEXT)
+RETURNS TEXT
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  normalized TEXT := lower(coalesce(target_department, ''));
+BEGIN
+  -- 1. Nursery (Ages 0-2)
+  IF normalized LIKE '%nursery%' OR normalized LIKE '%toddler%' OR normalized LIKE '%baby%' OR normalized LIKE '%infant%' THEN
+    RETURN 'nursery';
+  END IF;
+
+  -- 2. Kinder (Ages 3-5)
+  IF normalized LIKE '%kinder%' OR normalized LIKE '%kindergarten%' OR normalized LIKE '%prep%' THEN
+    RETURN 'kinder';
+  END IF;
+
+  -- 3. Primary (Ages 6-8)
+  IF normalized LIKE '%primary%' OR normalized LIKE '%elementary%' OR normalized LIKE '%kids%' OR normalized LIKE '%children%' THEN
+    RETURN 'primary';
+  END IF;
+
+  -- 4. Junior (Ages 9-12)
+  IF normalized LIKE '%junior%' OR normalized LIKE '%youth%' OR normalized LIKE '%teen%' OR normalized LIKE '%high school%' THEN
+    RETURN 'junior';
+  END IF;
+
+  -- 5. Beginners
+  IF normalized LIKE '%beginner%' THEN
+    RETURN 'beginners';
+  END IF;
+
+  -- 6. Adult
+  IF normalized LIKE '%adult%' OR normalized LIKE '%men%' OR normalized LIKE '%women%' OR normalized LIKE '%senior%' OR normalized LIKE '%couple%' THEN
+    RETURN 'adult';
+  END IF;
+
+  IF normalized IN ('adult', 'beginners', 'nursery', 'kinder', 'primary', 'junior') THEN
+    RETURN normalized;
+  END IF;
+
+  RETURN NULL;
+END;
+$$;
+
+-- Determine the Sunday School department key from position details
+CREATE OR REPLACE FUNCTION public.app_sunday_school_department_key(
+  position_category TEXT,
+  department TEXT,
+  position_name TEXT,
+  specific_role TEXT DEFAULT NULL
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  normalized TEXT;
+BEGIN
+  normalized := public.app_normalize_sunday_school_department(
+    coalesce(department, '') || ' ' || coalesce(position_name, '') || ' ' || coalesce(specific_role, '')
+  );
+  IF normalized IS NOT NULL THEN
+    RETURN normalized;
+  END IF;
+
+  IF position_category = 'nursery_class' THEN
+    RETURN 'nursery';
+  END IF;
+
+  IF position_category = 'kinder_class' THEN
+    RETURN 'kinder';
+  END IF;
+
+  IF position_category = 'sunday_school_children' THEN
+    RETURN 'primary'; 
+  END IF;
+
+  IF position_category = 'beginners_class' THEN
+    RETURN 'beginners';
+  END IF;
+  
+  IF position_category = 'sunday_school_adult' THEN
+    RETURN 'adult';
+  END IF;
+
+  RETURN NULL;
+END;
+$$;
+
+-- Check if a position assignment represents a Sunday School teacher/leader role
+CREATE OR REPLACE FUNCTION public.app_is_sunday_school_teacher_assignment(
+  position_name TEXT,
+  specific_role TEXT,
+  is_ministry_head BOOLEAN
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  role_text TEXT := lower(coalesce(position_name, '') || ' ' || coalesce(specific_role, ''));
+BEGIN
+  IF coalesce(is_ministry_head, FALSE) THEN
+    RETURN TRUE;
+  END IF;
+
+  RETURN (
+    role_text LIKE '%teacher%'
+    OR role_text LIKE '%assistant teacher%'
+    OR role_text LIKE '%coordinator%'
+    OR role_text LIKE '%director%'
+    OR role_text LIKE '%superintendent%'
+    OR role_text LIKE '%head%'
+    OR role_text LIKE '%leader%'
+    OR role_text LIKE '%advisor%'
+    OR role_text LIKE '%adviser%'
+    OR role_text LIKE '%facilitator%'
+    OR role_text LIKE '%mentor%'
+  );
+END;
+$$;
+
+-- Get all Sunday School departments the current user is assigned to as a teacher
+CREATE OR REPLACE FUNCTION public.app_sunday_school_teacher_departments()
+RETURNS TEXT[]
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  result TEXT[];
+BEGIN
+  SELECT coalesce(array_agg(DISTINCT dept), ARRAY[]::TEXT[]) INTO result
+  FROM (
+    SELECT public.app_sunday_school_department_key(
+      cp.position_category,
+      cp.department,
+      cp.position_name,
+      cp.specific_role
+    ) AS dept
+    FROM public.church_positions cp
+    WHERE cp.member_id = public.app_current_member_id()
+      AND cp.is_active = TRUE
+      AND cp.position_category IN ('sunday_school_adult', 'sunday_school_children', 'beginners_class', 'nursery_class', 'kinder_class')
+      AND public.app_is_sunday_school_teacher_assignment(cp.position_name, cp.specific_role, cp.is_ministry_head)
+  ) q
+  WHERE dept IS NOT NULL;
+  RETURN result;
+END;
+$$;
+
+-- Check if the current user is a Sunday School teacher
+CREATE OR REPLACE FUNCTION public.app_is_sunday_school_teacher()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN cardinality(public.app_sunday_school_teacher_departments()) > 0;
+END;
+$$;
+
+-- Check if the current user can manage a specific Sunday School department
+CREATE OR REPLACE FUNCTION public.app_can_manage_sunday_school_department(target_department TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN
+    public.app_has_any_role(ARRAY['church_administrator', 'sunday_school_admin'])
+    OR (
+      public.app_is_sunday_school_teacher()
+      AND public.app_normalize_sunday_school_department(target_department) = ANY(public.app_sunday_school_teacher_departments())
+    );
+END;
+$$;
+
+-- Check if a member is within the teaching scope of the current teacher
+CREATE OR REPLACE FUNCTION public.app_member_in_teacher_scope(target_member UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.church_positions cp
+    WHERE cp.member_id = target_member
+      AND cp.is_active = TRUE
+      AND cp.position_category IN ('sunday_school_adult', 'sunday_school_children', 'beginners_class')
+      AND NOT public.app_is_sunday_school_teacher_assignment(cp.position_name, cp.specific_role, cp.is_ministry_head)
+      AND public.app_sunday_school_department_key(cp.position_category, cp.department, cp.position_name, cp.specific_role)
+            = ANY(public.app_sunday_school_teacher_departments())
+  );
+END;
+$$;
+
+-- Check if the current user can manage a specific Sunday School session
+CREATE OR REPLACE FUNCTION public.app_can_manage_sunday_school_session(target_session UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.sunday_school_sessions s
+    WHERE s.id = target_session
+      AND public.app_can_manage_sunday_school_department(s.department)
+  );
+END;
+$$;
+
+-- Check if a member has any active Sunday School assignment
+CREATE OR REPLACE FUNCTION public.app_member_has_sunday_school_assignment(target_member UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.church_positions cp
+    WHERE cp.member_id = target_member
+      AND cp.is_active = TRUE
+      AND cp.position_category IN ('sunday_school_adult', 'sunday_school_children', 'beginners_class')
+      AND public.app_sunday_school_department_key(cp.position_category, cp.department, cp.position_name, cp.specific_role) IS NOT NULL
+  );
+END;
+$$;
+
+-- ============================================================================
+-- COMMON TRIGGERS
+-- ============================================================================
+
+-- Generates a human-readable member number (BBC-YYYY-NNN)
+CREATE OR REPLACE FUNCTION public.generate_member_number(p_year INTEGER) 
+RETURNS TEXT 
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_max_seq INTEGER;
+BEGIN
+    SELECT COALESCE(MAX(member_number_seq), 0)
+    INTO v_max_seq
+    FROM public.members
+    WHERE member_number_year = p_year;
+
+    RETURN 'BBC-' || p_year::TEXT || '-' || LPAD((v_max_seq + 1)::TEXT, 3, '0');
+END;
+$$;
+
+-- Trigger function to automatically set member number on insert
+CREATE OR REPLACE FUNCTION public.set_member_number()
+RETURNS TRIGGER 
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_year INTEGER;
+    v_seq INTEGER;
+BEGIN
+    IF NEW.member_number IS NULL THEN
+        v_year := EXTRACT(YEAR FROM NOW())::INTEGER;
+        
+        SELECT COALESCE(MAX(member_number_seq), 0) + 1
+        INTO v_seq
+        FROM public.members
+        WHERE member_number_year = v_year;
+
+        NEW.member_number_year := v_year;
+        NEW.member_number_seq := v_seq;
+        NEW.member_number := 'BBC-' || v_year::TEXT || '-' || LPAD(v_seq::TEXT, 3, '0');
+    END IF;
+    RETURN NEW;
+END;
+$$;

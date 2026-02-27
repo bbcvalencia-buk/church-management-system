@@ -196,7 +196,7 @@ const Login: React.FC = () => {
 
                         <div className="pt-6 mt-6 border-t border-gray-200">
                             <p className="text-center text-[13px] text-[#6b7280]">
-                                Need help? <span className="text-[#1f2937] font-bold cursor-pointer hover:underline">Contact Administrator</span>
+                                To get access, contact your church administrator
                             </p>
                         </div>
                     </form>

@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
     User, Heart, Shield, Users, ArrowLeft, Save, Upload, Trash2,
-    MapPin, TrendingUp, Star, Mail, Edit3, Printer, CheckCircle2, Phone, Home, BookOpen, Clock, Activity, FileText, Calendar, Eye, MessageSquare, AlertCircle, Mic
+    MapPin, TrendingUp, Star, Mail, Edit3, Printer, CheckCircle2, Phone, Home, BookOpen, Clock, Activity, FileText, Calendar, Eye, MessageSquare, AlertCircle, Mic, Lock
 } from "lucide-react";
 
 import { uploadFile, deleteFile } from "../lib/storage";
+import { supabase } from "../lib/supabase";
 import * as memberService from "../services/memberService";
 import * as financeService from "../services/financeService";
 import * as serviceService from "../services/serviceService";
@@ -238,6 +239,8 @@ const MemberProfile: React.FC = () => {
     const [showEditRequestModal, setShowEditRequestModal] = useState(false);
     const [editRequestMessage, setEditRequestMessage] = useState("");
     const [submittingEditRequest, setSubmittingEditRequest] = useState(false);
+    const [sendingInvite, setSendingInvite] = useState(false);
+    const [hasSystemAccess, setHasSystemAccess] = useState(false);
     const [loadingMates, setLoadingMates] = useState(false);
     const [showMinistryMatesModal, setShowMinistryMatesModal] = useState(false);
     const [selectedMinistryName, setSelectedMinistryName] = useState("");
@@ -250,12 +253,13 @@ const MemberProfile: React.FC = () => {
     const isOwnProfile = Boolean(id && currentMember?.id === id);
 
     useEffect(() => {
-        if (isEditMode) {
+        if (isEditMode && id) {
             fetchMemberData(id);
             fetchServiceAssignments(id);
             fetchGoodnewsAssignments(id);
+            checkSystemAccess(id);
         }
-    }, [id]);
+    }, [isEditMode, id]);
 
     useEffect(() => {
         if (isEditMode && !canManageProfiles) {
@@ -385,6 +389,44 @@ const MemberProfile: React.FC = () => {
     const fetchGoodnewsAssignments = async (memberId: string) => {
         const data = await goodnewsService.getGoodnewsAssignmentsByMember(memberId);
         if (data) setGoodnewsAssignments(data);
+    };
+
+    const checkSystemAccess = async (memberId: string) => {
+        try {
+            const { data, error } = await supabase.from('user_roles').select('id').eq('member_id', memberId).limit(1);
+            if (!error && data && data.length > 0) {
+                setHasSystemAccess(true);
+            } else {
+                setHasSystemAccess(false);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleSendInvite = async () => {
+        if (!member.email || !id) return;
+        setSendingInvite(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("Unauthorized context");
+
+            const response = await fetch('/.netlify/functions/invite-member', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ member_id: id, email: member.email })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "Failed to send invite");
+            showToast(`Invite sent to ${member.email}`, "success");
+        } catch (error: any) {
+            showToast(error.message, "error");
+        } finally {
+            setSendingInvite(false);
+        }
     };
 
     const fetchMemberData = async (memberId: string) => {
@@ -1124,6 +1166,24 @@ const MemberProfile: React.FC = () => {
                                     ></div>
                                 </div>
                             </div>
+
+                            {canManageProfiles && !hasSystemAccess && member.email && activeTab === 'Overview' && (
+                                <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6">
+                                    <h4 className="text-sm font-black text-blue-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                        <Lock size={16} /> System Access
+                                    </h4>
+                                    <p className="text-xs text-gray-600 mb-4 leading-relaxed">
+                                        This member has an email address but does not have system access yet. You can invite them to create a password and access the app.
+                                    </p>
+                                    <button
+                                        onClick={handleSendInvite}
+                                        disabled={sendingInvite}
+                                        className="w-full flex justify-center items-center py-2.5 px-4 border border-blue-200 rounded-xl text-sm font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                                    >
+                                        {sendingInvite ? 'Sending...' : 'Send App Invite'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

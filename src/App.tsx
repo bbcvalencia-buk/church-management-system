@@ -29,7 +29,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import { supabase } from './lib/supabase';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './views/Login';
-import Register from './views/Register';
+import SetPassword from './views/SetPassword';
 import ResetPassword from './views/ResetPassword';
 import ChangePassword from './views/ChangePassword';
 import AuditLogs from './views/AuditLogs';
@@ -321,7 +321,7 @@ function App() {
           <ToastProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/set-password" element={<SetPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
 
               <Route

@@ -11,10 +11,10 @@ export interface SystemSettings {
 
 export interface AuditLog {
     id: string;
-    timestamp: string;
-    action_type: string;
+    created_at: string;
+    action: string;
     description: string;
-    user_id?: string;
+    actor_id?: string;
 }
 
 /**
@@ -54,9 +54,9 @@ export const upsertSettings = async (settings: Partial<SystemSettings>): Promise
  */
 export const getAuditLogs = async (limit = 20): Promise<AuditLog[]> => {
     const { data, error } = await supabase
-        .from('audit_log')
+        .from('audit_logs')
         .select('*')
-        .order('timestamp', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(limit);
 
     if (error) {
