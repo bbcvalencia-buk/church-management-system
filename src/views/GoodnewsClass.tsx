@@ -88,14 +88,29 @@ const GoodnewsClass = () => {
                     setSeriesList([]);
                     return;
                 }
-                const assignments = await goodnewsService.getGoodnewsAssignmentsByMember(member.id);
+
+                const [assignments, allSeries] = await Promise.all([
+                    goodnewsService.getGoodnewsAssignmentsByMember(member.id),
+                    goodnewsService.getGoodnewsSeries()
+                ]);
+
                 const seen = new Map<string, GoodnewsSeries>();
+
+                // Add series where they participated in a session
                 for (const row of (assignments || []) as any[]) {
                     const series = row?.session?.series;
                     if (series?.id && !seen.has(series.id)) {
                         seen.set(series.id, series);
                     }
                 }
+
+                // Add series where they are assigned as the lead member (especially for newly created ones with no sessions yet)
+                for (const series of (allSeries || []) as any[]) {
+                    if (series.lead_member_id === member.id && !seen.has(series.id)) {
+                        seen.set(series.id, series);
+                    }
+                }
+
                 setSeriesList(Array.from(seen.values()));
                 return;
             }
