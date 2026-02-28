@@ -93,9 +93,16 @@ export const uploadFile = async (file: File, folder: string): Promise<string> =>
 export const deleteFile = async (fileUrl: string): Promise<void> => {
     try {
         const R2_PUBLIC_URL = import.meta.env.VITE_R2_PUBLIC_URL;
-        if (!fileUrl.startsWith(R2_PUBLIC_URL)) return;
+        let key = "";
 
-        const key = fileUrl.replace(`${R2_PUBLIC_URL}/`, '');
+        if (R2_PUBLIC_URL && fileUrl.startsWith(R2_PUBLIC_URL)) {
+            key = fileUrl.replace(`${R2_PUBLIC_URL}/`, "");
+        } else if (fileUrl.includes("/functions/v1/r2-serve?key=")) {
+            const parsed = new URL(fileUrl);
+            key = parsed.searchParams.get("key") || "";
+        } else {
+            return;
+        }
 
         await invokeSupabaseFunction("r2-delete", {
             body: JSON.stringify({ key: decodeURIComponent(key) }),

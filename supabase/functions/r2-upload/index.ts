@@ -36,29 +36,6 @@ function sanitizePathPart(name: string): string {
     .join("/");
 }
 
-async function ensurePublicUrlReachable(url: string): Promise<void> {
-  let lastStatus = 0;
-  let lastError = "";
-
-  for (let i = 0; i < 3; i += 1) {
-    try {
-      const probeUrl = `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}-${i}`;
-      const res = await fetch(probeUrl, { method: "HEAD" });
-      lastStatus = res.status;
-      if (res.ok) return;
-    } catch (err) {
-      lastError = err instanceof Error ? err.message : "Unknown probe error";
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 350));
-  }
-
-  const details = lastError
-    ? `public URL probe failed: ${lastError}`
-    : `public URL returned HTTP ${lastStatus}`;
-  throw new Error(`Upload completed but file is not publicly reachable (${details}). Check R2_PUBLIC_URL and bucket public access.`);
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -111,7 +88,6 @@ Deno.serve(async (req) => {
     const accessKeyId = getRequiredEnv("R2_ACCESS_KEY_ID");
     const secretAccessKey = getRequiredEnv("R2_SECRET_ACCESS_KEY");
     const bucket = getRequiredEnv("R2_BUCKET_NAME");
-    const publicUrl = getRequiredEnv("R2_PUBLIC_URL");
 
     const s3 = new S3Client({
       region: "auto",
@@ -133,10 +109,9 @@ Deno.serve(async (req) => {
       }),
     );
 
-    const url = `${publicUrl}/${key}`;
-    await ensurePublicUrlReachable(url);
+    const serveUrl = `${supabaseUrl}/functions/v1/r2-serve?key=${encodeURIComponent(key)}`;
 
-    return jsonResponse(200, { url, key });
+    return jsonResponse(200, { url: serveUrl, key });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Internal server error";
     return jsonResponse(500, { error: message });

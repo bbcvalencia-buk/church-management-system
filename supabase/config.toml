@@ -4,5 +4,8 @@ verify_jwt = false
 [functions.r2-delete]
 verify_jwt = false
 
+[functions.r2-serve]
+verify_jwt = false
+
 [functions.financial-write]
 verify_jwt = false
