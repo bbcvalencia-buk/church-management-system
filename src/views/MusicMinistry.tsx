@@ -396,7 +396,7 @@ const MusicMinistry: React.FC = () => {
             title: "Low Attendance Recorded",
             desc: `For ${formatPracticeTypeLabel(lowAttendanceSessions[0].practice_type)} (${new Date(lowAttendanceSessions[0].practice_date).toLocaleDateString()})`,
             node: <span className="font-bold text-sm">!</span>,
-            colorClass: 'bg-red-50 text-red-500 border-red-100'
+            colorClass: 'bg-red-50 text-red-700 border-red-100'
         });
     }
     const upcomingSessions = sessions.filter(s => new Date(s.practice_date) >= new Date(new Date().setHours(0, 0, 0, 0)));
@@ -405,7 +405,7 @@ const MusicMinistry: React.FC = () => {
             title: "No Upcoming Practices",
             desc: "Schedule your next rehearsal.",
             node: <Calendar size={14} />,
-            colorClass: 'bg-orange-50 text-orange-500 border-orange-100'
+            colorClass: 'bg-orange-50 text-orange-700 border-orange-100'
         });
     }
 

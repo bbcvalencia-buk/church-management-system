@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import * as memberService from '@/services/memberService';
-import { Search, Loader2, X } from 'lucide-react';
+import { Search, Loader2, X, Check } from 'lucide-react';
 
 interface SearchMemberModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSelect: (memberId: string) => void;
+    selectedIds?: string[];
+    isMulti?: boolean;
 }
 
-export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({ isOpen, onClose, onSelect }) => {
+export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({
+    isOpen,
+    onClose,
+    onSelect,
+    selectedIds = [],
+    isMulti = false
+}) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
@@ -48,7 +56,7 @@ export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({ isOpen, on
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]">
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Match Member</h3>
+                    <h3 className="text-lg font-semibold">{isMulti ? 'Select Members' : 'Match Member'}</h3>
                     <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
                         <X size={20} />
                     </button>
@@ -76,32 +84,43 @@ export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({ isOpen, on
                     ) : results.length === 0 ? (
                         <div className="text-center p-4 text-gray-500">No members found.</div>
                     ) : (
-                        <div className="space-y-2">
-                            {results.map(member => (
-                                <button
-                                    key={member.id}
-                                    onClick={() => onSelect(member.id)}
-                                    className="w-full text-left p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-[var(--color-primary)] hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors flex items-center justify-between"
-                                >
-                                    <div>
-                                        <div className="font-medium text-gray-900 dark:text-white">
-                                            {member.surname}, {member.first_name}
+                        <div className="space-y-2 pb-16">
+                            {results.map(member => {
+                                const isSelected = selectedIds.includes(member.id);
+                                return (
+                                    <button
+                                        key={member.id}
+                                        onClick={() => onSelect(member.id)}
+                                        className={`w-full text-left p-3 rounded-lg border transition-colors flex items-center justify-between ${isSelected ? 'border-[var(--color-primary)] bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-[var(--color-primary)] hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}
+                                    >
+                                        <div>
+                                            <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                                {member.surname}, {member.first_name}
+                                            </div>
+                                            <div className="text-sm text-gray-500 flex items-center gap-2">
+                                                <span className="font-mono">{member.member_number || 'No Number'}</span>
+                                            </div>
                                         </div>
-                                        <div className="text-sm text-gray-500 flex items-center gap-2">
-                                            <span className="font-mono">{member.member_number || 'No Number'}</span>
-                                            {false && (
-                                                <span className="px-2 py-0.5 rounded-full text-[10px] uppercase font-bold bg-purple-100 text-purple-700">Visitor</span>
-                                            )}
+                                        <div className={`flex items-center gap-1 ${isSelected ? 'text-[var(--color-primary)]' : 'text-gray-400 group-hover:text-[var(--color-primary)] opacity-0'}`}>
+                                            {isSelected ? <><Check size={16} /> Selected</> : 'Select'}
                                         </div>
-                                    </div>
-                                    <div className="text-[var(--color-primary)] opacity-0 group-hover:opacity-100">
-                                        Select
-                                    </div>
-                                </button>
-                            ))}
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
+
+                {isMulti && (
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                        <button
+                            onClick={onClose}
+                            className="w-full bg-[var(--color-primary)] text-white font-bold py-2.5 rounded-lg hover:bg-opacity-90 transition-opacity"
+                        >
+                            Done Selecting
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

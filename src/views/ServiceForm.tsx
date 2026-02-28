@@ -73,7 +73,7 @@ const ROLE_LABELS: Record<ServiceRole, string> = {
     other: 'Other'
 };
 
-const MULTI_MEMBER_ROLES: ServiceRole[] = ['choir', 'mini_ensemble', 'usher', 'technicals'];
+const MULTI_MEMBER_ROLES: ServiceRole[] = ['choir', 'mini_ensemble', 'usher', 'technicals', 'pianist'];
 
 const inferVisitTimeFromService = (serviceType?: string): 'AM' | 'PM' =>
     serviceType === 'sunday_afternoon' ? 'PM' : 'AM';
@@ -533,7 +533,7 @@ const ServiceForm: React.FC = () => {
         if (MULTI_MEMBER_ROLES.includes(role)) {
             // Check if already assigned this role
             if (assignments.some(a => a.role === role && a.member_id === memberId)) {
-                setShowRoleSearch(null);
+                setAssignments(prev => prev.filter(a => !(a.role === role && a.member_id === memberId)));
                 return;
             }
             setAssignments(prev => [...prev, {
@@ -551,8 +551,8 @@ const ServiceForm: React.FC = () => {
                     member: member
                 }
             ]);
+            setShowRoleSearch(null);
         }
-        setShowRoleSearch(null);
     };
 
     const removeAssignment = (memberId: string, role: string) => {
@@ -928,6 +928,8 @@ const ServiceForm: React.FC = () => {
                 isOpen={!!showRoleSearch}
                 onClose={() => setShowRoleSearch(null)}
                 onSelect={handleSelectMemberForRole}
+                selectedIds={showRoleSearch ? assignments.filter(a => a.role === showRoleSearch).map(a => a.member_id!) : []}
+                isMulti={showRoleSearch ? MULTI_MEMBER_ROLES.includes(showRoleSearch) : false}
             />
         </div >
     );

@@ -100,27 +100,27 @@ const getCategoryStyle = (catId: string) => {
       return {
         bg: 'bg-emerald-50/50',
         border: 'border-emerald-50',
-        text: 'text-emerald-600',
+        text: 'text-emerald-700',
       };
     case 'music_ministry':
       return {
         bg: 'bg-orange-50/50',
         border: 'border-orange-50',
-        text: 'text-orange-600',
+        text: 'text-orange-700',
       };
     case 'sunday_school_adult':
     case 'sunday_school_children':
       return {
         bg: 'bg-rose-50/50',
         border: 'border-rose-50',
-        text: 'text-rose-600',
+        text: 'text-rose-700',
       };
     case 'other_ministries':
     default:
       return {
         bg: 'bg-[#f4f7ff]',
         border: 'border-[#eef2fc]',
-        text: 'text-indigo-600',
+        text: 'text-indigo-700',
       };
   }
 };
@@ -577,10 +577,10 @@ const MinistryDirectory: React.FC = () => {
 
                             return bestRateObj && (
                               <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(bestRateObj.rate.replace('%', '')) >= 75
-                                ? 'bg-green-50 text-green-700 border-green-200'
+                                ? 'bg-green-50 text-green-800 border-green-200'
                                 : Number(bestRateObj.rate.replace('%', '')) >= 50
-                                  ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                  : 'bg-red-50 text-red-700 border-red-200'
+                                  ? 'bg-yellow-50 text-yellow-800 border-yellow-200'
+                                  : 'bg-red-50 text-red-800 border-red-200'
                                 }`} title={`Attended ${bestRateObj.count} of ${bestRateObj.total} music practices`}>
                                 {bestRateObj.rate} Attendance
                               </span>
@@ -588,10 +588,10 @@ const MinistryDirectory: React.FC = () => {
                           })() : (
                             attendanceRates[preview.id] && (
                               <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[preview.id].rate.replace('%', '')) >= 80
-                                ? 'bg-green-50 text-green-700 border-green-200'
+                                ? 'bg-green-50 text-green-800 border-green-200'
                                 : Number(attendanceRates[preview.id].rate.replace('%', '')) >= 50
-                                  ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                  : 'bg-red-50 text-red-700 border-red-200'
+                                  ? 'bg-yellow-50 text-yellow-800 border-yellow-200'
+                                  : 'bg-red-50 text-red-800 border-red-200'
                                 }`} title={`Attended ${attendanceRates[preview.id].count} out of ${attendanceRates[preview.id].total} services`}>
                                 {attendanceRates[preview.id].rate} Attendance
                               </span>
@@ -782,10 +782,10 @@ const MinistryDirectory: React.FC = () => {
                         return bestRateObj && (
                           <div className="mt-1">
                             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(bestRateObj.rate.replace('%', '')) >= 75
-                              ? 'bg-green-50 text-green-700 border-green-200'
+                              ? 'bg-green-50 text-green-800 border-green-200'
                               : Number(bestRateObj.rate.replace('%', '')) >= 50
-                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                : 'bg-red-50 text-red-700 border-red-200'
+                                ? 'bg-yellow-50 text-yellow-800 border-yellow-200'
+                                : 'bg-red-50 text-red-800 border-red-200'
                               }`} title={`Attended ${bestRateObj.count} of ${bestRateObj.total} music practices`}>
                               {bestRateObj.rate} Attendance
                             </span>
@@ -795,10 +795,10 @@ const MinistryDirectory: React.FC = () => {
                         attendanceRates[m.id] && (
                           <div className="mt-1">
                             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[m.id].rate.replace('%', '')) >= 80
-                              ? 'bg-green-50 text-green-700 border-green-200'
+                              ? 'bg-green-50 text-green-800 border-green-200'
                               : Number(attendanceRates[m.id].rate.replace('%', '')) >= 50
-                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                : 'bg-red-50 text-red-700 border-red-200'
+                                ? 'bg-yellow-50 text-yellow-800 border-yellow-200'
+                                : 'bg-red-50 text-red-800 border-red-200'
                               }`} title={`Attended ${attendanceRates[m.id].count} out of ${attendanceRates[m.id].total} services`}>
                               {attendanceRates[m.id].rate} Attendance
                             </span>
