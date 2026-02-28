@@ -177,9 +177,18 @@ const SystemSettings: React.FC = () => {
                                             Upload your church logo in PNG format. Recommended size: 512×512px. Max 2MB.
                                         </p>
                                         {logoPreviewError && settings.church_logo_url && (
-                                            <p className="text-xs text-red-600 break-all">
-                                                Could not load logo URL: {settings.church_logo_url}
-                                            </p>
+                                            <div className="space-y-2">
+                                                <p className="text-xs text-red-600 break-all">
+                                                    Could not load logo URL: {settings.church_logo_url}
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setLogoPreviewError(false)}
+                                                    className="text-xs text-[var(--color-primary)] hover:underline"
+                                                >
+                                                    Retry loading logo
+                                                </button>
+                                            </div>
                                         )}
                                         <div className="flex gap-2 flex-wrap">
                                             <button

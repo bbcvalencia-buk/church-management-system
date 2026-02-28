@@ -859,7 +859,7 @@ CREATE TABLE IF NOT EXISTS public.service_assignments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   service_id UUID NOT NULL REFERENCES public.services(id) ON DELETE CASCADE,
   member_id UUID NOT NULL REFERENCES public.members(id) ON DELETE CASCADE,
-  role TEXT NOT NULL CHECK (role IN ('songleader', 'pastor', 'moderator', 'pianist', 'technicals', 'mini_ensemble', 'usher', 'choir', 'preacher', 'worship_leader', 'other')),
+  role TEXT NOT NULL CHECK (role IN ('songleader', 'pastor', 'moderator', 'pianist', 'technicals', 'mini_ensemble', 'usher', 'choir', 'preacher', 'other')),
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(service_id, member_id, role)
@@ -1194,10 +1194,12 @@ CREATE INDEX IF NOT EXISTS idx_import_conflicts_reason ON public.import_conflict
 CREATE TABLE IF NOT EXISTS public.church_events (
     id TEXT PRIMARY KEY, -- Format: EVT-YYYY-NNN
     event_name TEXT NOT NULL,
-    event_type TEXT CHECK(event_type IN('fellowship','bible_quiz','camp','anniversary','special_program','other')),
+    event_theme TEXT,
+    event_type TEXT CHECK(event_type IN('fellowship','bible_quiz','camp','anniversary','special_program','thanksgiving','other')),
     event_date DATE NOT NULL,
     location TEXT,
     total_attendance INT DEFAULT 0,
+    visitors_count INT DEFAULT 0,
     notes TEXT,
     attachment_urls TEXT[] DEFAULT '{}',
     created_by UUID REFERENCES public.members(id),

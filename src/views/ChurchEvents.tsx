@@ -22,7 +22,8 @@ import {
     PartyPopper,
     Star,
     ChevronRight,
-    Loader2
+    Loader2,
+    Heart
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import SuccessModal from "@/components/SuccessModal";
@@ -39,6 +40,7 @@ const EVENT_TYPES = [
     { value: 'camp', label: 'Camp', icon: Tent, color: 'bg-emerald-500/10 text-emerald-500' },
     { value: 'anniversary', label: 'Anniversary', icon: PartyPopper, color: 'bg-rose-500/10 text-rose-500' },
     { value: 'special_program', label: 'Special Program', icon: Star, color: 'bg-purple-500/10 text-purple-500' },
+    { value: 'thanksgiving', label: 'Thanksgiving', icon: Heart, color: 'bg-orange-500/10 text-orange-500' },
     { value: 'other', label: 'Other', icon: Calendar, color: 'bg-gray-500/10 text-gray-500' },
 ];
 
@@ -60,10 +62,12 @@ const ChurchEvents: React.FC = () => {
     // Form state
     const [form, setForm, clearFormDraft] = useSessionDraft<Partial<ChurchEvent>>('church-events-form', {
         event_name: '',
+        event_theme: '',
         event_type: 'fellowship',
         event_date: new Date().toISOString().split('T')[0],
         location: '',
         total_attendance: 0,
+        visitors_count: 0,
         notes: '',
         attachment_urls: []
     });
@@ -118,10 +122,12 @@ const ChurchEvents: React.FC = () => {
             clearMembersDraft();
             setForm({
                 event_name: '',
+                event_theme: '',
                 event_type: 'fellowship',
                 event_date: new Date().toISOString().split('T')[0],
                 location: '',
                 total_attendance: 0,
+                visitors_count: 0,
                 notes: '',
                 attachment_urls: [],
                 created_by: member?.id
@@ -311,6 +317,9 @@ const ChurchEvents: React.FC = () => {
                                 </div>
 
                                 <h3 className="text-xl font-black text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors uppercase italic">{event.event_name}</h3>
+                                {event.event_theme && (
+                                    <p className="text-sm text-gray-400 italic mb-4">"{event.event_theme}"</p>
+                                )}
 
                                 <div className="space-y-2 mb-6 text-sm font-medium">
                                     <div className="flex items-center gap-2 text-gray-500">
@@ -321,6 +330,12 @@ const ChurchEvents: React.FC = () => {
                                         <Users size={14} className="text-gray-400" />
                                         <span>{event.total_attendance || 0} Attended</span>
                                     </div>
+                                    {event.visitors_count !== undefined && event.visitors_count > 0 && (
+                                        <div className="flex items-center gap-2 text-gray-500">
+                                            <Heart size={14} className="text-pink-400" />
+                                            <span>{event.visitors_count} Visitors</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
@@ -346,6 +361,7 @@ const ChurchEvents: React.FC = () => {
                                     <ViewIcon size={28} className="text-blue-600" />
                                     {form.id ? 'Edit Event' : 'Schedule New Event'}
                                 </h2>
+                                {form.event_theme && <p className="text-blue-600 font-bold italic mt-1 text-lg">"{form.event_theme}"</p>}
                                 <p className="text-gray-500 font-medium">Capture attendance and programs for specific activities.</p>
                             </div>
                             <button onClick={() => setIsModalOpen(false)} className="w-12 h-12 rounded-2xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-all active:scale-90">
@@ -371,6 +387,19 @@ const ChurchEvents: React.FC = () => {
                                                     placeholder="e.g., Youth Summer Fellowship"
                                                 />
                                             </div>
+
+                                            {['thanksgiving', 'fellowship', 'camp', 'anniversary', 'special_program'].includes(form.event_type || '') && (
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Event Theme / Title (Optional)</label>
+                                                    <input
+                                                        type="text"
+                                                        value={form.event_theme || ''}
+                                                        onChange={(e) => setForm({ ...form, event_theme: e.target.value })}
+                                                        className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-base font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                        placeholder='e.g., "Faithful in All Seasons"'
+                                                    />
+                                                </div>
+                                            )}
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
@@ -404,6 +433,22 @@ const ChurchEvents: React.FC = () => {
                                                     placeholder="e.g., Church Main Hall"
                                                 />
                                             </div>
+
+                                            {['thanksgiving', 'fellowship', 'anniversary'].includes(form.event_type || '') && (
+                                                <div>
+                                                    <label className="block text-[10px] font-bold text-pink-400 uppercase tracking-widest mb-2 px-1 flex items-center gap-2">
+                                                        <Heart size={12} /> Visitors Present (Optional)
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        value={form.visitors_count || 0}
+                                                        onChange={(e) => setForm({ ...form, visitors_count: parseInt(e.target.value) || 0 })}
+                                                        className="w-full bg-pink-50/30 border border-pink-100 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all shadow-sm"
+                                                        placeholder="Number of non-member visitors"
+                                                    />
+                                                </div>
+                                            )}
 
                                             <div>
                                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-1">Notes / Program Details</label>
@@ -522,7 +567,7 @@ const ChurchEvents: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div >
             )}
 
             <ConfirmModal
@@ -539,7 +584,7 @@ const ChurchEvents: React.FC = () => {
                 title="Event Saved!"
                 message="Your church event report has been successfully recorded and archived."
             />
-        </div>
+        </div >
     );
 };
 

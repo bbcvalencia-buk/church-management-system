@@ -20,7 +20,8 @@ import {
   MapPin,
   Clock,
   Trash2,
-  Edit2
+  Edit2,
+  Phone
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { Link } from "react-router-dom";
@@ -32,6 +33,7 @@ interface PartialMember {
   surname: string;
   profile_picture_url?: string;
   member_number?: string;
+  phone_number?: string;
 }
 
 interface PositionWithMember extends ChurchPosition {
@@ -150,6 +152,9 @@ const MinistryDirectory: React.FC = () => {
   const [participationRates, setParticipationRates] = useState<Record<string, number>>({});
   const [attendanceRates, setAttendanceRates] = useState<Record<string, { count: number, rate: string, total: number }>>({});
 
+  const [viewingMember, setViewingMember] = useState<any>(null);
+  const [memberServiceHistory, setMemberServiceHistory] = useState<any[]>([]);
+
   useEffect(() => {
     fetchPositions();
     fetchMembers();
@@ -164,6 +169,17 @@ const MinistryDirectory: React.FC = () => {
       setAttendanceRates(rates);
     } catch (err) {
       console.error("Error fetching participation/attendance:", err);
+    }
+  };
+
+  const handleViewMember = async (member: any) => {
+    setViewingMember(member);
+    setMemberServiceHistory([]);
+    try {
+      const history = await memberService.getMemberServiceHistory(member.id, 5);
+      setMemberServiceHistory(history);
+    } catch (err) {
+      console.error("Failed to load service history:", err);
     }
   };
 
@@ -505,9 +521,9 @@ const MinistryDirectory: React.FC = () => {
                           {preview.full_pos?.is_ministry_head ? `Head - ${preview.specific_role || 'Member'}` : (preview.specific_role || 'Member')}
                         </p>
                         <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                          <Link to={`/members/${preview.id}`} onClick={(e) => e.stopPropagation()} className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors truncate">
+                          <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleViewMember(preview); }} className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors truncate text-left">
                             {preview.first_name} {preview.surname}
-                          </Link>
+                          </button>
                           {attendanceRates[preview.id] && (
                             <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[preview.id].rate.replace('%', '')) >= 80
                               ? 'bg-green-50 text-green-700 border-green-200'
@@ -594,7 +610,7 @@ const MinistryDirectory: React.FC = () => {
 
             <div className="space-y-2 max-h-[45vh] overflow-y-auto pr-1 custom-scrollbar">
               {filteredAllMembers.map((m) => (
-                <Link key={m.id} to={`/members/${m.id}`} onClick={() => setAllMembersOpen(false)} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+                <button key={m.id} onClick={(e) => { e.preventDefault(); setAllMembersOpen(false); handleViewMember({ ...m, specific_role: m.member_number ? 'Member' : 'Member' }); }} className="w-full flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors text-left">
                   <div className="flex items-center gap-3">
                     {m.profile_picture_url ? (
                       <img src={m.profile_picture_url} alt={`${m.first_name} ${m.surname}`} className="w-9 h-9 rounded-full object-cover shadow-sm bg-white" />
@@ -611,7 +627,7 @@ const MinistryDirectory: React.FC = () => {
                     </div>
                   </div>
                   <Eye size={15} className="text-blue-600" />
-                </Link>
+                </button>
               ))}
               {filteredAllMembers.length === 0 && (
                 <div className="text-center py-6 text-gray-500 text-sm font-semibold border-2 border-dashed border-gray-100 rounded-xl">
@@ -676,7 +692,7 @@ const MinistryDirectory: React.FC = () => {
                       <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200"><User size={18} className="text-gray-500" /></div>
                     )}
                     <div>
-                      <Link to={`/members/${m.id}`} className="text-[13px] font-bold text-gray-900 hover:text-blue-600 transition-colors inline-block">{m.first_name} {m.surname}</Link>
+                      <button onClick={(e) => { e.preventDefault(); setManageGroup(null); handleViewMember(m); }} className="text-[13px] font-bold text-gray-900 hover:text-blue-600 transition-colors text-left">{m.first_name} {m.surname}</button>
                       {m.member_number && (
                         <p className="text-[9px] font-bold text-indigo-600 tracking-tight">{m.member_number}</p>
                       )}
@@ -687,10 +703,10 @@ const MinistryDirectory: React.FC = () => {
                       {attendanceRates[m.id] && (
                         <div className="mt-1">
                           <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[m.id].rate.replace('%', '')) >= 80
-                              ? 'bg-green-50 text-green-700 border-green-200'
-                              : Number(attendanceRates[m.id].rate.replace('%', '')) >= 50
-                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                : 'bg-red-50 text-red-700 border-red-200'
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : Number(attendanceRates[m.id].rate.replace('%', '')) >= 50
+                              ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                              : 'bg-red-50 text-red-700 border-red-200'
                             }`} title={`Attended ${attendanceRates[m.id].count} out of ${attendanceRates[m.id].total} services`}>
                             {attendanceRates[m.id].rate} Attendance
                           </span>
@@ -859,6 +875,132 @@ const MinistryDirectory: React.FC = () => {
               >
                 <Save size={16} /> {submitting ? 'Saving...' : 'Confirm Assignment'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Member View Modal */}
+      {viewingMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg overflow-hidden relative animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col max-h-[90vh]">
+            <button
+              onClick={() => setViewingMember(null)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 p-2 bg-gray-100/50 backdrop-blur-sm hover:bg-gray-200 rounded-full transition-all z-20"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Header / Hero */}
+            <div className="pt-8 pb-6 px-6 bg-gradient-to-b from-blue-50/50 to-white flex flex-col items-center border-b border-gray-100">
+              <div className="relative mb-4">
+                {viewingMember.profile_picture_url ? (
+                  <img
+                    src={viewingMember.profile_picture_url}
+                    alt={`${viewingMember.first_name}`}
+                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover shadow-lg border-4 border-white"
+                  />
+                ) : (
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-blue-100 flex items-center justify-center border-4 border-white shadow-lg">
+                    <User size={40} className="text-blue-500" />
+                  </div>
+                )}
+                {viewingMember.full_pos?.is_ministry_head && (
+                  <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white p-1.5 rounded-full border-4 border-white shadow-sm" title="Ministry Head">
+                    <Star size={16} className="fill-current" />
+                  </div>
+                )}
+              </div>
+              <h2 className="text-2xl font-black text-gray-900 mb-1 leading-tight text-center">
+                {viewingMember.first_name} {viewingMember.surname}
+              </h2>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                {viewingMember.member_number && (
+                  <span className="bg-indigo-50 text-indigo-700 border border-indigo-100/50 px-2.5 py-1 rounded-md text-[11px] font-black tracking-widest font-mono shadow-sm">
+                    {viewingMember.member_number}
+                  </span>
+                )}
+                {viewingMember.specific_role && (
+                  <span className="bg-blue-50 text-blue-700 border border-blue-100/50 px-2.5 py-1 rounded-md text-[11px] font-black tracking-widest uppercase shadow-sm">
+                    {viewingMember.full_pos?.is_ministry_head ? `HEAD - ${viewingMember.specific_role}` : viewingMember.specific_role}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="overflow-y-auto px-6 py-6 custom-scrollbar flex-1 bg-[#F9FAFB]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                {/* Left Column: Quick Stats */}
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                      <Activity size={12} /> Attendance Rate
+                    </h4>
+                    {attendanceRates[viewingMember.id] ? (
+                      <div>
+                        <div className="text-3xl font-black text-gray-900 leading-none mb-1">
+                          {attendanceRates[viewingMember.id].rate}
+                        </div>
+                        <p className="text-[11px] font-bold text-gray-500">
+                          {attendanceRates[viewingMember.id].count} of {attendanceRates[viewingMember.id].total} Services
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs font-bold text-gray-400 italic">No attendance data yet</p>
+                    )}
+                  </div>
+
+                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                      <Phone size={12} /> Contact Info
+                    </h4>
+                    {viewingMember.phone_number ? (
+                      <a href={`tel:${viewingMember.phone_number}`} className="text-sm font-bold text-gray-900 hover:text-blue-600 truncate block">
+                        {viewingMember.phone_number}
+                      </a>
+                    ) : (
+                      <p className="text-xs font-bold text-gray-400 italic">No phone on record</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Column: Service History */}
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <Music size={12} /> Recent Service Roles
+                  </h4>
+                  <div className="flex-1 space-y-3">
+                    {memberServiceHistory.length > 0 ? (
+                      memberServiceHistory.map(history => (
+                        <div key={history.id} className="relative pl-3 border-l-2 border-blue-100">
+                          <p className="text-xs font-bold text-gray-900 capitalize leading-tight">
+                            {history.role.replace('_', ' ')}
+                            {history.notes && <span className="text-gray-400 font-normal"> - {history.notes}</span>}
+                          </p>
+                          <p className="text-[10px] font-semibold text-gray-500 uppercase mt-0.5">
+                            {new Date(history.services?.service_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs font-bold text-gray-400 italic py-2">No recent service assignments</p>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-white border-t border-gray-100">
+              <Link
+                to={`/members/${viewingMember.id}`}
+                className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-colors shadow-sm active:scale-[0.98]"
+              >
+                <Eye size={16} /> View Full Profile
+              </Link>
             </div>
           </div>
         </div>

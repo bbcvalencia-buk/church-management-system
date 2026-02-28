@@ -415,4 +415,44 @@ export const getMemberAttendanceRates = async (): Promise<Record<string, { count
     return rates;
 };
 
+/**
+ * Fetches the recent service history for a specific member.
+ * Gets the last 5 services where they had an assigned role.
+ */
+export const getMemberServiceHistory = async (memberId: string, limit: number = 5): Promise<any[]> => {
+    if (isTableMarkedMissing('service_assignments')) {
+        return [];
+    }
 
+    const { data, error } = await supabase
+        .from('service_assignments')
+        .select(`
+            id,
+            role,
+            notes,
+            services (
+                id,
+                service_date,
+                service_type
+            )
+        `)
+        .eq('member_id', memberId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (error) {
+        if (isMissingTableError(error)) {
+            markTableMissing('service_assignments');
+            return [];
+        }
+        console.error(`Failed to fetch service history for member ${memberId}:`, error);
+        return [];
+    }
+
+    // Sort heavily by service_date from the join just to be safe
+    return (data || []).sort((a: any, b: any) => {
+        const dateA = new Date(a.services?.service_date || 0).getTime();
+        const dateB = new Date(b.services?.service_date || 0).getTime();
+        return dateB - dateA;
+    });
+};

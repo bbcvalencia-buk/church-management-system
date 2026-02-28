@@ -18,10 +18,12 @@ export type MaritalStatus = 'Single' | 'Married' | 'Widow' | 'Widower' | 'Separa
 export interface ChurchEvent {
     id: string;
     event_name: string;
-    event_type: 'fellowship' | 'bible_quiz' | 'camp' | 'anniversary' | 'special_program' | 'other';
+    event_theme?: string | null;
+    event_type: 'fellowship' | 'bible_quiz' | 'camp' | 'anniversary' | 'special_program' | 'thanksgiving' | 'other';
     event_date: string;
     location: string;
     total_attendance: number;
+    visitors_count?: number;
     notes: string;
     attachment_urls?: string[];
     created_by: string;
@@ -234,7 +236,7 @@ export interface FaithPromiseLedger {
 }
 
 export type ServiceType = 'sunday_morning' | 'sunday_afternoon' | 'wednesday_prayer' | 'pre_service' | 'funeral';
-export type ServiceRole = 'songleader' | 'pastor' | 'moderator' | 'pianist' | 'technicals' | 'mini_ensemble' | 'usher' | 'choir' | 'preacher' | 'worship_leader' | 'other';
+export type ServiceRole = 'songleader' | 'pastor' | 'moderator' | 'pianist' | 'technicals' | 'mini_ensemble' | 'usher' | 'choir' | 'preacher' | 'other';
 
 export interface ServiceAssignment {
     id: string;

@@ -1,4 +1,5 @@
 import { S3Client, GetObjectCommand, HeadObjectCommand } from "npm:@aws-sdk/client-s3@3.992.0";
+import { getSignedUrl } from "npm:@aws-sdk/s3-request-presigner@3.992.0";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -69,14 +70,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    const object = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-    const bodyBytes = object.Body ? await object.Body.transformToByteArray() : new Uint8Array();
+    const signed = await getSignedUrl(
+      s3,
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+      { expiresIn: 60 * 10 },
+    );
 
-    return new Response(bodyBytes, {
-      status: 200,
+    return new Response(null, {
+      status: 302,
       headers: withCors({
-        "Content-Type": object.ContentType || "application/octet-stream",
-        "Cache-Control": "public, max-age=31536000, immutable",
+        Location: signed,
+        "Cache-Control": "private, no-store",
       }),
     });
   } catch (error) {

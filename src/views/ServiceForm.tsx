@@ -70,7 +70,6 @@ const ROLE_LABELS: Record<ServiceRole, string> = {
     usher: 'Usher',
     choir: 'Choir',
     preacher: 'Preacher',
-    worship_leader: 'Worship Leader',
     other: 'Other'
 };
 
@@ -568,7 +567,7 @@ const ServiceForm: React.FC = () => {
 
     if (loading) return <div className="p-8 text-center text-[var(--color-text-muted)]">Loading...</div>;
 
-    const ROLES: ServiceRole[] = ['pastor', 'preacher', 'songleader', 'moderator', 'worship_leader', 'pianist', 'technicals', 'choir', 'mini_ensemble', 'usher', 'other'];
+    const ROLES: ServiceRole[] = ['pastor', 'preacher', 'songleader', 'moderator', 'pianist', 'technicals', 'choir', 'mini_ensemble', 'usher', 'other'];
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20">
