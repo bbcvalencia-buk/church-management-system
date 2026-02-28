@@ -83,38 +83,7 @@ const GoodnewsClass = () => {
     const fetchSeries = async () => {
         setLoading(true);
         try {
-            if (isTeacher && !canManageSessions) {
-                if (!member?.id) {
-                    setSeriesList([]);
-                    return;
-                }
-
-                const [assignments, allSeries] = await Promise.all([
-                    goodnewsService.getGoodnewsAssignmentsByMember(member.id),
-                    goodnewsService.getGoodnewsSeries()
-                ]);
-
-                const seen = new Map<string, GoodnewsSeries>();
-
-                // Add series where they participated in a session
-                for (const row of (assignments || []) as any[]) {
-                    const series = row?.session?.series;
-                    if (series?.id && !seen.has(series.id)) {
-                        seen.set(series.id, series);
-                    }
-                }
-
-                // Add series where they are assigned as the lead member (especially for newly created ones with no sessions yet)
-                for (const series of (allSeries || []) as any[]) {
-                    if (series.lead_member_id === member.id && !seen.has(series.id)) {
-                        seen.set(series.id, series);
-                    }
-                }
-
-                setSeriesList(Array.from(seen.values()));
-                return;
-            }
-
+            // RLS already controls who can see what — just fetch all series
             const data = await goodnewsService.getGoodnewsSeries();
             setSeriesList((data || []) as any[]);
         } catch (e) {
@@ -259,7 +228,7 @@ const GoodnewsClass = () => {
                     </h1>
                     <p className="text-gray-500 mt-2 font-medium">Manage Goodnews series, locations, children attendance, and members involved.</p>
                 </div>
-                {canManageSessions && !viewingSeries && (
+                {(canManageSessions || isTeacher) && !viewingSeries && (
                     <button
                         onClick={() => { setSeriesForm({ status: 'ongoing', start_date: new Date().toISOString().split('T')[0] }); setShowSeriesForm(true); }}
                         className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
@@ -375,7 +344,7 @@ const GoodnewsClass = () => {
                                 )}
                             </div>
                             <div className="flex flex-col gap-2">
-                                {canManageSessions && (
+                                {(canManageSessions || isTeacher) && (
                                     <button
                                         onClick={() => {
                                             setSeriesForm(viewingSeries);
