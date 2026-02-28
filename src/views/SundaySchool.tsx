@@ -531,6 +531,29 @@ const SundaySchool: React.FC = () => {
     const newVisitorsToday = latestSessions.reduce((sum, s) => sum + (s.visitors_present || 0), 0);
     const soulsSavedToday = latestSessions.reduce((sum, s) => sum + (s.souls_saved || 0), 0);
 
+    // Calculate this month's summary
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const thisMonthSessions = sessions.filter(s => {
+        const d = new Date(s.session_date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    });
+
+    const thisMonthAttendance = thisMonthSessions.reduce((sum, s) => sum + s.total_attendance, 0);
+    const thisMonthVisitors = thisMonthSessions.reduce((sum, s) => sum + (s.visitors_present || 0), 0);
+    const thisMonthSaved = thisMonthSessions.reduce((sum, s) => sum + (s.souls_saved || 0), 0);
+
+    // Department wise latest stats
+    const latestDeptStats = DEPARTMENTS.reduce((acc, dept) => {
+        const session = latestSessions.find(s => s.department === dept.id);
+        if (session) {
+            acc[dept.id] = { attendance: session.total_attendance, trend: session.total_attendance > 0 ? '+inc' : 'same' };
+        } else {
+            acc[dept.id] = { attendance: 0, trend: 'same' };
+        }
+        return acc;
+    }, {} as Record<string, { attendance: number, trend: string }>);
+
     // List filtering
     const filteredSessions = sessions.filter(session => {
         const deptLabel = DEPARTMENTS.find(d => d.id === session.department)?.label || '';
@@ -609,48 +632,67 @@ const SundaySchool: React.FC = () => {
                 </button>
             </div>
 
-            {/* Top Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[160px]">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="bg-blue-100 p-2.5 rounded-xl text-blue-600">
-                                <Users size={20} />
+            {/* Department Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {DEPARTMENTS.map(dept => {
+                    const stats = latestDeptStats[dept.id];
+                    return (
+                        <div key={dept.id} className="bg-white rounded-[20px] p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col justify-between relative overflow-hidden group hover:border-blue-200 transition-colors">
+                            <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500" style={{ backgroundColor: dept.color }} />
+                            <div>
+                                <h3 className="text-[12px] font-black uppercase tracking-wider text-gray-500 mb-1">{dept.label}</h3>
                             </div>
-                            <span className="text-gray-500 text-sm font-medium">Total Attendance Today</span>
+                            <div className="mt-4">
+                                <div className="text-3xl font-black text-gray-900 leading-tight">
+                                    {stats.attendance}
+                                </div>
+                                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                    {latestDate ? new Date(latestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No Data'}
+                                </div>
+                            </div>
                         </div>
-                        <div className="text-4xl font-bold text-gray-900 mt-2">{totalAttendanceToday}</div>
-                    </div>
-                    <button className="text-blue-600 text-sm font-medium hover:underline text-left">View detailed breakdown</button>
-                </div>
+                    );
+                })}
+            </div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[160px]">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="bg-green-100 p-2.5 rounded-xl text-green-600">
-                                <UserPlus size={20} />
-                            </div>
-                            <span className="text-gray-500 text-sm font-medium">New Visitors</span>
-                        </div>
-                        <div className="text-4xl font-bold text-gray-900 mt-2">{newVisitorsToday}</div>
-                    </div>
-                    <div className="text-green-600 text-sm font-medium flex items-center gap-1">
-                        <TrendingUp size={14} />
-                        12% increase <span className="text-gray-400 font-normal">vs last week</span>
-                    </div>
-                </div>
+            {/* This Month Summary */}
+            <div className="bg-[#111827] rounded-[24px] p-8 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/3"></div>
 
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col justify-between h-[160px]">
-                    <div>
+                <h3 className="text-white font-serif font-bold text-xl mb-6 flex items-center gap-2 relative z-10">
+                    <Calendar size={20} className="text-blue-400" /> This Month Summary
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 divide-y md:divide-y-0 md:divide-x divide-gray-700/50">
+                    <div className="pt-4 md:pt-0 md:pr-6 first:pt-0">
                         <div className="flex items-center gap-3 mb-2">
-                            <div className="bg-orange-100 p-2.5 rounded-xl text-orange-500">
-                                <Heart size={20} />
+                            <div className="bg-blue-500/20 p-2 rounded-lg text-blue-400">
+                                <Users size={18} />
                             </div>
-                            <span className="text-gray-500 text-sm font-medium">Souls Saved</span>
+                            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Total Attendance</span>
                         </div>
-                        <div className="text-4xl font-bold text-gray-900 mt-2">{soulsSavedToday}</div>
+                        <div className="text-4xl font-black text-white mt-1">{thisMonthAttendance}</div>
                     </div>
-                    <button className="text-blue-600 text-sm font-medium hover:underline text-left">View testimonies</button>
+
+                    <div className="pt-6 md:pt-0 md:px-6">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="bg-emerald-500/20 p-2 rounded-lg text-emerald-400">
+                                <UserPlus size={18} />
+                            </div>
+                            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">New Visitors</span>
+                        </div>
+                        <div className="text-4xl font-black text-white mt-1">{thisMonthVisitors}</div>
+                    </div>
+
+                    <div className="pt-6 md:pt-0 md:pl-6">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="bg-rose-500/20 p-2 rounded-lg text-rose-400">
+                                <Heart size={18} />
+                            </div>
+                            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Souls Saved</span>
+                        </div>
+                        <div className="text-4xl font-black text-white mt-1">{thisMonthSaved}</div>
+                    </div>
                 </div>
             </div>
 

@@ -144,22 +144,94 @@ export const getFamilyRelationships = async (memberId: string): Promise<FamilyRe
 };
 
 /**
- * Upserts a family relationship.
+ * Maps a relationship from the perspective of the target back to the source.
+ * Example: If A adds B as "father", B should add A as "son" (if A is male) or "daughter" (if A is female).
  */
-export const upsertFamilyRelationship = async (relationship: Partial<FamilyRelationship>): Promise<void> => {
-    const { error } = await supabase
+export const getReciprocalRelation = (relation: string, sourceGender?: string): string => {
+    const isFemale = sourceGender?.toLowerCase() === 'female';
+    switch (relation.toLowerCase()) {
+        case 'spouse': return 'spouse';
+        case 'father': return isFemale ? 'daughter' : 'son';
+        case 'mother': return isFemale ? 'daughter' : 'son';
+        case 'son': return isFemale ? 'mother' : 'father';
+        case 'daughter': return isFemale ? 'mother' : 'father';
+        case 'brother': return isFemale ? 'sister' : 'brother';
+        case 'sister': return isFemale ? 'sister' : 'brother';
+        case 'grandfather': return isFemale ? 'granddaughter' : 'grandson';
+        case 'grandmother': return isFemale ? 'granddaughter' : 'grandson';
+        case 'grandson': return isFemale ? 'grandmother' : 'grandfather';
+        case 'granddaughter': return isFemale ? 'grandmother' : 'grandfather';
+        case 'uncle': return isFemale ? 'niece' : 'nephew';
+        case 'aunt': return isFemale ? 'niece' : 'nephew';
+        case 'nephew': return isFemale ? 'aunt' : 'uncle';
+        case 'niece': return isFemale ? 'aunt' : 'uncle';
+        case 'cousin': return 'cousin';
+        case 'in_law': return 'in_law';
+        default: return relation;
+    }
+}
+
+/**
+ * Upserts a family relationship and automatically ensures the reciprocal relationship exists.
+ */
+export const upsertFamilyRelationship = async (relationship: Partial<FamilyRelationship>, skipReciprocal = false): Promise<void> => {
+    // 1. Insert/Update the primary relationship
+    const { error, data: savedRelation } = await supabase
         .from("family_relationships")
-        .upsert(relationship);
+        .upsert(relationship)
+        .select()
+        .single();
 
     if (error) {
         throw new Error(`Failed to save family relationship: ${error.message}`);
     }
+
+    // 2. If it is linked to another member, dynamically ensure the reciprocal exists
+    if (!skipReciprocal && relationship.related_member_id && relationship.member_id) {
+        // Find existing reciprocal where member_id = B and related_member_id = A
+        const { data: existingReciprocal } = await supabase
+            .from("family_relationships")
+            .select("id")
+            .eq("member_id", relationship.related_member_id)
+            .eq("related_member_id", relationship.member_id)
+            .maybeSingle();
+
+        if (!existingReciprocal) {
+            // Get source member to know their gender
+            const { data: sourceMember } = await supabase
+                .from("members")
+                .select("gender, first_name, surname")
+                .eq("id", relationship.member_id)
+                .single();
+
+            if (sourceMember) {
+                const reciprocalType = getReciprocalRelation(relationship.relationship_type || '', sourceMember.gender);
+                await supabase
+                    .from("family_relationships")
+                    .insert({
+                        member_id: relationship.related_member_id,
+                        related_member_id: relationship.member_id,
+                        relationship_type: reciprocalType,
+                        non_member_name: `${sourceMember.first_name} ${sourceMember.surname}`
+                    });
+            }
+        }
+    }
 };
 
 /**
- * Deletes specific family relationships.
+ * Deletes specific family relationships and automatically removes their reciprocals to avoid dangling orphans.
  */
 export const deleteFamilyRelationships = async (relationshipIds: string[]): Promise<void> => {
+    if (!relationshipIds?.length) return;
+
+    // First find what we are deleting to grab their target IDs
+    const { data: deletingRels } = await supabase
+        .from("family_relationships")
+        .select("member_id, related_member_id")
+        .in("id", relationshipIds)
+        .not("related_member_id", "is", null);
+
     const { error } = await supabase
         .from("family_relationships")
         .delete()
@@ -167,6 +239,17 @@ export const deleteFamilyRelationships = async (relationshipIds: string[]): Prom
 
     if (error) {
         throw new Error(`Failed to delete family relationships: ${error.message}`);
+    }
+
+    // Delete reciprocal pairs too
+    if (deletingRels && deletingRels.length > 0) {
+        for (const rel of deletingRels) {
+            await supabase
+                .from("family_relationships")
+                .delete()
+                .eq("member_id", rel.related_member_id!)
+                .eq("related_member_id", rel.member_id);
+        }
     }
 };
 
