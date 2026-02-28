@@ -14,9 +14,6 @@ export const getAllMembers = async (): Promise<Member[]> => {
     return data as Member[];
 };
 
-/**
- * Fetches all active members from the database, ordered by surname.
- */
 export const getActiveMembers = async (): Promise<Member[]> => {
     const { data, error } = await supabase
         .from("members")
@@ -28,6 +25,32 @@ export const getActiveMembers = async (): Promise<Member[]> => {
         throw new Error(`Failed to fetch active members: ${error.message}`);
     }
     return data as Member[];
+};
+
+/**
+ * Fetches all active members with their active church positions.
+ */
+export const getActiveMembersWithPositions = async (): Promise<any[]> => {
+    const { data, error } = await supabase
+        .from("members")
+        .select(`
+            id,
+            first_name,
+            surname,
+            member_number,
+            profile_picture_url,
+            church_positions (
+                position_name,
+                is_active
+            )
+        `)
+        .eq("membership_status", "active")
+        .order("surname", { ascending: true });
+
+    if (error) {
+        throw new Error(`Failed to fetch active members with positions: ${error.message}`);
+    }
+    return data || [];
 };
 
 /**
@@ -131,16 +154,25 @@ export const deleteChurchPositions = async (memberId: string, positionIds: strin
 /**
  * Fetches family relationships for a specific member.
  */
-export const getFamilyRelationships = async (memberId: string): Promise<FamilyRelationship[]> => {
+export const getFamilyRelationships = async (memberId: string): Promise<any[]> => {
     const { data, error } = await supabase
         .from("family_relationships")
-        .select("*")
+        .select(`
+            *,
+            members:related_member_id (
+                id,
+                first_name,
+                surname,
+                member_number,
+                profile_picture_url
+            )
+        `)
         .eq("member_id", memberId);
 
     if (error) {
         throw new Error(`Failed to fetch family relationships for member ${memberId}: ${error.message}`);
     }
-    return data as FamilyRelationship[];
+    return data;
 };
 
 /**
@@ -175,10 +207,13 @@ export const getReciprocalRelation = (relation: string, sourceGender?: string): 
  * Upserts a family relationship and automatically ensures the reciprocal relationship exists.
  */
 export const upsertFamilyRelationship = async (relationship: Partial<FamilyRelationship>, skipReciprocal = false): Promise<void> => {
-    // 1. Insert/Update the primary relationship
+    // 1. Sanitize the payload to only include actual table columns
+    const { members, ...dbPayload } = relationship as any;
+
+    // 2. Insert/Update the primary relationship
     const { error, data: savedRelation } = await supabase
         .from("family_relationships")
-        .upsert(relationship)
+        .upsert(dbPayload)
         .select()
         .single();
 

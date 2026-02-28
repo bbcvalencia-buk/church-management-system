@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import * as memberService from "@/services/memberService";
+import * as musicService from "@/services/musicService";
 import type { ChurchPosition } from "@/types";
 import {
   Shield,
@@ -151,14 +152,28 @@ const MinistryDirectory: React.FC = () => {
   const [savingHeadAssignmentId, setSavingHeadAssignmentId] = useState<string | null>(null);
   const [participationRates, setParticipationRates] = useState<Record<string, number>>({});
   const [attendanceRates, setAttendanceRates] = useState<Record<string, { count: number, rate: string, total: number }>>({});
+  const [musicAttendanceRates, setMusicAttendanceRates] = useState<Record<string, Record<string, { count: number, rate: string, total: number }>>>({});
 
   const [viewingMember, setViewingMember] = useState<any>(null);
   const [memberServiceHistory, setMemberServiceHistory] = useState<any[]>([]);
+  const [memberMusicHistory, setMemberMusicHistory] = useState<any[]>([]);
 
   useEffect(() => {
     fetchPositions();
     fetchMembers();
     fetchParticipation();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setAllMembersOpen(false);
+        setManageGroup(null);
+        setIsModalOpen(false);
+        setViewingMember(null);
+        setConfirmRemove({ isOpen: false, assignment: null });
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const fetchParticipation = async () => {
@@ -167,6 +182,8 @@ const MinistryDirectory: React.FC = () => {
       setParticipationRates(counts);
       const rates = await memberService.getMemberAttendanceRates();
       setAttendanceRates(rates);
+      const musicRates = await musicService.getMusicPracticeAttendanceRates();
+      setMusicAttendanceRates(musicRates || {});
     } catch (err) {
       console.error("Error fetching participation/attendance:", err);
     }
@@ -175,11 +192,15 @@ const MinistryDirectory: React.FC = () => {
   const handleViewMember = async (member: any) => {
     setViewingMember(member);
     setMemberServiceHistory([]);
+    setMemberMusicHistory([]);
     try {
       const history = await memberService.getMemberServiceHistory(member.id, 5);
       setMemberServiceHistory(history);
+
+      const musicHistory = await musicService.getMemberMusicPracticeHistory(member.id, 5);
+      setMemberMusicHistory(musicHistory);
     } catch (err) {
-      console.error("Failed to load service history:", err);
+      console.error("Failed to load history:", err);
     }
   };
 
@@ -415,6 +436,13 @@ const MinistryDirectory: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 font-sans pb-20 fade-in">
+      {/* Breadcrumbs */}
+      <div className="-mb-4 flex items-center gap-2 text-sm text-[var(--color-text-muted)] font-medium">
+        <Link to="/" className="hover:text-[var(--color-primary)] transition-colors">Dashboard</Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-[var(--color-text-main)] font-semibold">Ministry Directory</span>
+      </div>
+
       {/* Header section matching exact design */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
@@ -524,16 +552,52 @@ const MinistryDirectory: React.FC = () => {
                           <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleViewMember(preview); }} className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors truncate text-left">
                             {preview.first_name} {preview.surname}
                           </button>
-                          {attendanceRates[preview.id] && (
-                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[preview.id].rate.replace('%', '')) >= 80
-                              ? 'bg-green-50 text-green-700 border-green-200'
-                              : Number(attendanceRates[preview.id].rate.replace('%', '')) >= 50
-                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                : 'bg-red-50 text-red-700 border-red-200'
-                              }`} title={`Attended ${attendanceRates[preview.id].count} out of ${attendanceRates[preview.id].total} services`}>
-                              {attendanceRates[preview.id].rate} Attendance
-                            </span>
+
+                          {/* Attendance Badge - switches between Music Practice and Worship Service based on category */}
+                          {group.category === 'music_ministry' ? (() => {
+                            // Find the best matching practice type rate for this specific group.
+                            // We check if the group name (e.g. "Choir") matches any practice type the member has attended.
+                            // If they haven't attended any, or we can't perfectly match, we fall back to finding the rate with the most attendances,
+                            // or just the first type available.
+                            const memberMusicRates = musicAttendanceRates[preview.id];
+
+                            let bestRateObj = null;
+                            if (memberMusicRates) {
+                              const types = Object.keys(memberMusicRates);
+                              const groupNameLower = group.name.toLowerCase();
+                              let bestMatch = types.find(t => groupNameLower.includes(t.toLowerCase()) || t.toLowerCase().includes(groupNameLower));
+
+                              if (bestMatch) {
+                                bestRateObj = memberMusicRates[bestMatch];
+                              } else if (types.length > 0) {
+                                // Fallback to max count
+                                bestRateObj = memberMusicRates[types.reduce((a, b) => memberMusicRates[a].count > memberMusicRates[b].count ? a : b)];
+                              }
+                            }
+
+                            return bestRateObj && (
+                              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(bestRateObj.rate.replace('%', '')) >= 75
+                                ? 'bg-green-50 text-green-700 border-green-200'
+                                : Number(bestRateObj.rate.replace('%', '')) >= 50
+                                  ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                  : 'bg-red-50 text-red-700 border-red-200'
+                                }`} title={`Attended ${bestRateObj.count} of ${bestRateObj.total} music practices`}>
+                                {bestRateObj.rate} Attendance
+                              </span>
+                            );
+                          })() : (
+                            attendanceRates[preview.id] && (
+                              <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[preview.id].rate.replace('%', '')) >= 80
+                                ? 'bg-green-50 text-green-700 border-green-200'
+                                : Number(attendanceRates[preview.id].rate.replace('%', '')) >= 50
+                                  ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                  : 'bg-red-50 text-red-700 border-red-200'
+                                }`} title={`Attended ${attendanceRates[preview.id].count} out of ${attendanceRates[preview.id].total} services`}>
+                                {attendanceRates[preview.id].rate} Attendance
+                              </span>
+                            )
                           )}
+
                           {participationRates[preview.id] && (
                             <span className="text-[9px] font-black bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100/50 shadow-sm whitespace-nowrap" title="Service Participation Count">
                               {participationRates[preview.id]}x Serviced
@@ -589,10 +653,10 @@ const MinistryDirectory: React.FC = () => {
 
       {/* All Members Modal */}
       {allMembersOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
-          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg p-4 sm:p-6 relative animate-in zoom-in-95 duration-200 border border-gray-100 mx-2 sm:mx-0">
-            <button onClick={() => setAllMembersOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 p-1 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10">
-              <X size={18} />
+        <div className="fixed inset-0 z-50 lg:left-64 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]" onClick={() => setAllMembersOpen(false)}>
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg p-4 sm:p-6 relative animate-in zoom-in-95 duration-200 border border-gray-100 mx-2 sm:mx-0" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setAllMembersOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10" title="Close (Esc)">
+              <X size={24} strokeWidth={2.5} />
             </button>
             <h2 className="text-[20px] font-bold text-gray-900 mb-1">All Members</h2>
             <p className="text-sm text-gray-500 mb-5 font-medium">{members.length} member{members.length !== 1 ? 's' : ''} in the church registry.</p>
@@ -645,10 +709,10 @@ const MinistryDirectory: React.FC = () => {
 
       {/* Manage Group Modal */}
       {manageGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
-          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg p-4 sm:p-6 relative animate-in zoom-in-95 duration-200 border border-gray-100 mx-2 sm:mx-0">
-            <button onClick={() => setManageGroup(null)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 p-1 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10">
-              <X size={18} />
+        <div className="fixed inset-0 z-50 lg:left-64 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]" onClick={() => setManageGroup(null)}>
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg p-4 sm:p-6 relative animate-in zoom-in-95 duration-200 border border-gray-100 mx-2 sm:mx-0" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setManageGroup(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10" title="Close (Esc)">
+              <X size={24} strokeWidth={2.5} />
             </button>
             <h2 className="text-[20px] font-bold text-gray-900 mb-2">{manageGroup.name} Members</h2>
             <p className="text-sm text-gray-500 mb-6 font-medium">Manage roles and members within this ministry.</p>
@@ -700,17 +764,46 @@ const MinistryDirectory: React.FC = () => {
                         {m.specific_role}
                         {m.full_pos?.is_ministry_head && <span className="ml-2 text-amber-600">HEAD</span>}
                       </p>
-                      {attendanceRates[m.id] && (
-                        <div className="mt-1">
-                          <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[m.id].rate.replace('%', '')) >= 80
-                            ? 'bg-green-50 text-green-700 border-green-200'
-                            : Number(attendanceRates[m.id].rate.replace('%', '')) >= 50
-                              ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                              : 'bg-red-50 text-red-700 border-red-200'
-                            }`} title={`Attended ${attendanceRates[m.id].count} out of ${attendanceRates[m.id].total} services`}>
-                            {attendanceRates[m.id].rate} Attendance
-                          </span>
-                        </div>
+                      {manageGroup.category === 'music_ministry' ? (() => {
+                        const memberMusicRates = musicAttendanceRates[m.id];
+                        let bestRateObj = null;
+                        if (memberMusicRates) {
+                          const types = Object.keys(memberMusicRates);
+                          const groupNameLower = manageGroup.name.toLowerCase();
+                          let bestMatch = types.find(t => groupNameLower.includes(t.toLowerCase()) || t.toLowerCase().includes(groupNameLower));
+
+                          if (bestMatch) {
+                            bestRateObj = memberMusicRates[bestMatch];
+                          } else if (types.length > 0) {
+                            bestRateObj = memberMusicRates[types.reduce((a, b) => memberMusicRates[a].count > memberMusicRates[b].count ? a : b)];
+                          }
+                        }
+
+                        return bestRateObj && (
+                          <div className="mt-1">
+                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(bestRateObj.rate.replace('%', '')) >= 75
+                              ? 'bg-green-50 text-green-700 border-green-200'
+                              : Number(bestRateObj.rate.replace('%', '')) >= 50
+                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                : 'bg-red-50 text-red-700 border-red-200'
+                              }`} title={`Attended ${bestRateObj.count} of ${bestRateObj.total} music practices`}>
+                              {bestRateObj.rate} Attendance
+                            </span>
+                          </div>
+                        );
+                      })() : (
+                        attendanceRates[m.id] && (
+                          <div className="mt-1">
+                            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded border shadow-sm whitespace-nowrap ${Number(attendanceRates[m.id].rate.replace('%', '')) >= 80
+                              ? 'bg-green-50 text-green-700 border-green-200'
+                              : Number(attendanceRates[m.id].rate.replace('%', '')) >= 50
+                                ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                : 'bg-red-50 text-red-700 border-red-200'
+                              }`} title={`Attended ${attendanceRates[m.id].count} out of ${attendanceRates[m.id].total} services`}>
+                              {attendanceRates[m.id].rate} Attendance
+                            </span>
+                          </div>
+                        )
                       )}
                     </div>
                   </div>
@@ -746,13 +839,14 @@ const MinistryDirectory: React.FC = () => {
 
       {/* Editing / Assigning Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
-          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg p-5 sm:p-8 relative animate-in zoom-in-95 duration-200 border border-gray-100 mx-2 sm:mx-0">
+        <div className="fixed inset-0 z-50 lg:left-64 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]" onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg p-5 sm:p-8 relative animate-in zoom-in-95 duration-200 border border-gray-100 mx-2 sm:mx-0" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setIsModalOpen(false)}
-              className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 p-1 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+              title="Close (Esc)"
             >
-              <X size={18} />
+              <X size={24} strokeWidth={2.5} />
             </button>
 
             <h2 className="text-[20px] font-bold text-gray-900 flex items-center gap-2 mb-6">
@@ -881,13 +975,14 @@ const MinistryDirectory: React.FC = () => {
       )}
       {/* Member View Modal */}
       {viewingMember && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]">
-          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg overflow-hidden relative animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 lg:left-64 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]" onClick={() => setViewingMember(null)}>
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg overflow-hidden relative animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setViewingMember(null)}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 p-2 bg-gray-100/50 backdrop-blur-sm hover:bg-gray-200 rounded-full transition-all z-20"
+              title="Close (Esc)"
             >
-              <X size={18} />
+              <X size={24} strokeWidth={2.5} />
             </button>
 
             {/* Header / Hero */}
@@ -966,28 +1061,59 @@ const MinistryDirectory: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right Column: Service History */}
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                    <Music size={12} /> Recent Service Roles
-                  </h4>
-                  <div className="flex-1 space-y-3">
-                    {memberServiceHistory.length > 0 ? (
-                      memberServiceHistory.map(history => (
-                        <div key={history.id} className="relative pl-3 border-l-2 border-blue-100">
-                          <p className="text-xs font-bold text-gray-900 capitalize leading-tight">
-                            {history.role.replace('_', ' ')}
-                            {history.notes && <span className="text-gray-400 font-normal"> - {history.notes}</span>}
-                          </p>
-                          <p className="text-[10px] font-semibold text-gray-500 uppercase mt-0.5">
-                            {new Date(history.services?.service_date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-xs font-bold text-gray-400 italic py-2">No recent service assignments</p>
-                    )}
+                {/* Right Column: Service History & Music Practice History */}
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                      <Shield size={12} /> Recent Service Roles
+                    </h4>
+                    <div className="flex-1 space-y-3">
+                      {memberServiceHistory.length > 0 ? (
+                        memberServiceHistory.map(history => (
+                          <div key={history.id} className="relative pl-3 border-l-2 border-blue-100">
+                            <p className="text-xs font-bold text-gray-900 capitalize leading-tight">
+                              {history.role.replace('_', ' ')}
+                              {history.notes && <span className="text-gray-400 font-normal"> - {history.notes}</span>}
+                            </p>
+                            <p className="text-[10px] font-semibold text-gray-500 uppercase mt-0.5">
+                              {new Date(history.services?.service_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs font-bold text-gray-400 italic py-2">No recent service assignments</p>
+                      )}
+                    </div>
                   </div>
+
+                  {viewingMember?.full_pos?.position_category === 'music_ministry' && (
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                      <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <Music size={12} /> Practice Attendance
+                      </h4>
+                      <div className="flex-1 space-y-3">
+                        {memberMusicHistory.length > 0 ? (
+                          memberMusicHistory.map(practice => (
+                            <div key={practice.id} className="flex justify-between items-center text-sm py-1 border-b border-gray-50 last:border-0">
+                              <div>
+                                <p className="font-semibold text-gray-900 text-xs">{new Date(practice.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mt-0.5">{practice.name.replace('_', ' ')}</p>
+                              </div>
+                              <div>
+                                {practice.present ? (
+                                  <span className="bg-green-50 text-green-700 border border-green-200 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase shadow-sm">Present</span>
+                                ) : (
+                                  <span className="bg-gray-100 text-gray-500 border border-gray-200 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase shadow-sm">Absent</span>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs font-bold text-gray-400 italic py-2">No practice history</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
               </div>

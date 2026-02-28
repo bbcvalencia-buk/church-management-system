@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import type { FamilyRelationship } from '@/types';
 import { Plus, X, UserPlus, Users, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase'; // Assuming alias works, or need relative path
-import { getActiveMembers } from '@/services/memberService';
+import { getActiveMembersWithPositions } from '@/services/memberService';
 
 interface FamilyFormProps {
     data: any;
@@ -35,7 +35,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
     const [selectedMember, setSelectedMember] = useState<any | null>(null);
 
     useEffect(() => {
-        getActiveMembers().then(setMembers).catch(console.error);
+        getActiveMembersWithPositions().then(setMembers).catch(console.error);
     }, []);
 
     const filteredMembers = React.useMemo(() => {
@@ -60,6 +60,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
 
         if (selectedMember && `${selectedMember.first_name} ${selectedMember.surname}` === newRelationName) {
             relation.related_member_id = selectedMember.id;
+            (relation as any).members = selectedMember;
         }
 
         onChange('relationships', [...relationships, relation]);
@@ -75,11 +76,13 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-medium text-white mb-4">Family Relationships</h3>
+            <h3 className="text-[16px] font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Users size={18} className="text-[#4f46e5]" /> Family Relationships
+            </h3>
 
-            <div className="glass-panel p-4 flex flex-col md:flex-row gap-4 items-end">
-                <div className="flex-1 space-y-2 w-full relative">
-                    <label className="text-sm font-medium text-[var(--color-text-muted)]">Relative Name (Search Member)</label>
+            <div className="bg-gray-50 border border-gray-100 rounded-[16px] p-4 flex flex-col md:flex-row gap-4 items-end shadow-sm">
+                <div className="flex-1 space-y-1.5 w-full relative">
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Relative Name (Search Member)</label>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                         <input
@@ -95,30 +98,50 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                             onFocus={() => setShowDropdown(true)}
                             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                             placeholder="Type to search members..."
-                            className="bg-white/5 border border-white/10 text-white rounded-lg p-2.5 pl-9 w-full focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                            className="w-full bg-white border border-gray-200 rounded-xl py-2.5 pl-9 pr-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400 font-semibold"
                         />
                     </div>
                     {/* Autocomplete Dropdown */}
                     {showDropdown && filteredMembers.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
-                            {filteredMembers.map(m => (
-                                <button
-                                    key={m.id}
-                                    type="button"
-                                    onClick={() => handleSelectMember(m)}
-                                    className="w-full text-left px-4 py-3 hover:bg-gray-700 transition-colors border-b border-gray-700/50 last:border-0"
-                                >
-                                    <p className="text-sm font-bold text-white leading-none">{m.first_name} {m.surname}</p>
-                                </button>
-                            ))}
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                            {filteredMembers.map(m => {
+                                const pos = m.church_positions?.find((p: any) => p.is_active)?.position_name;
+                                return (
+                                    <button
+                                        key={m.id}
+                                        type="button"
+                                        onClick={() => handleSelectMember(m)}
+                                        className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 flex items-center gap-3"
+                                    >
+                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                                            {m.profile_picture_url ? (
+                                                <img src={m.profile_picture_url} alt="" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                                    <Users size={14} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-gray-900 leading-none mb-1">{m.first_name} {m.surname}</p>
+                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                {m.member_number && <span>{m.member_number}</span>}
+                                                {m.member_number && pos && <span>•</span>}
+                                                {pos && <span className="truncate text-gray-500">{pos}</span>}
+                                            </div>
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
-                <div className="flex-1 space-y-2 w-full">
-                    <label className="text-sm font-medium text-[var(--color-text-muted)]">Relationship</label>
+                <div className="flex-1 space-y-1.5 w-full">
+                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Relationship</label>
                     <select
                         value={relationType}
                         onChange={(e) => onChange('relationType', e.target.value)}
+                        className="w-full bg-white border border-gray-200 rounded-xl p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
                     >
                         {Object.entries(RELATION_TYPES).map(([key, label]) => (
                             <option key={key} value={key}>{label}</option>
@@ -127,7 +150,8 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                 </div>
                 <button
                     onClick={addRelation}
-                    className="bg-[var(--color-primary)] hover:bg-violet-600 text-white p-2.5 rounded-lg flex items-center justify-center transition-colors shadow-lg shadow-purple-500/20"
+                    className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white p-2.5 rounded-xl flex items-center justify-center transition-colors shadow-sm"
+                    title="Add Relative"
                 >
                     <UserPlus size={20} />
                 </button>
@@ -136,32 +160,54 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
             {/* List Relations */}
             <div className="space-y-3">
                 {relationships.length === 0 && (
-                    <p className="text-center text-[var(--color-text-muted)] py-4">No family members linked yet.</p>
+                    <p className="text-center text-gray-500 text-sm font-semibold py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">No family members linked yet.</p>
                 )}
 
-                {relationships.map((rel: any, idx: number) => (
-                    <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10 group">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg">
-                                <Users size={16} />
+                {relationships.map((rel: any, idx: number) => {
+                    const relMember = rel.members;
+                    const name = relMember ? `${relMember.first_name} ${relMember.surname}` : (rel.non_member_name || 'Linked Member');
+                    const isLinked = !!relMember;
+
+                    return (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-[16px] border border-gray-200 group hover:border-[#93c5fd] hover:shadow-[0_4px_12px_-4px_rgba(59,130,246,0.15)] transition-all">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                                    {isLinked && relMember.profile_picture_url ? (
+                                        <img src={relMember.profile_picture_url} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                            <Users size={20} />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    {isLinked ? (
+                                        <a href={`/members/${relMember.id}`} target="_blank" rel="noopener noreferrer" className="font-bold text-gray-900 text-base hover:text-blue-600 transition-colors hover:underline">
+                                            {name}
+                                        </a>
+                                    ) : (
+                                        <h4 className="font-bold text-gray-900 text-base">{name}</h4>
+                                    )}
+                                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                                        <span className="text-[10px] font-black tracking-widest uppercase bg-indigo-50 text-indigo-700 border border-indigo-100/50 px-2.5 py-1 rounded-md shadow-sm">
+                                            {RELATION_TYPES[rel.relationship_type as keyof typeof RELATION_TYPES]}
+                                        </span>
+                                        {isLinked && relMember.member_number && (
+                                            <span className="text-xs text-gray-500 font-bold">{relMember.member_number}</span>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="font-medium text-white">
-                                    {rel.non_member_name || 'Linked Member'}
-                                </h4>
-                                <p className="text-xs text-[var(--color-text-muted)]">
-                                    {RELATION_TYPES[rel.relationship_type as keyof typeof RELATION_TYPES]}
-                                </p>
-                            </div>
+                            <button
+                                onClick={() => removeRelation(idx)}
+                                className="p-2.5 text-red-500 bg-red-50/0 hover:bg-red-50 hover:text-red-700 rounded-xl transition-all border border-transparent hover:border-red-100"
+                                title="Remove related member"
+                            >
+                                <X size={20} />
+                            </button>
                         </div>
-                        <button
-                            onClick={() => removeRelation(idx)}
-                            className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

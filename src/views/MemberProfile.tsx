@@ -732,6 +732,41 @@ const MemberProfile: React.FC = () => {
                                     <p className="text-gray-500 italic leading-relaxed text-sm max-w-2xl">
                                         "A faithful individual actively participating in our fellowship. Encouraged by their faithfulness in small group."
                                     </p>
+
+                                    {family && family.length > 0 && (
+                                        <div className="mt-4 pt-4 border-t border-gray-100/60 max-w-2xl">
+                                            <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-2">Family & Relatives</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {family.map((rel: any, idx: number) => {
+                                                    const relMember = rel.members;
+                                                    const name = relMember ? `${relMember.first_name} ${relMember.surname}` : (rel.non_member_name || 'Relative');
+                                                    const initials = name.substring(0, 2).toUpperCase();
+                                                    const typeStr = (rel.relationship_type || '').replace('_', ' ');
+
+                                                    const content = (
+                                                        <div className="flex items-center gap-2 pr-3 pl-1 py-1 rounded-full border border-gray-200/80 bg-white hover:bg-gray-50 hover:border-blue-200 transition-colors shadow-sm cursor-pointer group">
+                                                            <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden shrink-0 border border-blue-50/50">
+                                                                {relMember && relMember.profile_picture_url ? (
+                                                                    <img src={relMember.profile_picture_url} className="w-full h-full object-cover" alt="" />
+                                                                ) : (
+                                                                    <span className="text-[10px] font-bold text-blue-700">{initials}</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex flex-col leading-none justify-center">
+                                                                <span className="text-xs font-bold text-gray-800 group-hover:text-blue-600 transition-colors mb-0.5">{name}</span>
+                                                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{typeStr}</span>
+                                                            </div>
+                                                        </div>
+                                                    );
+
+                                                    if (relMember) {
+                                                        return <a href={`/members/${relMember.id}`} target="_blank" rel="noopener noreferrer" key={idx}>{content}</a>
+                                                    }
+                                                    return <span key={idx} title="Not a registered member">{content}</span>
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex flex-wrap gap-3">
                                     <button onClick={() => window.location.href = `mailto:${member.email || ''}`} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors shadow-sm">
