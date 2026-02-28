@@ -24,6 +24,29 @@ import {
     ActivitySquare
 } from 'lucide-react';
 
+// Human-friendly role labels (short versions for the header)
+const ROLE_DISPLAY_LABELS: Record<string, string> = {
+    church_administrator: 'Administrator',
+    pastor: 'Pastor',
+    church_clerk: 'Church Clerk',
+    treasurer: 'Treasurer',
+    recording_secretary: 'Secretary',
+    music_minister: 'Music Minister',
+    sunday_school_admin: 'SS Teacher',
+    goodnews_teacher: 'GN Teacher',
+    activity_coordinator: 'Activity Coord.',
+    member: 'Member',
+};
+
+const formatRoleDisplay = (userRoles: string[]): string => {
+    if (!userRoles || userRoles.length === 0) return 'Member';
+    // Filter out 'member' if they have other roles
+    const meaningful = userRoles.filter(r => r !== 'member');
+    const display = (meaningful.length > 0 ? meaningful : userRoles)
+        .map(r => ROLE_DISPLAY_LABELS[r] || r.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
+    return display.join(' · ');
+};
+
 const Layout: React.FC = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const { signOut, member, user, roles } = useAuth();
@@ -347,8 +370,8 @@ const Layout: React.FC = () => {
                                 <p className="text-sm font-medium">
                                     {member ? `${member.first_name} ${member.surname}` : (user?.email?.split('@')[0] || 'User')}
                                 </p>
-                                <p className="text-xs text-[var(--color-text-muted)] capitalize">
-                                    {roles && roles.length > 0 ? roles[0].replace('_', ' ') : 'Member'}
+                                <p className="text-xs text-[var(--color-text-muted)]">
+                                    {formatRoleDisplay(roles)}
                                 </p>
                             </div>
                             {member?.profile_picture_url ? (
