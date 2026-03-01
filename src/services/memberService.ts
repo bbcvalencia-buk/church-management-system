@@ -2,6 +2,128 @@ import { supabase } from "../lib/supabase";
 import type { Member, ChurchPosition, FamilyRelationship, FaithPromiseCommitment, AttendanceLog } from "../types";
 import { isMissingTableError, isTableMarkedMissing, markTableMissing } from "./supabaseErrorUtils";
 
+const MEMBER_ID_CONSTRAINT = "members_id_number_key";
+const MEMBER_NUMBER_CONSTRAINT = "members_member_number_key";
+
+const isConstraintViolation = (error: any, constraintName: string): boolean => {
+    if (!error) return false;
+    const text = `${error.message || ''} ${error.details || ''} ${error.hint || ''}`.toLowerCase();
+    return error.code === '23505' && text.includes(constraintName.toLowerCase());
+};
+
+const formatMemberWriteError = (error: any): string => {
+    if (isConstraintViolation(error, MEMBER_ID_CONSTRAINT)) {
+        return "Member ID conflict. Please try saving again.";
+    }
+    if (isConstraintViolation(error, MEMBER_NUMBER_CONSTRAINT)) {
+        return "Member number conflict. Please try saving again.";
+    }
+    return error?.message || 'Unknown database error';
+};
+
+const sanitizeMemberPayload = (memberData: Partial<Member>, mode: 'insert' | 'update'): Partial<Member> => {
+    const payload: Partial<Member> = { ...memberData };
+
+    // These are generated/managed by DB triggers and should not be client-authored.
+    delete (payload as any).id_number;
+    delete (payload as any).member_number;
+    delete (payload as any).member_number_year;
+    delete (payload as any).member_number_seq;
+
+    if (mode === 'insert') {
+        delete (payload as any).id;
+        delete (payload as any).created_at;
+        delete (payload as any).updated_at;
+    }
+
+    return payload;
+};
+
+const assertFixedRoleSlotsAvailable = async (memberData: Partial<Member>, currentMemberId?: string): Promise<void> => {
+    if (memberData.is_pastor && memberData.is_pastors_wife) {
+        throw new Error("A member cannot be both Pastor and Pastor's Wife.");
+    }
+
+    if (memberData.is_pastor) {
+        const { data, error } = await supabase
+            .from('members')
+            .select('id')
+            .eq('is_pastor', true)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) {
+            throw new Error(`Failed to validate Pastor assignment: ${error.message}`);
+        }
+        if (data?.id && data.id !== currentMemberId) {
+            throw new Error('Another member is already assigned as Pastor (ID #1).');
+        }
+    }
+
+    if (memberData.is_pastors_wife) {
+        const { data, error } = await supabase
+            .from('members')
+            .select('id')
+            .eq('is_pastors_wife', true)
+            .limit(1)
+            .maybeSingle();
+
+        if (error) {
+            throw new Error(`Failed to validate Pastor's Wife assignment: ${error.message}`);
+        }
+        if (data?.id && data.id !== currentMemberId) {
+            throw new Error("Another member is already assigned as Pastor's Wife (ID #2).");
+        }
+    }
+};
+
+const getNextMemberIdNumber = async (): Promise<number> => {
+    const { data, error } = await supabase
+        .from('members')
+        .select('id_number')
+        .order('id_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (error) {
+        throw new Error(`Failed to compute next member ID: ${error.message}`);
+    }
+
+    return (data?.id_number ?? 0) + 1;
+};
+
+const insertMemberWithIdFallback = async (memberData: Partial<Member>): Promise<Member> => {
+    const { data, error } = await supabase
+        .from("members")
+        .insert(memberData)
+        .select()
+        .single();
+
+    if (!error) {
+        return data as Member;
+    }
+
+    const mayRetryWithManualId = isConstraintViolation(error, MEMBER_ID_CONSTRAINT) && !memberData.is_pastor && !memberData.is_pastors_wife;
+    if (!mayRetryWithManualId) {
+        throw new Error(`Failed to create member: ${formatMemberWriteError(error)}`);
+    }
+
+    const nextIdNumber = await getNextMemberIdNumber();
+    const retryPayload = { ...memberData, id_number: nextIdNumber } as Partial<Member>;
+
+    const { data: retryData, error: retryError } = await supabase
+        .from("members")
+        .insert(retryPayload)
+        .select()
+        .single();
+
+    if (retryError) {
+        throw new Error(`Failed to create member: ${formatMemberWriteError(retryError)}`);
+    }
+
+    return retryData as Member;
+};
+
 /**
  * Fetches all members from the database, ordered by surname.
  */
@@ -59,16 +181,43 @@ export const getMemberById = async (id: string): Promise<Member> => {
  * Updates an existing member or inserts a new one if no ID is present.
  */
 export const upsertMember = async (memberData: Partial<Member>): Promise<Member> => {
-    const { data, error } = await supabase
-        .from("members")
-        .upsert(memberData)
-        .select()
-        .single();
+    const currentMemberId = memberData.id;
+    await assertFixedRoleSlotsAvailable(memberData, currentMemberId);
 
-    if (error) {
-        throw new Error(`Failed to save member: ${error.message}`);
+    if (currentMemberId) {
+        const updatePayload = sanitizeMemberPayload(memberData, 'update');
+        delete (updatePayload as any).id;
+
+        const { data, error } = await supabase
+            .from("members")
+            .update(updatePayload)
+            .eq("id", currentMemberId)
+            .select("*")
+            .maybeSingle();
+
+        if (error) {
+            throw new Error(`Failed to save member: ${formatMemberWriteError(error)}`);
+        }
+
+        if (data) {
+            return data as Member;
+        }
+
+        const { data: refreshed } = await supabase
+            .from("members")
+            .select("*")
+            .eq("id", currentMemberId)
+            .maybeSingle();
+
+        if (refreshed) {
+            return refreshed as Member;
+        }
+
+        return { id: currentMemberId, ...memberData } as Member;
     }
-    return data as Member;
+
+    const insertPayload = sanitizeMemberPayload(memberData, 'insert');
+    return insertMemberWithIdFallback(insertPayload);
 };
 
 /**
@@ -268,16 +417,9 @@ export const updateMember = async (id: string, memberData: Partial<Member>): Pro
  * Creates a new member.
  */
 export const createMember = async (memberData: Omit<Partial<Member>, 'id'>): Promise<Member> => {
-    const { data, error } = await supabase
-        .from("members")
-        .insert(memberData)
-        .select()
-        .single();
-
-    if (error) {
-        throw new Error(`Failed to create member: ${error.message}`);
-    }
-    return data as Member;
+    await assertFixedRoleSlotsAvailable(memberData);
+    const insertPayload = sanitizeMemberPayload(memberData, 'insert');
+    return insertMemberWithIdFallback(insertPayload);
 };
 
 /**
