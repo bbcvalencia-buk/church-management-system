@@ -263,13 +263,10 @@ export const submitFinancialMutation = async (action: 'INSERT' | 'UPDATE' | 'DEL
         throw new Error('Not authenticated.');
     }
 
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (!supabaseUrl) {
-        throw new Error('Missing VITE_SUPABASE_URL');
-    }
+    const endpoint = import.meta.env.VITE_URL ? `${import.meta.env.VITE_URL}/.netlify/functions/financial-write` : '/.netlify/functions/financial-write';
 
-    const response = await fetch(`${supabaseUrl}/functions/v1/financial-write`, {
+    const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -290,10 +287,7 @@ export const submitFinancialMutation = async (action: 'INSERT' | 'UPDATE' | 'DEL
     }
 
     if (!response.ok) {
-        if (response.status === 404) {
-            throw new Error('Supabase function "financial-write" not found (HTTP 404). Deploy it with: supabase functions deploy financial-write.');
-        }
-        throw new Error(data.error || 'An error occurred while saving financial records.');
+        throw new Error(data.error || 'An error occurred while saving financial records. (Note: Make sure to start the app with Netlify Dev when testing locally)');
     }
 
     return data;
