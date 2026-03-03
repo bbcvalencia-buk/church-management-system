@@ -264,7 +264,11 @@ export const submitFinancialMutation = async (action: 'INSERT' | 'UPDATE' | 'DEL
     }
 
     const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    const endpoint = import.meta.env.VITE_URL ? `${import.meta.env.VITE_URL}/.netlify/functions/financial-write` : '/.netlify/functions/financial-write';
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl) {
+        throw new Error('Missing Supabase URL configuration.');
+    }
+    const endpoint = `${supabaseUrl}/functions/v1/financial-write`;
 
     const response = await fetch(endpoint, {
         method: 'POST',
@@ -287,7 +291,7 @@ export const submitFinancialMutation = async (action: 'INSERT' | 'UPDATE' | 'DEL
     }
 
     if (!response.ok) {
-        throw new Error(data.error || 'An error occurred while saving financial records. (Note: Make sure to start the app with Netlify Dev when testing locally)');
+        throw new Error(data.error || 'An error occurred while saving financial records.');
     }
 
     return data;
