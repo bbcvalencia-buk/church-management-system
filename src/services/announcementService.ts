@@ -20,7 +20,7 @@ export const getAnnouncementData = async (limit: number = 60) => {
                 return result;
             });
 
-    return await Promise.all([
+    const [servicesRes, ssRes, activitiesRes, churchEventsRes, membersRes] = await Promise.all([
         supabase
             .from("services")
             .select("id, service_type, service_date, total_attendance, visitors_present, souls_saved, prospects_for_baptism, members_who_prayed")
@@ -42,4 +42,20 @@ export const getAnnouncementData = async (limit: number = 60) => {
             .select("id, first_name, surname, date_of_birth")
             .eq("membership_status", "active")
     ]);
+
+    // Fetch attendance logs for deduplication
+    const serviceIds = (servicesRes.data || []).map(s => s.id);
+    const ssIds = (ssRes.data || []).map(s => s.id);
+    const eventIds = [...serviceIds, ...ssIds];
+
+    let attendanceLogsRes: any = { data: [], error: null };
+    if (eventIds.length > 0) {
+        attendanceLogsRes = await supabase
+            .from("attendance_log")
+            .select("member_id, event_id")
+            .in("event_id", eventIds)
+            .eq('was_present', true);
+    }
+
+    return [servicesRes, ssRes, activitiesRes, churchEventsRes, membersRes, attendanceLogsRes];
 };

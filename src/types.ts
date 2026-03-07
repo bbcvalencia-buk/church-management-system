@@ -279,6 +279,7 @@ export interface AttendanceLog {
     was_present: boolean;
     excuse_reason?: string;
     notes?: string;
+    assessment_score?: number | null;
 }
 
 export interface Activity {

@@ -17,7 +17,12 @@ import {
     Edit2,
     ChevronLeft,
     ChevronRight,
-    Calendar
+    Calendar,
+    X,
+    CheckCircle2,
+    Hash,
+    ClipboardCheck,
+    Star
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImageUpload from "@/components/ImageUpload";
@@ -121,6 +126,19 @@ const SundaySchool: React.FC = () => {
     const [editingStudent, setEditingStudent] = useState<any | null>(null);
     const [studentSaving, setStudentSaving] = useState(false);
 
+    // Attendance Viewer State
+    const [attendanceViewerOpen, setAttendanceViewerOpen] = useState(false);
+    const [attendanceViewerSession, setAttendanceViewerSession] = useState<SundaySchoolSession | null>(null);
+    const [attendanceViewerMembers, setAttendanceViewerMembers] = useState<any[]>([]);
+    const [attendanceDayCounts, setAttendanceDayCounts] = useState<Record<string, number>>({});
+    const [attendanceViewerLoading, setAttendanceViewerLoading] = useState(false);
+    const [attendanceViewerSearch, setAttendanceViewerSearch] = useState("");
+    const [attendanceViewerScores, setAttendanceViewerScores] = useState<Record<string, number | null>>({});
+    const [attendanceViewerScoreStats, setAttendanceViewerScoreStats] = useState<Record<string, { totalScore: number; submissionCount: number }>>({});
+
+    // Assessment scores per member in the report modal
+    const [memberAssessmentScores, setMemberAssessmentScores] = useState<Record<string, number | null>>({});
+
     const managedDepartmentIds = (isSundaySchoolAdmin || isPastor) ? DEPARTMENTS.map((d) => d.id) : teacherDepartments;
     const hasSundaySchoolAccess = isSundaySchoolAdmin || isPastor || teacherDepartments.length > 0;
 
@@ -223,12 +241,22 @@ const SundaySchool: React.FC = () => {
 
     const handleOpenModal = async (session?: SundaySchoolSession) => {
         setMemberSearchTerm("");
+        setMemberAssessmentScores({});
         if (session) {
             setNewSession(session);
 
-            // Fetch attendance logs
+            // Fetch attendance logs (with scores)
             const logs = await sundaySchoolService.getAttendanceLogs(session.id, 'sunday_school');
             const memberIds = logs?.map((l: any) => l.member_id) || [];
+
+            // Load existing assessment scores
+            const existingScores: Record<string, number | null> = {};
+            for (const log of (logs || [])) {
+                if (log.assessment_score != null) {
+                    existingScores[log.member_id] = log.assessment_score;
+                }
+            }
+            setMemberAssessmentScores(existingScores);
 
             // Primary linkage for newer records
             let registeredVisitors: any[] = [];
@@ -437,11 +465,17 @@ const SundaySchool: React.FC = () => {
             });
 
             if (allMemberIds.length > 0) {
-                await sundaySchoolService.updateSundaySchoolAttendanceLogs(savedSession.id, savedSession.session_date, allMemberIds);
+                await sundaySchoolService.updateSundaySchoolAttendanceLogs(
+                    savedSession.id,
+                    savedSession.session_date,
+                    allMemberIds,
+                    memberAssessmentScores
+                );
             }
 
             setIsModalOpen(false);
             setNewVisitors([]); // Reset
+            setMemberAssessmentScores({});
             fetchSessions();
             if (!newSession.id) {
                 setShowSuccessModal(true);
@@ -469,6 +503,51 @@ const SundaySchool: React.FC = () => {
             alert("Delete failed: " + err.message);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleOpenAttendanceViewer = async (session: SundaySchoolSession) => {
+        setAttendanceViewerSession(session);
+        setAttendanceViewerLoading(true);
+        setAttendanceViewerMembers([]);
+        setAttendanceDayCounts({});
+        setAttendanceViewerSearch("");
+        setAttendanceViewerScores({});
+        setAttendanceViewerScoreStats({});
+        setAttendanceViewerOpen(true);
+
+        try {
+            // Get who was present for this specific session (with scores)
+            const logs = await sundaySchoolService.getAttendanceLogsBySessionIds([session.id]);
+            const presentMemberIds = logs.map((l) => l.member_id);
+
+            // Build per-session score map
+            const sessionScores: Record<string, number | null> = {};
+            for (const log of logs) {
+                sessionScores[log.member_id] = log.assessment_score ?? null;
+            }
+            setAttendanceViewerScores(sessionScores);
+
+            // Get total days present for this department
+            const dayCounts = await sundaySchoolService.getAttendanceCountsByDepartment(session.department);
+            setAttendanceDayCounts(dayCounts);
+
+            // Get assessment score stats for this department
+            const scoreStats = await sundaySchoolService.getAssessmentScoresByDepartment(session.department);
+            setAttendanceViewerScoreStats(scoreStats);
+
+            // Resolve member details
+            const allMembers = members.length > 0 ? members : await memberService.getAllMembers();
+            const presentMembers = presentMemberIds
+                .map((id) => allMembers.find((m: any) => m.id === id))
+                .filter(Boolean)
+                .sort((a: any, b: any) => `${a.surname || ""} ${a.first_name || ""}`.localeCompare(`${b.surname || ""} ${b.first_name || ""}`));
+
+            setAttendanceViewerMembers(presentMembers);
+        } catch (err) {
+            console.error("Error loading attendance viewer:", err);
+        } finally {
+            setAttendanceViewerLoading(false);
         }
     };
 
@@ -615,87 +694,74 @@ const SundaySchool: React.FC = () => {
 
     return (
         <div className="space-y-8 p-6 lg:p-10 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                        Sunday School Overview
-                    </h1>
-                    <p className="text-sm font-semibold text-gray-500 mt-1">
-                        You are logged in as: <span className="text-blue-600 font-bold">{currentMember?.first_name} {currentMember?.surname}</span>
-                        {!isSundaySchoolAdmin ? (
-                            <span> — {teacherDepartments.map(d => DEPARTMENTS.find(dept => dept.id === d)?.label).join(', ')} Teacher</span>
-                        ) : (
-                            <span> — Admin</span>
-                        )}
-                    </p>
+            {/* Simplified Overview Dashboard */}
+            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+                {/* Header bar */}
+                <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                            <BookOpen size={20} className="text-blue-600" /> Sunday School Overview
+                        </h2>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                            Logged in as <span className="text-blue-600 font-semibold">{currentMember?.first_name} {currentMember?.surname}</span>
+                            {!isSundaySchoolAdmin ? (
+                                <span> — {teacherDepartments.map(d => DEPARTMENTS.find(dept => dept.id === d)?.label).join(', ')} Teacher</span>
+                            ) : (
+                                <span> — Admin</span>
+                            )}
+                        </p>
+                    </div>
+                    {latestDate && (
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                            Latest: {new Date(latestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                    )}
                 </div>
-            </div>
 
-            {/* Department Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {DEPARTMENTS.map(dept => {
-                    const stats = latestDeptStats[dept.id];
-                    const isManaged = managedDepartmentIds.includes(dept.id);
-                    return (
-                        <div key={dept.id} onClick={() => { document.getElementById(`dept-${dept.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="bg-white rounded-[20px] p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-gray-100 flex flex-col justify-between relative overflow-hidden group hover:border-blue-200 hover:shadow-md transition-all cursor-pointer">
-                            <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-500" style={{ backgroundColor: dept.color }} />
-                            <div>
-                                <h3 className="text-[13px] font-black uppercase tracking-wider text-gray-700 mb-1 flex items-center justify-between">
-                                    {dept.label}
-                                    {!isManaged && <span className="text-[9px] font-bold bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded uppercase">View</span>}
-                                </h3>
-                            </div>
-                            <div className="mt-4">
-                                <div className="text-3xl font-black text-gray-900 leading-tight">
+                {/* Stats row */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100 border-b border-gray-100">
+                    <div className="px-5 py-4">
+                        <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 flex items-center gap-1.5"><Users size={12} /> Latest Sunday</p>
+                        <p className="text-2xl font-black text-gray-900 mt-1">{totalAttendanceToday}</p>
+                    </div>
+                    <div className="px-5 py-4">
+                        <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 flex items-center gap-1.5"><Calendar size={12} /> This Month</p>
+                        <p className="text-2xl font-black text-gray-900 mt-1">{thisMonthAttendance}</p>
+                    </div>
+                    <div className="px-5 py-4">
+                        <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 flex items-center gap-1.5"><UserPlus size={12} /> Visitors</p>
+                        <p className="text-2xl font-black text-gray-900 mt-1">{thisMonthVisitors}</p>
+                    </div>
+                    <div className="px-5 py-4">
+                        <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 flex items-center gap-1.5"><Heart size={12} /> Souls Saved</p>
+                        <p className="text-2xl font-black text-gray-900 mt-1">{thisMonthSaved}</p>
+                    </div>
+                </div>
+
+                {/* Department quick links */}
+                <div className="px-6 py-3 flex flex-wrap gap-2">
+                    {DEPARTMENTS.map(dept => {
+                        const stats = latestDeptStats[dept.id];
+                        const isManaged = managedDepartmentIds.includes(dept.id);
+                        return (
+                            <button
+                                key={dept.id}
+                                onClick={() => document.getElementById(`dept-${dept.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${isManaged ? 'hover:shadow-sm' : 'opacity-60'}`}
+                                style={{
+                                    backgroundColor: `${dept.color}10`,
+                                    borderColor: `${dept.color}30`,
+                                    color: dept.color
+                                }}
+                            >
+                                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: dept.color }} />
+                                {dept.label}
+                                <span className="bg-white/80 text-gray-700 px-1.5 py-0.5 rounded text-[10px] font-black">
                                     {stats.attendance}
-                                </div>
-                                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
-                                    {latestDate ? new Date(latestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'No Data'}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* This Month Summary */}
-            <div className="bg-[#111827] rounded-[24px] p-8 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/3"></div>
-
-                <h3 className="text-white font-serif font-bold text-xl mb-6 flex items-center gap-2 relative z-10">
-                    <Calendar size={20} className="text-blue-400" /> This Month Summary
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10 divide-y md:divide-y-0 md:divide-x divide-gray-700/50">
-                    <div className="pt-4 md:pt-0 md:pr-6 first:pt-0">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="bg-blue-500/20 p-2 rounded-lg text-blue-400">
-                                <Users size={18} />
-                            </div>
-                            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Total Attendance</span>
-                        </div>
-                        <div className="text-4xl font-black text-white mt-1">{thisMonthAttendance}</div>
-                    </div>
-
-                    <div className="pt-6 md:pt-0 md:px-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="bg-emerald-500/20 p-2 rounded-lg text-emerald-400">
-                                <UserPlus size={18} />
-                            </div>
-                            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">New Visitors</span>
-                        </div>
-                        <div className="text-4xl font-black text-white mt-1">{thisMonthVisitors}</div>
-                    </div>
-
-                    <div className="pt-6 md:pt-0 md:pl-6">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="bg-rose-500/20 p-2 rounded-lg text-rose-400">
-                                <Heart size={18} />
-                            </div>
-                            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Souls Saved</span>
-                        </div>
-                        <div className="text-4xl font-black text-white mt-1">{thisMonthSaved}</div>
-                    </div>
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -775,27 +841,36 @@ const SundaySchool: React.FC = () => {
                                                             </span>
                                                         ) : <span className="text-gray-300">-</span>}
                                                     </td>
-                                                    <td className="p-4 pr-6 text-right flex justify-end gap-2">
-                                                        {isManaged ? (
+                                                    <td className="p-4 pr-6 text-right">
+                                                        <div className="flex justify-end gap-2">
                                                             <button
-                                                                onClick={() => handleOpenModal(session)}
-                                                                className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-blue-200"
-                                                                title="Edit Report"
+                                                                onClick={() => handleOpenAttendanceViewer(session)}
+                                                                className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-emerald-200"
+                                                                title="View Attendance"
                                                             >
-                                                                <Edit2 size={14} /> Edit
+                                                                <Eye size={14} /> Attendance
                                                             </button>
-                                                        ) : (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setNewSession(session);
-                                                                    setIsModalOpen(true);
-                                                                }}
-                                                                className="px-3 py-1.5 bg-gray-50 text-gray-500 hover:bg-gray-100 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-gray-200"
-                                                                title="View Report"
-                                                            >
-                                                                <Eye size={14} /> View
-                                                            </button>
-                                                        )}
+                                                            {isManaged ? (
+                                                                <button
+                                                                    onClick={() => handleOpenModal(session)}
+                                                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-blue-200"
+                                                                    title="Edit Report"
+                                                                >
+                                                                    <Edit2 size={14} /> Edit
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setNewSession(session);
+                                                                        setIsModalOpen(true);
+                                                                    }}
+                                                                    className="px-3 py-1.5 bg-gray-50 text-gray-500 hover:bg-gray-100 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-gray-200"
+                                                                    title="View Report"
+                                                                >
+                                                                    <Eye size={14} /> View
+                                                                </button>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))
@@ -809,248 +884,444 @@ const SundaySchool: React.FC = () => {
             </div>
 
             {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-sans animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
-                        {/* Body */}
-                        <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-8">
-                            <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900 border-b border-gray-100 pb-4">
-                                <BookOpen size={24} className="text-blue-600" />
-                                {newSession.id ? 'Edit Report' : 'File New Report'}
-                            </h2>
+            {
+                isModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-sans animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
+                            {/* Body */}
+                            <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-8">
+                                <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900 border-b border-gray-100 pb-4">
+                                    <BookOpen size={24} className="text-blue-600" />
+                                    {newSession.id ? 'Edit Report' : 'File New Report'}
+                                </h2>
 
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date</label>
-                                    <input
-                                        type="date"
-                                        value={newSession.session_date}
-                                        onChange={(e) => setNewSession({ ...newSession, session_date: e.target.value })}
-                                        className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Department</label>
-                                    <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-bold text-gray-700 shadow-sm cursor-not-allowed">
-                                        {DEPARTMENTS.find(d => d.id === newSession.department)?.label}
+                                <div className="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date</label>
+                                        <input
+                                            type="date"
+                                            value={newSession.session_date}
+                                            onChange={(e) => setNewSession({ ...newSession, session_date: e.target.value })}
+                                            className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Department</label>
+                                        <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-bold text-gray-700 shadow-sm cursor-not-allowed">
+                                            {DEPARTMENTS.find(d => d.id === newSession.department)?.label}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Alert Context */}
-                            {!isSundaySchoolAdmin ? (
-                                <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-sm font-medium">
-                                    {newSession.id ? (
-                                        <span>You are editing the <span className="font-bold">{DEPARTMENTS.find(d => d.id === newSession.department)?.label}</span> report for <span className="font-bold">{new Date(newSession.session_date || '').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</span>. Continue?</span>
-                                    ) : (
-                                        <span>You are filing a new report for the <span className="font-bold">{DEPARTMENTS.find(d => d.id === newSession.department)?.label}</span> {new Date(newSession.session_date || '').toLocaleDateString()}.</span>
+                                {/* Alert Context */}
+                                {!isSundaySchoolAdmin ? (
+                                    <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-sm font-medium">
+                                        {newSession.id ? (
+                                            <span>You are editing the <span className="font-bold">{DEPARTMENTS.find(d => d.id === newSession.department)?.label}</span> report for <span className="font-bold">{new Date(newSession.session_date || '').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</span>. Continue?</span>
+                                        ) : (
+                                            <span>You are filing a new report for the <span className="font-bold">{DEPARTMENTS.find(d => d.id === newSession.department)?.label}</span> {new Date(newSession.session_date || '').toLocaleDateString()}.</span>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-4 text-sm font-medium">
+                                        <p>You are viewing this as an <strong>Administrator</strong>.</p>
+                                    </div>
+                                )}
+
+                                {/* Attendance */}
+                                <div className="space-y-4 border-t border-gray-100 pt-6">
+                                    <MemberAttendancePicker
+                                        label="Members Present"
+                                        members={attendanceMembers}
+                                        selectedIds={selectedMemberIds}
+                                        onChange={setSelectedMemberIds}
+                                        onEditMember={handleOpenStudentEditor}
+                                        searchTerm={memberSearchTerm}
+                                        onSearchTermChange={setMemberSearchTerm}
+                                        maxHeightClass="max-h-[160px]"
+                                        showVisitorToggle
+                                    />
+                                    {!isSundaySchoolAdmin && attendanceMembers.length === 0 && (
+                                        <p className="text-xs font-semibold text-amber-700">
+                                            No students are assigned to this department yet. Add student assignments in Ministry Directory.
+                                        </p>
+                                    )}
+
+                                    <div className="grid grid-cols-2 gap-6 pt-4">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Visitors / Non-Members Present</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={newSession.visitors_present}
+                                                onChange={(e) => setNewSession({ ...newSession, visitors_present: parseInt(e.target.value) || 0 })}
+                                                className="w-full border border-gray-200 rounded-lg p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            />
+                                            <p className="text-[10px] text-gray-500 mt-1 font-semibold">
+                                                Visitor cards encoded: {newVisitors.length}
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 text-center">Total</label>
+                                            <div className="w-full bg-blue-50 text-gray-900 font-bold text-xl rounded-lg p-3 flex items-center justify-center border border-blue-100 shadow-sm h-[54px]">
+                                                {selectedRegularCountInModal + visitorsCountInModal}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Visitor Card Input for Nursery/Juniors */}
+                                    {supportsVisitorCards && (
+                                        <div className="space-y-2 pt-6">
+                                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Visitor Card Image</label>
+                                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex gap-4 items-center transition-colors hover:border-blue-300">
+                                                <ImageUpload
+                                                    value={newSession.visitor_card_url || ''}
+                                                    onChange={(url) => setNewSession({ ...newSession, visitor_card_url: url })}
+                                                    folder={`sunday-school/${newSession.department || 'general'}`}
+                                                    label=""
+                                                    description="Upload photo of visitor card (JPG/PNG)"
+                                                />
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 mt-1">Visit tracking required for Nursery/Toddler & Primary and Junior departments.</p>
+                                        </div>
                                     )}
                                 </div>
-                            ) : (
-                                <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-4 text-sm font-medium">
-                                    <p>You are viewing this as an <strong>Administrator</strong>.</p>
-                                </div>
-                            )}
 
-                            {/* Attendance */}
-                            <div className="space-y-4 border-t border-gray-100 pt-6">
-                                <MemberAttendancePicker
-                                    label="Members Present"
-                                    members={attendanceMembers}
-                                    selectedIds={selectedMemberIds}
-                                    onChange={setSelectedMemberIds}
-                                    onEditMember={handleOpenStudentEditor}
-                                    searchTerm={memberSearchTerm}
-                                    onSearchTermChange={setMemberSearchTerm}
-                                    maxHeightClass="max-h-[160px]"
-                                    showVisitorToggle
-                                />
-                                {!isSundaySchoolAdmin && attendanceMembers.length === 0 && (
-                                    <p className="text-xs font-semibold text-amber-700">
-                                        No students are assigned to this department yet. Add student assignments in Ministry Directory.
-                                    </p>
-                                )}
-
-                                <div className="grid grid-cols-2 gap-6 pt-4">
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Visitors / Non-Members Present</label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={newSession.visitors_present}
-                                            onChange={(e) => setNewSession({ ...newSession, visitors_present: parseInt(e.target.value) || 0 })}
-                                            className="w-full border border-gray-200 rounded-lg p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
-                                        />
-                                        <p className="text-[10px] text-gray-500 mt-1 font-semibold">
-                                            Visitor cards encoded: {newVisitors.length}
-                                        </p>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 text-center">Total</label>
-                                        <div className="w-full bg-blue-50 text-gray-900 font-bold text-xl rounded-lg p-3 flex items-center justify-center border border-blue-100 shadow-sm h-[54px]">
-                                            {selectedRegularCountInModal + visitorsCountInModal}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Visitor Card Input for Nursery/Juniors */}
-                                {supportsVisitorCards && (
-                                    <div className="space-y-2 pt-6">
-                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Visitor Card Image</label>
-                                        <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex gap-4 items-center transition-colors hover:border-blue-300">
-                                            <ImageUpload
-                                                value={newSession.visitor_card_url || ''}
-                                                onChange={(url) => setNewSession({ ...newSession, visitor_card_url: url })}
-                                                folder={`sunday-school/${newSession.department || 'general'}`}
-                                                label=""
-                                                description="Upload photo of visitor card (JPG/PNG)"
+                                {supportsSoulsSaved && (
+                                    <div className="pt-6 border-t border-gray-100">
+                                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Souls Saved</label>
+                                        <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 p-4 rounded-xl">
+                                            <Heart size={20} className="text-red-500 shrink-0" />
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={newSession.souls_saved ?? 0}
+                                                onChange={(e) => setNewSession({ ...newSession, souls_saved: parseInt(e.target.value) || 0 })}
+                                                className="w-full border border-gray-200 rounded-lg p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             />
                                         </div>
-                                        <p className="text-[10px] text-gray-400 mt-1">Visit tracking required for Nursery/Toddler & Primary and Junior departments.</p>
                                     </div>
                                 )}
-                            </div>
 
-                            {supportsSoulsSaved && (
-                                <div className="pt-6 border-t border-gray-100">
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Souls Saved</label>
-                                    <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 p-4 rounded-xl">
-                                        <Heart size={20} className="text-red-500 shrink-0" />
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={newSession.souls_saved ?? 0}
-                                            onChange={(e) => setNewSession({ ...newSession, souls_saved: parseInt(e.target.value) || 0 })}
-                                            className="w-full border border-gray-200 rounded-lg p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                {/* Assessment Review Scores */}
+                                {selectedMemberIds.length > 0 && (
+                                    <div className="pt-6 border-t border-gray-100">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1.5">
+                                                <ClipboardCheck size={13} /> Assessment Review Scores
+                                            </label>
+                                            <span className="text-[10px] font-semibold text-gray-400">
+                                                {Object.values(memberAssessmentScores).filter(v => v != null && v > 0).length}/{selectedMemberIds.length} submitted
+                                            </span>
+                                        </div>
+                                        <p className="text-[10px] text-gray-400 mb-3">
+                                            Enter scores for members who submitted their assessment review questions. Leave blank if not submitted.
+                                        </p>
+                                        <div className="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden max-h-[200px] overflow-y-auto">
+                                            <div className="divide-y divide-gray-100">
+                                                {selectedMemberIds.map((memberId) => {
+                                                    const member = attendanceMembers.find((m) => m.id === memberId);
+                                                    if (!member) return null;
+                                                    const score = memberAssessmentScores[memberId];
+                                                    return (
+                                                        <div key={memberId} className="flex items-center justify-between px-4 py-2 hover:bg-gray-100/50 transition-colors">
+                                                            <span className="text-sm font-medium text-gray-800 truncate flex-1 mr-3">
+                                                                {member.first_name} {member.surname}
+                                                            </span>
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                max="100"
+                                                                placeholder="—"
+                                                                value={score != null ? score : ""}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value === "" ? null : parseInt(e.target.value) || 0;
+                                                                    setMemberAssessmentScores(prev => ({
+                                                                        ...prev,
+                                                                        [memberId]: val
+                                                                    }));
+                                                                }}
+                                                                className="w-16 border border-gray-200 rounded-lg px-2 py-1.5 text-center text-sm font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Quick Register Visitors */}
+                                {supportsVisitorCards && (
+                                    <div className="border border-gray-200 rounded-[16px] overflow-hidden">
+                                        <QuickVisitorRegistration
+                                            visitors={newVisitors}
+                                            onChange={setNewVisitors}
+                                            folderPath={`sunday-school/${newSession.department || 'general'}/cards`}
+                                            defaultVisitDate={newSession.session_date}
+                                            contextLabel={`${selectedDepartmentLabel}${newSession.session_date ? ` | ${newSession.session_date}` : ''}`}
                                         />
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Quick Register Visitors */}
-                            {supportsVisitorCards && (
-                                <div className="border border-gray-200 rounded-[16px] overflow-hidden">
-                                    <QuickVisitorRegistration
-                                        visitors={newVisitors}
-                                        onChange={setNewVisitors}
-                                        folderPath={`sunday-school/${newSession.department || 'general'}/cards`}
-                                        defaultVisitDate={newSession.session_date}
-                                        contextLabel={`${selectedDepartmentLabel}${newSession.session_date ? ` | ${newSession.session_date}` : ''}`}
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Sticky Footer */}
-                        <div className="bg-[#1e2333] p-4 px-6 flex items-center justify-between shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] relative z-10 transition-colors">
-                            <div className="flex gap-2">
-                                {newSession.id && (
-                                    <button
-                                        onClick={() => setConfirmDelete({ isOpen: true, id: newSession.id! })}
-                                        className="px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors text-xs font-bold uppercase tracking-widest"
-                                    >
-                                        Delete
-                                    </button>
                                 )}
                             </div>
-                            <div className="flex gap-4 items-center">
+
+                            {/* Sticky Footer */}
+                            <div className="bg-[#1e2333] p-4 px-6 flex items-center justify-between shrink-0 shadow-[0_-4px_20px_rgba(0,0,0,0.1)] relative z-10 transition-colors">
+                                <div className="flex gap-2">
+                                    {newSession.id && (
+                                        <button
+                                            onClick={() => setConfirmDelete({ isOpen: true, id: newSession.id! })}
+                                            className="px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors text-xs font-bold uppercase tracking-widest"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="flex gap-4 items-center">
+                                    <button
+                                        onClick={() => {
+                                            setIsModalOpen(false);
+                                            setSelectedMemberIds([]);
+                                        }}
+                                        className="text-sm font-medium text-gray-300 hover:text-white transition-colors py-2 px-4"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={saving}
+                                        className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_12px_rgba(37,99,235,0.2)] rounded-lg px-8 py-2.5 text-sm font-bold transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {saving ? 'Saving...' : (newSession.id ? 'Save Changes' : 'Submit Report')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {
+                isStudentEditorOpen && editingStudent && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
+                            <div className="px-6 py-5 border-b border-gray-100">
+                                <h3 className="text-lg font-bold text-gray-900">Edit Student Profile</h3>
+                                <p className="text-xs text-gray-500 mt-1">Update student details for your class roster.</p>
+                            </div>
+                            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">First Name</label>
+                                    <input
+                                        type="text"
+                                        value={editingStudent.first_name}
+                                        onChange={(e) => setEditingStudent({ ...editingStudent, first_name: e.target.value })}
+                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Surname</label>
+                                    <input
+                                        type="text"
+                                        value={editingStudent.surname}
+                                        onChange={(e) => setEditingStudent({ ...editingStudent, surname: e.target.value })}
+                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label>
+                                    <input
+                                        type="text"
+                                        value={editingStudent.phone_number}
+                                        onChange={(e) => setEditingStudent({ ...editingStudent, phone_number: e.target.value })}
+                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date of Birth</label>
+                                    <input
+                                        type="date"
+                                        value={editingStudent.date_of_birth || ""}
+                                        onChange={(e) => setEditingStudent({ ...editingStudent, date_of_birth: e.target.value })}
+                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Home Address</label>
+                                    <input
+                                        type="text"
+                                        value={editingStudent.home_address}
+                                        onChange={(e) => setEditingStudent({ ...editingStudent, home_address: e.target.value })}
+                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+                            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50">
                                 <button
                                     onClick={() => {
-                                        setIsModalOpen(false);
-                                        setSelectedMemberIds([]);
+                                        setIsStudentEditorOpen(false);
+                                        setEditingStudent(null);
                                     }}
-                                    className="text-sm font-medium text-gray-300 hover:text-white transition-colors py-2 px-4"
+                                    className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold"
                                 >
                                     Cancel
                                 </button>
                                 <button
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_12px_rgba(37,99,235,0.2)] rounded-lg px-8 py-2.5 text-sm font-bold transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={handleSaveStudentProfile}
+                                    disabled={studentSaving}
+                                    className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {saving ? 'Saving...' : (newSession.id ? 'Save Changes' : 'Submit Report')}
+                                    {studentSaving ? "Saving..." : "Save Student"}
                                 </button>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
-            {isStudentEditorOpen && editingStudent && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
-                        <div className="px-6 py-5 border-b border-gray-100">
-                            <h3 className="text-lg font-bold text-gray-900">Edit Student Profile</h3>
-                            <p className="text-xs text-gray-500 mt-1">Update student details for your class roster.</p>
-                        </div>
-                        <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">First Name</label>
-                                <input
-                                    type="text"
-                                    value={editingStudent.first_name}
-                                    onChange={(e) => setEditingStudent({ ...editingStudent, first_name: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                />
+            {/* Attendance Viewer Modal */}
+            {
+                attendanceViewerOpen && attendanceViewerSession && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-sans animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
+                            {/* Header */}
+                            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                        <Users size={20} className="text-emerald-600" />
+                                        Attendance Details
+                                    </h3>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        {DEPARTMENTS.find(d => d.id === attendanceViewerSession.department)?.label} — {new Date(attendanceViewerSession.session_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => { setAttendanceViewerOpen(false); setAttendanceViewerSession(null); }}
+                                    className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    <X size={18} />
+                                </button>
                             </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Surname</label>
-                                <input
-                                    type="text"
-                                    value={editingStudent.surname}
-                                    onChange={(e) => setEditingStudent({ ...editingStudent, surname: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                />
+
+                            {/* Summary bar */}
+                            <div className="px-6 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center gap-4 text-sm">
+                                <span className="font-bold text-emerald-700">
+                                    {attendanceViewerMembers.length} present
+                                </span>
+                                <span className="text-gray-400">|</span>
+                                <span className="text-gray-600">
+                                    Total: <strong>{attendanceViewerSession.total_attendance}</strong>
+                                </span>
+                                {(attendanceViewerSession.visitors_present || 0) > 0 && (
+                                    <>
+                                        <span className="text-gray-400">|</span>
+                                        <span className="text-gray-600">
+                                            Visitors: <strong>{attendanceViewerSession.visitors_present}</strong>
+                                        </span>
+                                    </>
+                                )}
                             </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label>
-                                <input
-                                    type="text"
-                                    value={editingStudent.phone_number}
-                                    onChange={(e) => setEditingStudent({ ...editingStudent, phone_number: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                />
+
+                            {/* Search */}
+                            <div className="px-6 py-3 border-b border-gray-100">
+                                <div className="relative">
+                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search students..."
+                                        value={attendanceViewerSearch}
+                                        onChange={(e) => setAttendanceViewerSearch(e.target.value)}
+                                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                                    />
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date of Birth</label>
-                                <input
-                                    type="date"
-                                    value={editingStudent.date_of_birth || ""}
-                                    onChange={(e) => setEditingStudent({ ...editingStudent, date_of_birth: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                />
+
+                            {/* Member List */}
+                            <div className="flex-1 overflow-y-auto">
+                                {attendanceViewerLoading ? (
+                                    <div className="p-8 text-center text-gray-500">Loading attendance data...</div>
+                                ) : attendanceViewerMembers.length === 0 ? (
+                                    <div className="p-8 text-center text-gray-400">
+                                        <Users size={32} className="mx-auto mb-2 opacity-40" />
+                                        <p className="font-medium">No attendance records found</p>
+                                        <p className="text-xs mt-1">No members were marked present for this session.</p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gray-50">
+                                        {/* Table Header */}
+                                        <div className="px-4 py-2.5 bg-gray-50/80 grid grid-cols-20 gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest sticky top-0" style={{ gridTemplateColumns: '24px 1fr 60px 56px 56px' }}>
+                                            <div>#</div>
+                                            <div>Student Name</div>
+                                            <div className="text-center">Status</div>
+                                            <div className="text-center">Score</div>
+                                            <div className="text-center">Days</div>
+                                        </div>
+                                        {attendanceViewerMembers
+                                            .filter((m) => {
+                                                if (!attendanceViewerSearch) return true;
+                                                const term = attendanceViewerSearch.toLowerCase();
+                                                return `${m.first_name || ''} ${m.surname || ''}`.toLowerCase().includes(term);
+                                            })
+                                            .map((member, idx) => {
+                                                const sessionScore = attendanceViewerScores[member.id];
+                                                const scoreStats = attendanceViewerScoreStats[member.id];
+                                                return (
+                                                    <div
+                                                        key={member.id}
+                                                        className="px-4 py-2.5 items-center hover:bg-gray-50/50 transition-colors text-sm grid"
+                                                        style={{ gridTemplateColumns: '24px 1fr 60px 56px 56px', gap: '8px' }}
+                                                    >
+                                                        <div className="text-gray-400 font-medium text-xs">{idx + 1}</div>
+                                                        <div>
+                                                            <p className="font-semibold text-gray-900 text-sm truncate">
+                                                                {member.first_name} {member.surname}
+                                                            </p>
+                                                            {scoreStats && scoreStats.submissionCount > 0 && (
+                                                                <p className="text-[10px] text-gray-400 mt-0.5">
+                                                                    Avg: {Math.round(scoreStats.totalScore / scoreStats.submissionCount)} ({scoreStats.submissionCount}x)
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                                                                <CheckCircle2 size={9} /> Present
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            {sessionScore != null && sessionScore > 0 ? (
+                                                                <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                                                    <Star size={9} /> {sessionScore}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-gray-300 text-xs">—</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <span className="inline-flex items-center gap-0.5 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                                                <Hash size={9} />
+                                                                {attendanceDayCounts[member.id] || 0}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                    </div>
+                                )}
                             </div>
-                            <div className="sm:col-span-2">
-                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Home Address</label>
-                                <input
-                                    type="text"
-                                    value={editingStudent.home_address}
-                                    onChange={(e) => setEditingStudent({ ...editingStudent, home_address: e.target.value })}
-                                    className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                />
+
+                            {/* Footer */}
+                            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end">
+                                <button
+                                    onClick={() => { setAttendanceViewerOpen(false); setAttendanceViewerSession(null); }}
+                                    className="px-5 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold transition-colors"
+                                >
+                                    Close
+                                </button>
                             </div>
-                        </div>
-                        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50">
-                            <button
-                                onClick={() => {
-                                    setIsStudentEditorOpen(false);
-                                    setEditingStudent(null);
-                                }}
-                                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleSaveStudentProfile}
-                                disabled={studentSaving}
-                                className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {studentSaving ? "Saving..." : "Save Student"}
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <SuccessModal
                 isOpen={showSuccessModal}
@@ -1067,7 +1338,7 @@ const SundaySchool: React.FC = () => {
                 onConfirm={handleDelete}
                 onCancel={() => setConfirmDelete({ isOpen: false, id: null })}
             />
-        </div>
+        </div >
     );
 };
 

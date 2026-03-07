@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import * as announcementService from "@/services/announcementService";
 import { toISODateLocal } from "@/lib/date";
-import { Bell, Calendar, BookOpen, Activity, Users, Heart, UserPlus } from "lucide-react";
+import { Bell, Calendar, BookOpen, Activity, Users, Heart, UserPlus, ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
 
 type AnnouncementSource = "service" | "sunday_school" | "activity" | "church_event";
 
@@ -69,6 +69,23 @@ const SOURCE_META: Record<AnnouncementSource, { label: string; icon: React.Eleme
 const sumNumberField = (rows: any[], fieldName: string) =>
     rows.reduce((sum, row) => sum + (Number(row?.[fieldName]) || 0), 0);
 
+/** Collect unique Sunday dates (sorted descending) from services + sunday school */
+const collectSundayDates = (services: any[], sundaySchoolSessions: any[]): string[] => {
+    const dateSet = new Set<string>();
+
+    services.forEach((row) => {
+        if (row.service_type === "sunday_morning" || row.service_type === "sunday_afternoon") {
+            dateSet.add(row.service_date);
+        }
+    });
+
+    sundaySchoolSessions.forEach((row) => {
+        dateSet.add(row.session_date);
+    });
+
+    return Array.from(dateSet).sort((a, b) => b.localeCompare(a));
+};
+
 const Announcements: React.FC = () => {
     const [items, setItems] = useState<AnnouncementItem[]>([]);
     const [services, setServices] = useState<any[]>([]);
@@ -76,8 +93,10 @@ const Announcements: React.FC = () => {
     const [activities, setActivities] = useState<any[]>([]);
     const [churchEvents, setChurchEvents] = useState<any[]>([]);
     const [upcomingBirthdays, setUpcomingBirthdays] = useState<BirthdayItem[]>([]);
+    const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [sourceWarnings, setSourceWarnings] = useState<string[]>([]);
+    const [selectedSundayIndex, setSelectedSundayIndex] = useState(0);
 
     useEffect(() => {
         const fetchAnnouncements = async () => {
@@ -86,7 +105,7 @@ const Announcements: React.FC = () => {
 
             const results = await announcementService.getAnnouncementData(60);
 
-            const [servicesResult, sundaySchoolResult, activitiesResult, churchEventsResult, birthdaysResult] = results as any[];
+            const [servicesResult, sundaySchoolResult, activitiesResult, churchEventsResult, birthdaysResult, attendanceLogsResult] = results as any[];
 
             const nextWarnings: string[] = [];
 
@@ -193,11 +212,14 @@ const Announcements: React.FC = () => {
                     .slice(0, 8);
             }
 
+            const logsRows = attendanceLogsResult?.error ? [] : (attendanceLogsResult?.data || []);
+
             setServices(serviceRows);
             setSundaySchoolSessions(sundaySchoolRows);
             setActivities(activityRows);
             setChurchEvents(churchEventRows);
             setUpcomingBirthdays(birthdayRows);
+            setAttendanceLogs(logsRows);
             setItems(merged);
             setSourceWarnings(nextWarnings);
             setLoading(false);
@@ -206,55 +228,110 @@ const Announcements: React.FC = () => {
         fetchAnnouncements();
     }, []);
 
-    const summary = useMemo(() => {
-        const primaryServices = services.filter((row) => isPrimaryServiceType(row.service_type));
-        const childrenSundaySchoolSessions = sundaySchoolSessions.filter((row) =>
-            CHILDREN_DEPARTMENTS.has(row.department)
+    // Collect unique Sunday dates
+    const sundayDates = useMemo(
+        () => collectSundayDates(services, sundaySchoolSessions),
+        [services, sundaySchoolSessions]
+    );
+
+    const selectedSundayDate = sundayDates[selectedSundayIndex] || null;
+
+    // Per-Sunday summary (only the selected Sunday)
+    const sundaySummary = useMemo(() => {
+        if (!selectedSundayDate) {
+            return {
+                morningServiceAttendance: 0,
+                childrenDeptAttendance: 0,
+                sundayMorningTotal: 0,
+                afternoonAttendance: 0,
+                morningVisitors: 0,
+                childrenVisitors: 0,
+                totalVisitors: 0,
+                morningSoulsSaved: 0,
+                childrenSoulsSaved: 0,
+                totalSoulsSaved: 0,
+                morningMembersWhoPrayed: 0,
+                morningProspectsForBaptism: 0,
+            };
+        }
+
+        // Morning service on this date
+        const morningServices = services.filter(
+            (row) => row.service_type === "sunday_morning" && row.service_date === selectedSundayDate
         );
+        const morningServiceAttendance = sumNumberField(morningServices, "total_attendance");
+        const morningVisitors = sumNumberField(morningServices, "visitors_present");
+        const morningSoulsSaved = sumNumberField(morningServices, "souls_saved");
+        const morningMembersWhoPrayed = sumNumberField(morningServices, "members_who_prayed");
+        const morningProspectsForBaptism = sumNumberField(morningServices, "prospects_for_baptism");
 
-        const sundayMorningServiceAttendance = services
-            .filter((row) => row.service_type === "sunday_morning")
-            .reduce((sum, row) => sum + (Number(row.total_attendance) || 0), 0);
+        // Children departments on this date
+        const childrenSessions = sundaySchoolSessions.filter(
+            (row) => CHILDREN_DEPARTMENTS.has(row.department) && row.session_date === selectedSundayDate
+        );
+        const childrenDeptAttendance = sumNumberField(childrenSessions, "total_attendance");
+        const childrenVisitors = sumNumberField(childrenSessions, "visitors_present");
+        const childrenSoulsSaved = sumNumberField(childrenSessions, "souls_saved");
 
-        const sundayMorningChildrenAttendance = sundaySchoolSessions
-            .filter((row) => CHILDREN_DEPARTMENTS.has(row.department))
-            .reduce((sum, row) => sum + (Number(row.total_attendance) || 0), 0);
+        // Deduplicated Total Calculation
+        const morningServiceIds = new Set(morningServices.map(s => s.id));
+        const childrenSessionIds = new Set(childrenSessions.map(s => s.id));
 
-        const sundayMorningAttendance = sundayMorningServiceAttendance + sundayMorningChildrenAttendance;
+        const uniqueMemberIds = new Set<string>();
 
-        const sundayAfternoonAttendance = services
-            .filter((row) => row.service_type === "sunday_afternoon")
-            .reduce((sum, row) => sum + (Number(row.total_attendance) || 0), 0);
+        attendanceLogs.forEach(log => {
+            if (morningServiceIds.has(log.event_id) || childrenSessionIds.has(log.event_id)) {
+                if (log.member_id) uniqueMemberIds.add(log.member_id);
+            }
+        });
 
-        const wednesdayPrayerAttendance = services
-            .filter((row) => row.service_type === "wednesday_prayer")
-            .reduce((sum, row) => sum + (Number(row.total_attendance) || 0), 0);
+        let anonymousCount = 0;
+        morningServices.forEach(s => {
+            const logsForThis = attendanceLogs.filter(l => l.event_id === s.id).length;
+            anonymousCount += Math.max(0, (s.total_attendance || 0) - logsForThis);
+        });
+        childrenSessions.forEach(s => {
+            const logsForThis = attendanceLogs.filter(l => l.event_id === s.id).length;
+            anonymousCount += Math.max(0, (s.total_attendance || 0) - logsForThis);
+        });
 
-        const primaryServiceAttendanceTotal =
-            sundayMorningAttendance +
-            sundayAfternoonAttendance +
-            wednesdayPrayerAttendance;
+        const sundayMorningTotal = uniqueMemberIds.size + anonymousCount;
+        const totalVisitors = morningVisitors + childrenVisitors;
+        const totalSoulsSaved = morningSoulsSaved + childrenSoulsSaved;
 
-        const totalVisitors =
-            sumNumberField(primaryServices, "visitors_present") +
-            sumNumberField(childrenSundaySchoolSessions, "visitors_present");
-
-        const totalSoulsSaved =
-            sumNumberField(primaryServices, "souls_saved") +
-            sumNumberField(childrenSundaySchoolSessions, "souls_saved");
+        // Afternoon service on this date
+        const afternoonServices = services.filter(
+            (row) => row.service_type === "sunday_afternoon" && row.service_date === selectedSundayDate
+        );
+        const afternoonAttendance = sumNumberField(afternoonServices, "total_attendance");
 
         return {
-            sundayMorningAttendance,
-            sundayAfternoonAttendance,
-            wednesdayPrayerAttendance,
-            primaryServiceAttendanceTotal,
+            morningServiceAttendance,
+            childrenDeptAttendance,
+            sundayMorningTotal,
+            afternoonAttendance,
+            morningVisitors,
+            childrenVisitors,
             totalVisitors,
-            totalSoulsSaved
+            morningSoulsSaved,
+            childrenSoulsSaved,
+            totalSoulsSaved,
+            morningMembersWhoPrayed,
+            morningProspectsForBaptism,
         };
-    }, [services, sundaySchoolSessions, activities]);
+    }, [services, sundaySchoolSessions, selectedSundayDate]);
+
+    const canGoPrev = selectedSundayIndex < sundayDates.length - 1;
+    const canGoNext = selectedSundayIndex > 0;
+
+    const formatSundayLabel = (dateStr: string) => {
+        const d = new Date(`${dateStr}T00:00:00`);
+        return d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    };
 
     return (
         <div className="space-y-6 p-6 lg:p-8">
+            {/* Header */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
@@ -263,39 +340,133 @@ const Announcements: React.FC = () => {
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Announcements</h1>
                         <p className="text-sm text-gray-500">
-                            Services, Sunday School, Activities, and upcoming birthdays.
+                            Sunday service results, upcoming birthdays, and recent reports.
                         </p>
                     </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
-                    <SummaryTile
-                        label="Sunday Morning (Service + Children Dep)"
-                        value={summary.sundayMorningAttendance}
-                    />
-                    <SummaryTile
-                        label="Sunday Afternoon Service"
-                        value={summary.sundayAfternoonAttendance}
-                    />
-                    <SummaryTile
-                        label="Wednesday Prayer Meeting"
-                        value={summary.wednesdayPrayerAttendance}
-                    />
-                    <SummaryTile
-                        label="Primary Services Total Attendance"
-                        value={summary.primaryServiceAttendanceTotal}
-                    />
-                    <SummaryTile
-                        label="Visitors / Guests (Primary Services + Children Dept)"
-                        value={summary.totalVisitors}
-                    />
-                    <SummaryTile
-                        label="Souls Saved (Primary Services + Children Dept)"
-                        value={summary.totalSoulsSaved}
-                    />
-                </div>
             </div>
 
+            {/* Sunday Date Selector */}
+            {sundayDates.length > 0 && (
+                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+                    {/* Date navigation bar */}
+                    <div className="px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-900 flex items-center justify-between">
+                        <button
+                            onClick={() => setSelectedSundayIndex((prev) => Math.min(prev + 1, sundayDates.length - 1))}
+                            disabled={!canGoPrev}
+                            className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Previous Sunday"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <div className="text-center">
+                            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">Sunday Results</p>
+                            <p className="text-white font-bold text-lg mt-0.5">
+                                {selectedSundayDate ? formatSundayLabel(selectedSundayDate) : "No Data"}
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setSelectedSundayIndex((prev) => Math.max(prev - 1, 0))}
+                            disabled={!canGoNext}
+                            className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Next Sunday"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+
+                    {/* Two sections: Morning and Afternoon */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
+                        {/* MORNING SECTION */}
+                        <div className="p-6">
+                            <div className="flex items-center gap-2.5 mb-5">
+                                <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
+                                    <Sun size={16} />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-900">Sunday Morning</h3>
+                                    <p className="text-[10px] text-gray-500 font-medium">Service + Children Department</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                {/* Total */}
+                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-wider font-bold text-blue-500">
+                                                Total Attendance
+                                            </p>
+                                            <p className="text-3xl font-black text-gray-900 mt-1">{sundaySummary.sundayMorningTotal}</p>
+                                        </div>
+                                        <div className="text-right space-y-0.5">
+                                            <p className="text-[10px] text-gray-500 font-semibold">
+                                                Service: <span className="text-gray-800 font-bold">{sundaySummary.morningServiceAttendance}</span>
+                                            </p>
+                                            <p className="text-[10px] text-gray-500 font-semibold">
+                                                Children: <span className="text-gray-800 font-bold">{sundaySummary.childrenDeptAttendance}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
+                                            <UserPlus size={11} /> Visitors
+                                        </p>
+                                        <p className="text-xl font-black text-gray-900 mt-1">{sundaySummary.totalVisitors}</p>
+                                    </div>
+                                    <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
+                                            <Heart size={11} /> Souls Saved
+                                        </p>
+                                        <p className="text-xl font-black text-gray-900 mt-1">{sundaySummary.totalSoulsSaved}</p>
+                                    </div>
+                                </div>
+
+                                {(sundaySummary.morningMembersWhoPrayed > 0 || sundaySummary.morningProspectsForBaptism > 0) && (
+                                    <div className="flex gap-3 text-xs text-gray-500 bg-gray-50/50 rounded-lg px-3 py-2">
+                                        <span>Prayed: <strong className="text-gray-700">{sundaySummary.morningMembersWhoPrayed}</strong></span>
+                                        <span>•</span>
+                                        <span>Prospects: <strong className="text-gray-700">{sundaySummary.morningProspectsForBaptism}</strong></span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* AFTERNOON SECTION */}
+                        <div className="p-6">
+                            <div className="flex items-center gap-2.5 mb-5">
+                                <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                    <Moon size={16} />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-gray-900">Sunday Afternoon</h3>
+                                    <p className="text-[10px] text-gray-500 font-medium">Afternoon Worship Service Only</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-4">
+                                    <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-500">
+                                        Total Attendance
+                                    </p>
+                                    <p className="text-3xl font-black text-gray-900 mt-1">{sundaySummary.afternoonAttendance}</p>
+                                </div>
+
+                                {sundaySummary.afternoonAttendance === 0 && (
+                                    <p className="text-xs text-gray-400 font-medium text-center py-2">
+                                        No afternoon service report for this Sunday.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Upcoming Birthdays */}
             <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
                     <h2 className="text-lg font-bold text-gray-900">Upcoming Birthdays</h2>
@@ -343,9 +514,10 @@ const Announcements: React.FC = () => {
                 </div>
             )}
 
+            {/* Recent Result Announcements */}
             <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100">
-                    <h2 className="text-lg font-bold text-gray-900">Recent Result Announcements</h2>
+                    <h2 className="text-lg font-bold text-gray-900">Recent Reports</h2>
                 </div>
 
                 {loading ? (
@@ -417,12 +589,5 @@ const Announcements: React.FC = () => {
         </div>
     );
 };
-
-const SummaryTile: React.FC<{ label: string; value: number }> = ({ label, value }) => (
-    <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-        <p className="text-xs uppercase tracking-wider font-bold text-gray-500">{label}</p>
-        <p className="text-2xl font-black text-gray-900 mt-1">{value}</p>
-    </div>
-);
 
 export default Announcements;

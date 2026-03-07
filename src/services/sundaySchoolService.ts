@@ -85,8 +85,14 @@ export const getSundaySchoolAttendanceLogs = async (sessionId: string): Promise<
 
 /**
  * Updates attendance logs for a Sunday School session.
+ * Now accepts optional assessment scores per member.
  */
-export const updateSundaySchoolAttendanceLogs = async (sessionId: string, date: string, memberIds: string[]): Promise<void> => {
+export const updateSundaySchoolAttendanceLogs = async (
+    sessionId: string,
+    date: string,
+    memberIds: string[],
+    assessmentScores?: Record<string, number | null>
+): Promise<void> => {
     await supabase.from('attendance_log')
         .delete()
         .eq('event_id', sessionId)
@@ -98,7 +104,8 @@ export const updateSundaySchoolAttendanceLogs = async (sessionId: string, date: 
             event_type: 'sunday_school',
             event_id: sessionId,
             event_date: date,
-            was_present: true
+            was_present: true,
+            assessment_score: assessmentScores?.[mid] ?? null
         }));
         const { error } = await supabase.from('attendance_log').insert(logs);
         if (error) {
@@ -259,6 +266,103 @@ export const createVisitor = async (visitorData: any): Promise<void> => {
     if (error) {
         throw new Error(`Failed to create visitor: ${error.message}`);
     }
+};
+
+/**
+ * Fetches attendance logs for sessions on a specific date and department.
+ * Returns an array of { member_id, event_id, assessment_score } for that session/date.
+ */
+export const getAttendanceLogsBySessionIds = async (sessionIds: string[]): Promise<{ member_id: string; event_id: string; assessment_score?: number | null }[]> => {
+    if (sessionIds.length === 0) return [];
+    const { data, error } = await supabase
+        .from('attendance_log')
+        .select('member_id, event_id, assessment_score')
+        .in('event_id', sessionIds)
+        .eq('event_type', 'sunday_school')
+        .eq('was_present', true);
+
+    if (error) {
+        throw new Error(`Failed to fetch attendance logs by session IDs: ${error.message}`);
+    }
+    return (data || []) as { member_id: string; event_id: string; assessment_score?: number | null }[];
+};
+
+/**
+ * Fetches attendance counts per member for a department.
+ * Returns a map of member_id -> number of sessions attended.
+ */
+export const getAttendanceCountsByDepartment = async (department: string): Promise<Record<string, number>> => {
+    // First get all session IDs for this department
+    const { data: sessions, error: sessionsError } = await supabase
+        .from('sunday_school_sessions')
+        .select('id')
+        .eq('department', department);
+
+    if (sessionsError) {
+        throw new Error(`Failed to fetch sessions for department: ${sessionsError.message}`);
+    }
+
+    const sessionIds = (sessions || []).map((s: any) => s.id);
+    if (sessionIds.length === 0) return {};
+
+    // Then get all attendance logs for these sessions
+    const { data: logs, error: logsError } = await supabase
+        .from('attendance_log')
+        .select('member_id')
+        .in('event_id', sessionIds)
+        .eq('event_type', 'sunday_school')
+        .eq('was_present', true);
+
+    if (logsError) {
+        throw new Error(`Failed to fetch attendance counts: ${logsError.message}`);
+    }
+
+    const counts: Record<string, number> = {};
+    for (const log of (logs || [])) {
+        counts[log.member_id] = (counts[log.member_id] || 0) + 1;
+    }
+    return counts;
+};
+
+/**
+ * Fetches assessment score stats per member for a department.
+ * Returns a map of member_id -> { totalScore, submissionCount }.
+ */
+export const getAssessmentScoresByDepartment = async (department: string): Promise<Record<string, { totalScore: number; submissionCount: number }>> => {
+    const { data: sessions, error: sessionsError } = await supabase
+        .from('sunday_school_sessions')
+        .select('id')
+        .eq('department', department);
+
+    if (sessionsError) {
+        throw new Error(`Failed to fetch sessions for department: ${sessionsError.message}`);
+    }
+
+    const sessionIds = (sessions || []).map((s: any) => s.id);
+    if (sessionIds.length === 0) return {};
+
+    const { data: logs, error: logsError } = await supabase
+        .from('attendance_log')
+        .select('member_id, assessment_score')
+        .in('event_id', sessionIds)
+        .eq('event_type', 'sunday_school')
+        .eq('was_present', true);
+
+    if (logsError) {
+        throw new Error(`Failed to fetch assessment scores: ${logsError.message}`);
+    }
+
+    const stats: Record<string, { totalScore: number; submissionCount: number }> = {};
+    for (const log of (logs || [])) {
+        if (!stats[log.member_id]) {
+            stats[log.member_id] = { totalScore: 0, submissionCount: 0 };
+        }
+        if (log.assessment_score != null && log.assessment_score > 0) {
+            stats[log.member_id].totalScore += log.assessment_score;
+            stats[log.member_id].submissionCount += 1;
+        }
+    }
+    return stats;
 };
 
 /**
