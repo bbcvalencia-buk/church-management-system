@@ -1,0 +1,1 @@
+ALTER TABLE attendance_log ADD COLUMN IF NOT EXISTS was_tardy BOOLEAN DEFAULT false;

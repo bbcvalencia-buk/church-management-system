@@ -95,6 +95,7 @@ const SundaySchool: React.FC = () => {
     const [teacherDepartments, setTeacherDepartments] = useState<string[]>([]);
     const [accessLoading, setAccessLoading] = useState(true);
     const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+    const [tardyMemberIds, setTardyMemberIds] = useState<string[]>([]);
     const [memberSearchTerm, setMemberSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -258,6 +259,10 @@ const SundaySchool: React.FC = () => {
             }
             setMemberAssessmentScores(existingScores);
 
+            // Load tardy member IDs
+            const tardyIds = (logs || []).filter((l: any) => l.was_tardy === true).map((l: any) => l.member_id);
+            setTardyMemberIds(tardyIds);
+
             // Primary linkage for newer records
             let registeredVisitors: any[] = [];
             const linkedVisitors = await sundaySchoolService.getVisitorsBySessionId(session.id);
@@ -305,6 +310,7 @@ const SundaySchool: React.FC = () => {
                 souls_saved: 0
             });
             setSelectedMemberIds([]);
+            setTardyMemberIds([]);
             setNewVisitors([]); // Clear visitors for new session
         }
         setIsModalOpen(true);
@@ -338,7 +344,7 @@ const SundaySchool: React.FC = () => {
                 selectedVisitorIds.length,
                 preparedVisitors.length > 0 ? preparedVisitors.length : manualVisitorsInput
             );
-            const membersPresent = selectedRegularIds.length;
+            const membersPresent = selectedRegularIds.length + tardyMemberIds.filter((id) => !visitorMemberIds.has(id)).length;
             const total = membersPresent + visitorsPresent;
 
             const sessionToSave = {
@@ -469,7 +475,8 @@ const SundaySchool: React.FC = () => {
                     savedSession.id,
                     savedSession.session_date,
                     allMemberIds,
-                    memberAssessmentScores
+                    memberAssessmentScores,
+                    tardyMemberIds
                 );
             }
 
@@ -935,6 +942,8 @@ const SundaySchool: React.FC = () => {
                                         members={attendanceMembers}
                                         selectedIds={selectedMemberIds}
                                         onChange={setSelectedMemberIds}
+                                        tardyIds={tardyMemberIds}
+                                        onTardyChange={setTardyMemberIds}
                                         onEditMember={handleOpenStudentEditor}
                                         searchTerm={memberSearchTerm}
                                         onSearchTermChange={setMemberSearchTerm}

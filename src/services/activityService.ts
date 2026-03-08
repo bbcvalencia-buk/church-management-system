@@ -66,23 +66,27 @@ export const deleteActivity = async (activityId: string): Promise<void> => {
 /**
  * Fetches attendance logs for an activity.
  */
-export const getActivityAttendanceLogs = async (activityId: string): Promise<string[]> => {
+export const getActivityAttendanceLogs = async (activityId: string): Promise<{ memberIds: string[]; tardyIds: string[] }> => {
     const { data, error } = await supabase
         .from('attendance_log')
-        .select('member_id')
+        .select('member_id, was_tardy')
         .eq('event_id', activityId)
         .eq('event_type', 'activity');
 
     if (error) {
         throw new Error(`Failed to fetch activity attendance: ${error.message}`);
     }
-    return (data || []).map(d => d.member_id);
+    const rows = data || [];
+    return {
+        memberIds: rows.map(d => d.member_id),
+        tardyIds: rows.filter((d: any) => d.was_tardy === true).map(d => d.member_id)
+    };
 };
 
 /**
  * Updates attendance logs for an activity.
  */
-export const updateActivityAttendanceLogs = async (activityId: string, date: string, memberIds: string[]): Promise<void> => {
+export const updateActivityAttendanceLogs = async (activityId: string, date: string, memberIds: string[], tardyIds: string[] = []): Promise<void> => {
     await supabase.from('attendance_log')
         .delete()
         .eq('event_id', activityId)
@@ -94,7 +98,8 @@ export const updateActivityAttendanceLogs = async (activityId: string, date: str
             event_type: 'activity',
             event_id: activityId,
             event_date: date,
-            was_present: true
+            was_present: true,
+            was_tardy: tardyIds.includes(mid)
         }));
         const { error } = await supabase.from('attendance_log').insert(logs);
         if (error) {

@@ -73,23 +73,27 @@ export const deleteChurchEvent = async (eventId: string): Promise<void> => {
 /**
  * Fetches attendance logs for a church event.
  */
-export const getChurchEventAttendanceLogs = async (eventId: string): Promise<string[]> => {
+export const getChurchEventAttendanceLogs = async (eventId: string): Promise<{ memberIds: string[]; tardyIds: string[] }> => {
     const { data, error } = await supabase
         .from('attendance_log')
-        .select('member_id')
+        .select('member_id, was_tardy')
         .eq('event_id', eventId)
         .eq('event_type', 'church_event');
 
     if (error) {
         throw new Error(`Failed to fetch church event attendance: ${error.message}`);
     }
-    return (data || []).map(d => d.member_id);
+    const rows = data || [];
+    return {
+        memberIds: rows.map(d => d.member_id),
+        tardyIds: rows.filter((d: any) => d.was_tardy === true).map(d => d.member_id)
+    };
 };
 
 /**
  * Updates attendance logs for a church event.
  */
-export const updateChurchEventAttendanceLogs = async (eventId: string, date: string, memberIds: string[]): Promise<void> => {
+export const updateChurchEventAttendanceLogs = async (eventId: string, date: string, memberIds: string[], tardyIds: string[] = []): Promise<void> => {
     await supabase.from('attendance_log')
         .delete()
         .eq('event_id', eventId)
@@ -101,7 +105,8 @@ export const updateChurchEventAttendanceLogs = async (eventId: string, date: str
             event_type: 'church_event',
             event_id: eventId,
             event_date: date,
-            was_present: true
+            was_present: true,
+            was_tardy: tardyIds.includes(mid)
         }));
         const { error } = await supabase.from('attendance_log').insert(logs);
         if (error) {

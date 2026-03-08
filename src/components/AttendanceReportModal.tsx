@@ -9,7 +9,8 @@ interface AttendanceReportModalProps {
     subtitle: string;
     members: AttendanceMember[];
     selectedMemberIds: string[];
-    onSave: (selectedIds: string[]) => void;
+    tardyIds?: string[];
+    onSave: (selectedIds: string[], tardyIds?: string[]) => void;
     visitorsCount: number;
 }
 
@@ -20,23 +21,29 @@ const AttendanceReportModal: React.FC<AttendanceReportModalProps> = ({
     subtitle,
     members,
     selectedMemberIds,
+    tardyIds = [],
     onSave,
     visitorsCount
 }) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [localSelectedIds, setLocalSelectedIds] = useState<string[]>(selectedMemberIds);
+    const [localTardyIds, setLocalTardyIds] = useState<string[]>(tardyIds);
+
+    // Tardy members are counted as present for total attendance purposes usually
     const selectedVisitorCount = localSelectedIds.filter((id) =>
         members.some((m) => m.id === id && false)
     ).length;
+    // We add tardy count to regular count
     const selectedRegularCount = localSelectedIds.length - selectedVisitorCount;
     const effectiveVisitorsCount = Math.max(visitorsCount, selectedVisitorCount);
-    const effectiveTotal = selectedRegularCount + effectiveVisitorsCount;
+    const effectiveTotal = selectedRegularCount + localTardyIds.length + effectiveVisitorsCount;
 
     useEffect(() => {
         if (!isOpen) return;
         setLocalSelectedIds(selectedMemberIds);
+        setLocalTardyIds(tardyIds);
         setSearchTerm("");
-    }, [isOpen, selectedMemberIds]);
+    }, [isOpen, selectedMemberIds, tardyIds]);
 
     if (!isOpen) return null;
 
@@ -65,6 +72,8 @@ const AttendanceReportModal: React.FC<AttendanceReportModalProps> = ({
                         members={members}
                         selectedIds={localSelectedIds}
                         onChange={setLocalSelectedIds}
+                        tardyIds={localTardyIds}
+                        onTardyChange={setLocalTardyIds}
                         searchTerm={searchTerm}
                         onSearchTermChange={setSearchTerm}
                         maxHeightClass="max-h-[280px]"
@@ -97,7 +106,7 @@ const AttendanceReportModal: React.FC<AttendanceReportModalProps> = ({
                         </button>
                         <button
                             onClick={() => {
-                                onSave(localSelectedIds);
+                                onSave(localSelectedIds, localTardyIds);
                                 onClose();
                             }}
                             className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_12px_rgba(37,99,235,0.2)] rounded-lg px-8 py-2.5 text-sm font-bold transition-transform hover:-translate-y-0.5"

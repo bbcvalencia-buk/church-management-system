@@ -3,7 +3,7 @@ import * as announcementService from "@/services/announcementService";
 import { toISODateLocal } from "@/lib/date";
 import { Bell, Calendar, BookOpen, Activity, Users, Heart, UserPlus, ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
 
-type AnnouncementSource = "service" | "sunday_school" | "activity" | "church_event";
+type AnnouncementSource = "service" | "sunday_school" | "activity" | "church_event" | "goodnews_class";
 
 interface AnnouncementItem {
     id: string;
@@ -63,7 +63,8 @@ const SOURCE_META: Record<AnnouncementSource, { label: string; icon: React.Eleme
     service: { label: "Service", icon: Calendar, color: "bg-blue-100 text-blue-600" },
     sunday_school: { label: "Sunday School", icon: BookOpen, color: "bg-emerald-100 text-emerald-600" },
     activity: { label: "Activity", icon: Activity, color: "bg-purple-100 text-purple-600" },
-    church_event: { label: "Church Event", icon: Calendar, color: "bg-orange-100 text-orange-600" }
+    church_event: { label: "Church Event", icon: Calendar, color: "bg-orange-100 text-orange-600" },
+    goodnews_class: { label: "Good News Class", icon: BookOpen, color: "bg-sky-100 text-sky-600" }
 };
 
 const sumNumberField = (rows: any[], fieldName: string) =>
@@ -83,6 +84,18 @@ const collectSundayDates = (services: any[], sundaySchoolSessions: any[]): strin
         dateSet.add(row.session_date);
     });
 
+    // Ensure the upcoming/recent Sunday is always in the list so that users can 
+    // preview the activities building up to the upcoming Sunday before service happens.
+    const today = new Date();
+    const currentDayOfWeek = today.getDay();
+    // Calculate the most relevant Sunday (if today is Sunday, today; otherwise, the coming Sunday)
+    const daysUntilNextSunday = currentDayOfWeek === 0 ? 0 : 7 - currentDayOfWeek;
+    const nextSundayDate = new Date(today);
+    nextSundayDate.setDate(today.getDate() + daysUntilNextSunday);
+    const nextSundayStr = nextSundayDate.toISOString().split('T')[0];
+
+    dateSet.add(nextSundayStr);
+
     return Array.from(dateSet).sort((a, b) => b.localeCompare(a));
 };
 
@@ -92,6 +105,7 @@ const Announcements: React.FC = () => {
     const [sundaySchoolSessions, setSundaySchoolSessions] = useState<any[]>([]);
     const [activities, setActivities] = useState<any[]>([]);
     const [churchEvents, setChurchEvents] = useState<any[]>([]);
+    const [goodnewsSessions, setGoodnewsSessions] = useState<any[]>([]);
     const [upcomingBirthdays, setUpcomingBirthdays] = useState<BirthdayItem[]>([]);
     const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -105,7 +119,7 @@ const Announcements: React.FC = () => {
 
             const results = await announcementService.getAnnouncementData(60);
 
-            const [servicesResult, sundaySchoolResult, activitiesResult, churchEventsResult, birthdaysResult, attendanceLogsResult] = results as any[];
+            const [servicesResult, sundaySchoolResult, activitiesResult, churchEventsResult, birthdaysResult, attendanceLogsResult, goodnewsResult] = results as any[];
 
             const nextWarnings: string[] = [];
 
@@ -120,6 +134,9 @@ const Announcements: React.FC = () => {
 
             const churchEventRows = churchEventsResult.error ? [] : (churchEventsResult.data || []);
             if (churchEventsResult.error) nextWarnings.push("Church Event results are not available for your account.");
+
+            const goodnewsRows = goodnewsResult?.error ? [] : (goodnewsResult?.data || []);
+            if (goodnewsResult?.error) nextWarnings.push("Goodnews class results are not available for your account.");
 
             const serviceItems: AnnouncementItem[] = serviceRows.map((row: any) => {
                 const isPrimaryService = isPrimaryServiceType(row.service_type);
@@ -175,7 +192,18 @@ const Announcements: React.FC = () => {
                 soulsSaved: 0
             }));
 
-            const merged = [...serviceItems, ...sundaySchoolItems, ...activityItems, ...churchEventItems].sort(
+            const goodnewsItems: AnnouncementItem[] = goodnewsRows.map((row: any) => ({
+                id: `goodnews-${row.id}`,
+                source: "goodnews_class",
+                date: row.date,
+                title: "Goodnews Class",
+                subtitle: row.series?.area ? `Session reported (${row.series.area})` : "Session reported",
+                attendance: row.children_count || 0,
+                visitors: 0,
+                soulsSaved: row.souls_saved_count || 0
+            }));
+
+            const merged = [...serviceItems, ...sundaySchoolItems, ...activityItems, ...churchEventItems, ...goodnewsItems].sort(
                 (a: AnnouncementItem, b: AnnouncementItem) => new Date(b.date).getTime() - new Date(a.date).getTime()
             );
 
@@ -218,6 +246,7 @@ const Announcements: React.FC = () => {
             setSundaySchoolSessions(sundaySchoolRows);
             setActivities(activityRows);
             setChurchEvents(churchEventRows);
+            setGoodnewsSessions(goodnewsRows);
             setUpcomingBirthdays(birthdayRows);
             setAttendanceLogs(logsRows);
             setItems(merged);
@@ -319,7 +348,69 @@ const Announcements: React.FC = () => {
             morningMembersWhoPrayed,
             morningProspectsForBaptism,
         };
-    }, [services, sundaySchoolSessions, selectedSundayDate]);
+    }, [services, sundaySchoolSessions, attendanceLogs, selectedSundayDate]);
+
+    // Per-Week summary (Monday to selected Sunday)
+    const weeklySummary = useMemo(() => {
+        if (!selectedSundayDate) {
+            return {
+                wednesdayAttendance: 0,
+                wednesdaySoulsSaved: 0,
+                goodnewsAttendance: 0,
+                goodnewsSoulsSaved: 0,
+                otherActivitiesAttendance: 0,
+                otherActivitiesSoulsSaved: 0,
+                goodnewsClasses: [] as any[],
+                otherActivitiesList: [] as any[],
+            };
+        }
+
+        const dDate = new Date(`${selectedSundayDate}T00:00:00`);
+        const sDate = new Date(dDate);
+        sDate.setDate(dDate.getDate() - 6);
+
+        const startDateStr = sDate.toISOString().split('T')[0];
+        const endDateStr = selectedSundayDate;
+
+        const isWithinWeek = (dateStr: string) => dateStr >= startDateStr && dateStr <= endDateStr;
+
+        // Wednesday Service
+        const wedServices = services.filter(
+            (row) => row.service_type === "wednesday_prayer" && isWithinWeek(row.service_date)
+        );
+        const wednesdayAttendance = sumNumberField(wedServices, "total_attendance");
+        const wednesdaySoulsSaved = sumNumberField(wedServices, "souls_saved");
+
+        // Goodnews Class
+        const gnActivities = goodnewsSessions.filter(
+            (row) => isWithinWeek(row.date)
+        );
+        const goodnewsAttendance = sumNumberField(gnActivities, "children_count");
+        const goodnewsSoulsSaved = sumNumberField(gnActivities, "souls_saved_count");
+        const goodnewsClasses = gnActivities.map(row => ({
+            area: row.series?.area,
+            total_attendance: row.children_count,
+            souls_saved: row.souls_saved_count
+        }));
+
+        // Other Activities
+        const otherActivities = activities.filter(
+            (row) => row.activity_type !== "goodnews_class" && isWithinWeek(row.activity_date)
+        );
+        const otherActivitiesAttendance = sumNumberField(otherActivities, "total_attendance");
+        const otherActivitiesSoulsSaved = sumNumberField(otherActivities, "souls_saved");
+
+        return {
+            wednesdayAttendance,
+            wednesdaySoulsSaved,
+            goodnewsAttendance,
+            goodnewsSoulsSaved,
+            otherActivitiesAttendance,
+            otherActivitiesSoulsSaved,
+            goodnewsClasses,
+            otherActivitiesList: otherActivities,
+        };
+    }, [services, activities, goodnewsSessions, selectedSundayDate]);
 
     const canGoPrev = selectedSundayIndex < sundayDates.length - 1;
     const canGoNext = selectedSundayIndex > 0;
@@ -332,7 +423,7 @@ const Announcements: React.FC = () => {
     return (
         <div className="space-y-6 p-6 lg:p-8">
             {/* Header */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            < div className="bg-white border border-gray-100 rounded-2xl p-6" >
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
                         <Bell size={20} />
@@ -344,127 +435,228 @@ const Announcements: React.FC = () => {
                         </p>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Sunday Date Selector */}
-            {sundayDates.length > 0 && (
-                <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-                    {/* Date navigation bar */}
-                    <div className="px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-900 flex items-center justify-between">
-                        <button
-                            onClick={() => setSelectedSundayIndex((prev) => Math.min(prev + 1, sundayDates.length - 1))}
-                            disabled={!canGoPrev}
-                            className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="Previous Sunday"
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-                        <div className="text-center">
-                            <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">Sunday Results</p>
-                            <p className="text-white font-bold text-lg mt-0.5">
-                                {selectedSundayDate ? formatSundayLabel(selectedSundayDate) : "No Data"}
-                            </p>
+            {
+                sundayDates.length > 0 && (
+                    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+                        {/* Date navigation bar */}
+                        <div className="px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-900 flex items-center justify-between">
+                            <button
+                                onClick={() => setSelectedSundayIndex((prev) => Math.min(prev + 1, sundayDates.length - 1))}
+                                disabled={!canGoPrev}
+                                className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Previous Sunday"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <div className="text-center">
+                                <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">Sunday Results</p>
+                                <p className="text-white font-bold text-lg mt-0.5">
+                                    {selectedSundayDate ? formatSundayLabel(selectedSundayDate) : "No Data"}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setSelectedSundayIndex((prev) => Math.max(prev - 1, 0))}
+                                disabled={!canGoNext}
+                                className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                title="Next Sunday"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
                         </div>
-                        <button
-                            onClick={() => setSelectedSundayIndex((prev) => Math.max(prev - 1, 0))}
-                            disabled={!canGoNext}
-                            className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                            title="Next Sunday"
-                        >
-                            <ChevronRight size={20} />
-                        </button>
-                    </div>
 
-                    {/* Two sections: Morning and Afternoon */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
-                        {/* MORNING SECTION */}
-                        <div className="p-6">
-                            <div className="flex items-center gap-2.5 mb-5">
-                                <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-                                    <Sun size={16} />
+                        {/* Three sections: Morning, Afternoon, and Weekly */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
+                            {/* MORNING SECTION */}
+                            <div className="p-6">
+                                <div className="flex items-center gap-2.5 mb-5">
+                                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
+                                        <Sun size={16} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-gray-900">Sunday Morning</h3>
+                                        <p className="text-[10px] text-gray-500 font-medium">Service + Children Department</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-gray-900">Sunday Morning</h3>
-                                    <p className="text-[10px] text-gray-500 font-medium">Service + Children Department</p>
+
+                                <div className="space-y-3">
+                                    {/* Total */}
+                                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-blue-500">
+                                                    Total Attendance
+                                                </p>
+                                                <p className="text-3xl font-black text-gray-900 mt-1">{sundaySummary.sundayMorningTotal}</p>
+                                            </div>
+                                            <div className="text-right space-y-0.5">
+                                                <p className="text-[10px] text-gray-500 font-semibold">
+                                                    Service: <span className="text-gray-800 font-bold">{sundaySummary.morningServiceAttendance}</span>
+                                                </p>
+                                                <p className="text-[10px] text-gray-500 font-semibold">
+                                                    Children: <span className="text-gray-800 font-bold">{sundaySummary.childrenDeptAttendance}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
+                                                <UserPlus size={11} /> Visitors
+                                            </p>
+                                            <p className="text-xl font-black text-gray-900 mt-1">{sundaySummary.totalVisitors}</p>
+                                        </div>
+                                        <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
+                                                <Heart size={11} /> Souls Saved
+                                            </p>
+                                            <p className="text-xl font-black text-gray-900 mt-1">{sundaySummary.totalSoulsSaved}</p>
+                                        </div>
+                                    </div>
+
+                                    {(sundaySummary.morningMembersWhoPrayed > 0 || sundaySummary.morningProspectsForBaptism > 0) && (
+                                        <div className="flex gap-3 text-xs text-gray-500 bg-gray-50/50 rounded-lg px-3 py-2">
+                                            <span>Prayed: <strong className="text-gray-700">{sundaySummary.morningMembersWhoPrayed}</strong></span>
+                                            <span>•</span>
+                                            <span>Prospects: <strong className="text-gray-700">{sundaySummary.morningProspectsForBaptism}</strong></span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
-                                {/* Total */}
-                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
-                                    <div className="flex items-center justify-between">
+                            {/* AFTERNOON SECTION */}
+                            <div className="p-6">
+                                <div className="flex items-center gap-2.5 mb-5">
+                                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                        <Moon size={16} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-gray-900">Sunday Afternoon</h3>
+                                        <p className="text-[10px] text-gray-500 font-medium">Afternoon Worship Service Only</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-4">
+                                        <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-500">
+                                            Total Attendance
+                                        </p>
+                                        <p className="text-3xl font-black text-gray-900 mt-1">{sundaySummary.afternoonAttendance}</p>
+                                    </div>
+
+                                    {sundaySummary.afternoonAttendance === 0 && (
+                                        <p className="text-xs text-gray-400 font-medium text-center py-2">
+                                            No afternoon service report for this Sunday.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* WEEKLY SECTION */}
+                            <div className="p-6">
+                                <div className="flex items-center gap-2.5 mb-5">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                        <Activity size={16} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-gray-900">Last Week's Activities</h3>
+                                        <p className="text-[10px] text-gray-500 font-medium">Recorded from the previous week</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {/* Wednesday Service */}
+                                    <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 flex justify-between items-center">
                                         <div>
-                                            <p className="text-[10px] uppercase tracking-wider font-bold text-blue-500">
-                                                Total Attendance
-                                            </p>
-                                            <p className="text-3xl font-black text-gray-900 mt-1">{sundaySummary.sundayMorningTotal}</p>
+                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Wednesday Service</p>
+                                            <div className="flex gap-3 text-[10px] mt-1 text-gray-400 font-semibold">
+                                                <span>Att: <strong className="text-gray-700">{weeklySummary.wednesdayAttendance}</strong></span>
+                                                <span>Saved: <strong className="text-gray-700">{weeklySummary.wednesdaySoulsSaved}</strong></span>
+                                            </div>
                                         </div>
-                                        <div className="text-right space-y-0.5">
-                                            <p className="text-[10px] text-gray-500 font-semibold">
-                                                Service: <span className="text-gray-800 font-bold">{sundaySummary.morningServiceAttendance}</span>
-                                            </p>
-                                            <p className="text-[10px] text-gray-500 font-semibold">
-                                                Children: <span className="text-gray-800 font-bold">{sundaySummary.childrenDeptAttendance}</span>
-                                            </p>
+                                        <div className="bg-white border border-gray-200 w-10 h-10 rounded-lg flex items-center justify-center font-black text-gray-900 shadow-sm">
+                                            {weeklySummary.wednesdayAttendance}
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                    {/* Goodnews Class */}
                                     <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
-                                            <UserPlus size={11} /> Visitors
-                                        </p>
-                                        <p className="text-xl font-black text-gray-900 mt-1">{sundaySummary.totalVisitors}</p>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
+                                                <BookOpen size={11} /> Goodnews Class
+                                            </p>
+                                            <div className="flex gap-2 text-[10px] text-gray-400 font-semibold">
+                                                <span>Total Att: <strong className="text-gray-700">{weeklySummary.goodnewsAttendance}</strong></span>
+                                                <span>Saved: <strong className="text-gray-700">{weeklySummary.goodnewsSoulsSaved}</strong></span>
+                                            </div>
+                                        </div>
+                                        {weeklySummary.goodnewsClasses.length > 0 ? (
+                                            <div className="space-y-1.5 mt-2">
+                                                {weeklySummary.goodnewsClasses.map((ac, idx) => (
+                                                    <div key={idx} className="flex justify-between items-center bg-white border border-gray-100 rounded-md px-2 py-1.5 text-xs">
+                                                        <span className="font-medium text-gray-700 truncate mr-2" title={ac.area || "Unknown Area"}>📍 {ac.area || "Unknown"}</span>
+                                                        <span className="text-gray-500 font-semibold flex-shrink-0">
+                                                            A: {ac.total_attendance || 0} | S: {ac.souls_saved || 0}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-400 italic text-center py-1">No classes this week</p>
+                                        )}
                                     </div>
+
+                                    {/* Other Ministries */}
                                     <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
-                                        <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
-                                            <Heart size={11} /> Souls Saved
-                                        </p>
-                                        <p className="text-xl font-black text-gray-900 mt-1">{sundaySummary.totalSoulsSaved}</p>
+                                        <div className="flex justify-between items-center mb-2">
+                                            <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
+                                                <Users size={11} /> Activities & Ministries
+                                            </p>
+                                            <div className="flex gap-2 text-[10px] text-gray-400 font-semibold">
+                                                <span>Total Att: <strong className="text-gray-700">{weeklySummary.otherActivitiesAttendance}</strong></span>
+                                                <span>Saved: <strong className="text-gray-700">{weeklySummary.otherActivitiesSoulsSaved}</strong></span>
+                                            </div>
+                                        </div>
+                                        {weeklySummary.otherActivitiesList.length > 0 ? (
+                                            <div className="space-y-1.5 mt-2">
+                                                {weeklySummary.otherActivitiesList.map((ac, idx) => {
+                                                    let details = "";
+                                                    if (ac.activity_type === "outreach" && ac.mission_church_name) details = ac.mission_church_name;
+                                                    if (ac.activity_type === "visitation" && ac.family_name) details = ac.family_name;
+                                                    if (ac.activity_type === "bible_study" && ac.bible_study_type) details = ac.bible_study_type;
+
+                                                    return (
+                                                        <div key={idx} className="flex flex-col bg-white border border-gray-100 rounded-md px-2 py-1.5 text-xs">
+                                                            <div className="flex justify-between items-center">
+                                                                <span className="font-bold text-gray-700 capitalize">
+                                                                    {ac.activity_type.replace('_', ' ')}
+                                                                </span>
+                                                                <span className="text-gray-500 font-semibold text-[10px]">
+                                                                    A: {ac.total_attendance || 0} | S: {ac.souls_saved || 0}
+                                                                </span>
+                                                            </div>
+                                                            {details && (
+                                                                <span className="text-[10px] text-gray-500 mt-0.5 truncate">
+                                                                    ➔ {details}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-400 italic text-center py-1">No activities this week</p>
+                                        )}
                                     </div>
                                 </div>
-
-                                {(sundaySummary.morningMembersWhoPrayed > 0 || sundaySummary.morningProspectsForBaptism > 0) && (
-                                    <div className="flex gap-3 text-xs text-gray-500 bg-gray-50/50 rounded-lg px-3 py-2">
-                                        <span>Prayed: <strong className="text-gray-700">{sundaySummary.morningMembersWhoPrayed}</strong></span>
-                                        <span>•</span>
-                                        <span>Prospects: <strong className="text-gray-700">{sundaySummary.morningProspectsForBaptism}</strong></span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* AFTERNOON SECTION */}
-                        <div className="p-6">
-                            <div className="flex items-center gap-2.5 mb-5">
-                                <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                                    <Moon size={16} />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-gray-900">Sunday Afternoon</h3>
-                                    <p className="text-[10px] text-gray-500 font-medium">Afternoon Worship Service Only</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3">
-                                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-4">
-                                    <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-500">
-                                        Total Attendance
-                                    </p>
-                                    <p className="text-3xl font-black text-gray-900 mt-1">{sundaySummary.afternoonAttendance}</p>
-                                </div>
-
-                                {sundaySummary.afternoonAttendance === 0 && (
-                                    <p className="text-xs text-gray-400 font-medium text-center py-2">
-                                        No afternoon service report for this Sunday.
-                                    </p>
-                                )}
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Upcoming Birthdays */}
             <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
@@ -506,13 +698,15 @@ const Announcements: React.FC = () => {
                 )}
             </div>
 
-            {sourceWarnings.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm font-medium space-y-1">
-                    {sourceWarnings.map((warning) => (
-                        <p key={warning}>{warning}</p>
-                    ))}
-                </div>
-            )}
+            {
+                sourceWarnings.length > 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm font-medium space-y-1">
+                        {sourceWarnings.map((warning) => (
+                            <p key={warning}>{warning}</p>
+                        ))}
+                    </div>
+                )
+            }
 
             {/* Recent Result Announcements */}
             <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
@@ -586,7 +780,7 @@ const Announcements: React.FC = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -117,6 +117,10 @@ const ServiceForm: React.FC = () => {
         isEditMode ? `service-members-edit-${id}` : 'service-members-new',
         []
     );
+    const [tardyMemberIds, setTardyMemberIds, clearTardyDraft] = useSessionValue<string[]>(
+        isEditMode ? `service-tardy-edit-${id}` : 'service-tardy-new',
+        []
+    );
     const [memberSearchTerm, setMemberSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -174,6 +178,10 @@ const ServiceForm: React.FC = () => {
         try {
             const data = await serviceService.getAttendanceLogsByEvent(id!);
             const memberIds = data?.map(d => d.member_id) || [];
+
+            // Extract tardy member IDs
+            const tardyIds = (data || []).filter((d: any) => d.was_tardy === true).map((d: any) => d.member_id);
+            setTardyMemberIds(tardyIds);
 
             // Primary linkage for newer records
             let registeredVisitors: any[] = [];
@@ -274,8 +282,9 @@ const ServiceForm: React.FC = () => {
     // Calculate total if members/visitors change
     useEffect(() => {
         const regularMemberCount = selectedMemberIds.filter((id) => !visitorMemberIds.has(id)).length;
-        update('members_present', regularMemberCount);
-    }, [selectedMemberIds, visitorMemberIds]);
+        const tardyCount = tardyMemberIds.filter((id) => !visitorMemberIds.has(id)).length;
+        update('members_present', regularMemberCount + tardyCount);
+    }, [selectedMemberIds, tardyMemberIds, visitorMemberIds]);
 
     useEffect(() => {
         const membersCount = parseInt(service.members_present as any) || 0;
@@ -311,6 +320,7 @@ const ServiceForm: React.FC = () => {
 
             const selectedVisitorIds = selectedMemberIds.filter((id) => visitorMemberIds.has(id));
             const selectedRegularIds = selectedMemberIds.filter((id) => !visitorMemberIds.has(id));
+            const tardyRegularIds = tardyMemberIds.filter((id) => !visitorMemberIds.has(id));
 
             const manualVisitorsInput = supportsVisitorsAndSouls ? (parseInt(service.visitors_present as any) || 0) : 0;
             const visitorsPresentCount = supportsVisitorsAndSouls
@@ -319,7 +329,7 @@ const ServiceForm: React.FC = () => {
                     preparedVisitors.length > 0 ? preparedVisitors.length : manualVisitorsInput
                 )
                 : 0;
-            const membersPresentCount = selectedRegularIds.length;
+            const membersPresentCount = selectedRegularIds.length + tardyRegularIds.length;
             const soulsSaved = supportsVisitorsAndSouls ? (parseInt(service.souls_saved as any) || 0) : 0;
             const visitorsSaved = supportsVisitorsAndSouls ? (parseInt(service.visitors_saved as any) || 0) : 0;
 
@@ -465,8 +475,10 @@ const ServiceForm: React.FC = () => {
             const finalVisitorsCount = supportsVisitorsAndSouls
                 ? Math.max(uniqueVisitorIds.length, manualVisitorsInput)
                 : 0;
-            const finalMembersCount = uniqueRegularIds.length;
-            const allMemberIds = Array.from(new Set([...uniqueRegularIds, ...uniqueVisitorIds]));
+            const finalMembersCount = uniqueRegularIds.length + tardyRegularIds.length;
+            const allPresentMemberIds = Array.from(new Set([...uniqueRegularIds, ...uniqueVisitorIds]));
+            const allMemberIds = Array.from(new Set([...allPresentMemberIds, ...tardyRegularIds]));
+            const tardySet = new Set(tardyRegularIds);
 
             await serviceService.upsertService({
                 ...savedService,
@@ -483,7 +495,8 @@ const ServiceForm: React.FC = () => {
                     event_type: 'service',
                     event_id: savedService.id,
                     event_date: savedService.service_date,
-                    was_present: true
+                    was_present: true,
+                    was_tardy: tardySet.has(mid)
                 }));
                 await serviceService.createAttendanceLogs(logs);
             }
@@ -491,12 +504,14 @@ const ServiceForm: React.FC = () => {
             if (!id) {
                 clearServiceDraft();
                 clearMembersDraft();
+                clearTardyDraft();
                 clearVisitorsDraft();
                 clearAssignmentsDraft();
                 setShowSuccessModal(true);
             } else {
                 clearServiceDraft();
                 clearMembersDraft();
+                clearTardyDraft();
                 clearVisitorsDraft();
                 clearAssignmentsDraft();
                 navigate('/services');
@@ -914,7 +929,11 @@ const ServiceForm: React.FC = () => {
                 subtitle="ATTENDANCE REPORT"
                 members={members}
                 selectedMemberIds={selectedMemberIds}
-                onSave={(ids) => setSelectedMemberIds(ids)}
+                tardyIds={tardyMemberIds}
+                onSave={(ids, tardy) => {
+                    setSelectedMemberIds(ids);
+                    if (tardy) setTardyMemberIds(tardy);
+                }}
                 visitorsCount={visitorsCountForReport}
             />
 

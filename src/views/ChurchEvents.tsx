@@ -57,6 +57,7 @@ const ChurchEvents: React.FC = () => {
     const [saving, setSaving] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<ChurchEvent | null>(null);
     const [selectedMemberIds, setSelectedMemberIds, clearMembersDraft] = useSessionValue<string[]>('church-events-members', []);
+    const [tardyMemberIds, setTardyMemberIds, clearTardyDraft] = useSessionValue<string[]>('church-events-tardy', []);
     const [uploading, setUploading] = useState(false);
 
     // Form state
@@ -106,8 +107,9 @@ const ChurchEvents: React.FC = () => {
 
     const fetchEventAttendance = async (eventId: string) => {
         try {
-            const data = await eventService.getChurchEventAttendanceLogs(eventId);
-            setSelectedMemberIds(data);
+            const { memberIds, tardyIds } = await eventService.getChurchEventAttendanceLogs(eventId);
+            setSelectedMemberIds(memberIds);
+            setTardyMemberIds(tardyIds);
         } catch (err) {
             console.error("Error fetching event attendance:", err);
         }
@@ -133,6 +135,7 @@ const ChurchEvents: React.FC = () => {
                 created_by: member?.id
             });
             setSelectedMemberIds([]);
+            setTardyMemberIds([]);
             setSelectedEvent(null);
         }
         setIsModalOpen(true);
@@ -174,18 +177,19 @@ const ChurchEvents: React.FC = () => {
             const isNew = !form.id;
             const eventPayload = {
                 ...form,
-                total_attendance: selectedMemberIds.length > (form.total_attendance || 0) ? selectedMemberIds.length : (form.total_attendance || 0)
+                total_attendance: (selectedMemberIds.length + tardyMemberIds.length) > (form.total_attendance || 0) ? (selectedMemberIds.length + tardyMemberIds.length) : (form.total_attendance || 0)
             };
 
             const savedEvent = await eventService.upsertChurchEvent(eventPayload);
 
             // Update attendance_log
-            await eventService.updateChurchEventAttendanceLogs(savedEvent.id, savedEvent.event_date, selectedMemberIds);
+            await eventService.updateChurchEventAttendanceLogs(savedEvent.id, savedEvent.event_date, [...selectedMemberIds, ...tardyMemberIds], tardyMemberIds);
 
             fetchEvents();
             setIsModalOpen(false);
             clearFormDraft();
             clearMembersDraft();
+            clearTardyDraft();
             setShowSuccessModal(true);
         } catch (err: any) {
             alert("Error saving event: " + err.message);
@@ -527,6 +531,8 @@ const ChurchEvents: React.FC = () => {
                                                     members={members}
                                                     selectedIds={selectedMemberIds}
                                                     onChange={setSelectedMemberIds}
+                                                    tardyIds={tardyMemberIds}
+                                                    onTardyChange={setTardyMemberIds}
                                                     searchTerm={memberSearchTerm}
                                                     onSearchTermChange={setMemberSearchTerm}
                                                 />

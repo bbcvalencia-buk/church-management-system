@@ -150,6 +150,7 @@ const MusicMinistry: React.FC = () => {
     const [form, setForm, clearFormDraft] = useSessionDraft<Partial<PracticeSession>>('music-practice-form', INITIAL_STATE);
     const [memberSearchTerm, setMemberSearchTerm] = useState("");
     const [selectedMemberIds, setSelectedMemberIds, clearMembersDraft] = useSessionValue<string[]>('music-practice-members', []);
+    const [tardyMemberIds, setTardyMemberIds, clearTardyDraft] = useSessionValue<string[]>('music-practice-tardy', []);
 
     // UI State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -236,8 +237,9 @@ const MusicMinistry: React.FC = () => {
 
     const fetchSessionAttendance = async (sessionId: string) => {
         try {
-            const data = await musicService.getMusicSessionAttendanceLogs(sessionId);
-            setSelectedMemberIds(data);
+            const { memberIds, tardyIds } = await musicService.getMusicSessionAttendanceLogs(sessionId);
+            setSelectedMemberIds(memberIds);
+            setTardyMemberIds(tardyIds);
         } catch (err) {
             console.error("Error fetching attendance:", err);
         }
@@ -251,10 +253,12 @@ const MusicMinistry: React.FC = () => {
                 practice_end_time: normalizeTimeInputValue(session.practice_end_time, DEFAULT_PRACTICE_END_TIME)
             });
             setSelectedMemberIds([]);
+            setTardyMemberIds([]);
             fetchSessionAttendance(session.id);
         } else {
             setForm(INITIAL_STATE);
             setSelectedMemberIds([]);
+            setTardyMemberIds([]);
         }
         setMemberSearchTerm("");
         setIsModalOpen(true);
@@ -263,7 +267,7 @@ const MusicMinistry: React.FC = () => {
     const handleViewSession = async (session: PracticeSession) => {
         setViewSession(session);
         // Fetch attendance for this specific session view
-        const data = await musicService.getMusicSessionAttendanceLogs(session.id);
+        const { memberIds: data } = await musicService.getMusicSessionAttendanceLogs(session.id);
         if (data) setViewSessionAttendance(data);
     };
 
@@ -282,18 +286,19 @@ const MusicMinistry: React.FC = () => {
                 ...form,
                 practice_start_time: practiceStartTime,
                 practice_end_time: practiceEndTime,
-                members_present: selectedMemberIds.length,
+                members_present: selectedMemberIds.length + tardyMemberIds.length,
                 non_member_attendance: nonMemberAttendance
             };
 
             const savedSession = await musicService.upsertMusicSession(sessionsToSave as PracticeSession);
 
-            await musicService.updateMusicSessionAttendanceLogs(savedSession.id, savedSession.practice_date, selectedMemberIds);
+            await musicService.updateMusicSessionAttendanceLogs(savedSession.id, savedSession.practice_date, [...selectedMemberIds, ...tardyMemberIds], tardyMemberIds);
 
             fetchSessions();
             setIsModalOpen(false);
             clearFormDraft();
             clearMembersDraft();
+            clearTardyDraft();
             setShowSuccessModal(true);
 
             if (viewSession && viewSession.id === savedSession.id) {
@@ -863,6 +868,8 @@ const MusicMinistry: React.FC = () => {
                                     members={formMembers}
                                     selectedIds={selectedMemberIds}
                                     onChange={setSelectedMemberIds}
+                                    tardyIds={tardyMemberIds}
+                                    onTardyChange={setTardyMemberIds}
                                     searchTerm={memberSearchTerm}
                                     onSearchTermChange={setMemberSearchTerm}
                                     maxHeightClass="max-h-[300px]"

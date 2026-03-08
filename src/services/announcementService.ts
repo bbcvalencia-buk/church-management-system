@@ -20,7 +20,7 @@ export const getAnnouncementData = async (limit: number = 60) => {
                 return result;
             });
 
-    const [servicesRes, ssRes, activitiesRes, churchEventsRes, membersRes] = await Promise.all([
+    const [servicesRes, ssRes, activitiesRes, churchEventsRes, membersRes, goodnewsRes] = await Promise.all([
         supabase
             .from("services")
             .select("id, service_type, service_date, total_attendance, visitors_present, souls_saved, prospects_for_baptism, members_who_prayed")
@@ -33,14 +33,19 @@ export const getAnnouncementData = async (limit: number = 60) => {
             .limit(limit),
         supabase
             .from("activities")
-            .select("id, activity_type, activity_date, area, total_attendance, non_member_attendance, souls_saved")
+            .select("id, activity_type, activity_date, area, total_attendance, non_member_attendance, souls_saved, mission_church_name, family_name, bible_study_type, activity_data")
             .order("activity_date", { ascending: false })
             .limit(limit),
         churchEventsPromise,
         supabase
             .from("members")
             .select("id, first_name, surname, date_of_birth")
-            .eq("membership_status", "active")
+            .eq("membership_status", "active"),
+        supabase
+            .from("goodnews_sessions")
+            .select("id, date, children_count, souls_saved_count, series:goodnews_series(area)")
+            .order("date", { ascending: false })
+            .limit(limit)
     ]);
 
     // Fetch attendance logs for deduplication
@@ -57,5 +62,5 @@ export const getAnnouncementData = async (limit: number = 60) => {
             .eq('was_present', true);
     }
 
-    return [servicesRes, ssRes, activitiesRes, churchEventsRes, membersRes, attendanceLogsRes];
+    return [servicesRes, ssRes, activitiesRes, churchEventsRes, membersRes, attendanceLogsRes, goodnewsRes];
 };

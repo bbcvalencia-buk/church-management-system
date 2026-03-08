@@ -78,6 +78,7 @@ const Activities: React.FC = () => {
     const [members, setMembers] = useState<any[]>([]);
     const [visitors, setVisitors] = useState<any[]>([]);
     const [selectedMemberIds, setSelectedMemberIds, clearMembersDraft] = useSessionValue<string[]>('activities-members', []);
+    const [tardyMemberIds, setTardyMemberIds, clearTardyDraft] = useSessionValue<string[]>('activities-tardy', []);
     const [memberSearchTerm, setMemberSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -131,8 +132,9 @@ const Activities: React.FC = () => {
 
     const fetchActivityAttendance = async (activityId: string) => {
         try {
-            const data = await activityService.getActivityAttendanceLogs(activityId);
-            setSelectedMemberIds(data);
+            const { memberIds, tardyIds } = await activityService.getActivityAttendanceLogs(activityId);
+            setSelectedMemberIds(memberIds);
+            setTardyMemberIds(tardyIds);
         } catch (err) {
             console.error("Error fetching activity attendance:", err);
         }
@@ -145,6 +147,7 @@ const Activities: React.FC = () => {
         } else {
             setForm(INITIAL_STATE);
             setSelectedMemberIds([]);
+            setTardyMemberIds([]);
         }
         setMemberSearchTerm("");
         setAttachmentFile(null);
@@ -159,7 +162,7 @@ const Activities: React.FC = () => {
         }
         setSaving(true);
         try {
-            const membersPresent = selectedMemberIds.length;
+            const membersPresent = selectedMemberIds.length + tardyMemberIds.length;
             const nonMemberAttendance = Number(form.non_member_attendance) || 0;
             const total = membersPresent + nonMemberAttendance;
 
@@ -185,12 +188,13 @@ const Activities: React.FC = () => {
             const savedActivity = await activityService.upsertActivity(payload as ActivityRecord);
 
             // 3. Save new attendance
-            await activityService.updateActivityAttendanceLogs(savedActivity.id, savedActivity.activity_date, selectedMemberIds);
+            await activityService.updateActivityAttendanceLogs(savedActivity.id, savedActivity.activity_date, [...selectedMemberIds, ...tardyMemberIds], tardyMemberIds);
 
             fetchActivities();
             setIsModalOpen(false);
             clearFormDraft();
             clearMembersDraft();
+            clearTardyDraft();
             setShowSuccessModal(true);
         } catch (err: any) {
             alert("Error saving activity: " + err.message);
@@ -260,24 +264,24 @@ const Activities: React.FC = () => {
                         <div
                             key={activity.id}
                             onClick={() => setViewActivity(activity)}
-                            className="glass-panel p-6 space-y-4 hover:border-[var(--color-primary)]/50 transition-all group relative cursor-pointer"
+                            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-4 hover:border-[var(--color-primary)]/50 hover:shadow-md transition-all group relative cursor-pointer"
                         >
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setConfirmDelete({ isOpen: true, id: activity.id });
                                 }}
-                                className="absolute top-4 right-4 text-white/20 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all p-1"
+                                className="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1"
                             >
                                 <Trash2 size={16} />
                             </button>
 
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center 
-                                    ${activity.activity_type === 'soul_winning' ? 'bg-red-500/20 text-red-400' :
-                                        activity.activity_type === 'bible_study' ? 'bg-blue-500/20 text-blue-400' :
-                                            activity.activity_type === 'visitation' ? 'bg-purple-500/20 text-purple-400' :
-                                                'bg-purple-500/20 text-purple-400'}`}
+                                    ${activity.activity_type === 'soul_winning' ? 'bg-red-50 text-red-500' :
+                                        activity.activity_type === 'bible_study' ? 'bg-blue-50 text-blue-500' :
+                                            activity.activity_type === 'visitation' ? 'bg-purple-50 text-purple-500' :
+                                                'bg-purple-50 text-purple-500'}`}
                                 >
                                     {activity.activity_type === 'visitation' ? <UserCheck size={20} /> :
                                         activity.activity_type === 'bible_study' ? <BookOpen size={20} /> :
@@ -285,7 +289,7 @@ const Activities: React.FC = () => {
                                                 <Activity size={20} />}
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-white">{getTypeLabel(activity.activity_type)}</h3>
+                                    <h3 className="font-bold text-gray-900">{getTypeLabel(activity.activity_type)}</h3>
                                     <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
                                         <Calendar size={12} />
                                         {new Date(activity.activity_date).toLocaleDateString()}
@@ -295,50 +299,53 @@ const Activities: React.FC = () => {
 
                             <div className="space-y-2 text-sm">
                                 {activity.area && (
-                                    <p className="text-[var(--color-text-muted)]">Area: <span className="text-white">{activity.area}</span></p>
+                                    <p className="text-[var(--color-text-muted)]">Area: <span className="text-gray-900 font-medium">{activity.area}</span></p>
                                 )}
                                 {activity.activity_type === 'visitation' && activity.activity_data?.visited_name && (
-                                    <p className="text-[var(--color-text-muted)]">Visited: <span className="text-white">{activity.activity_data.visited_name}</span></p>
+                                    <p className="text-[var(--color-text-muted)]">Visited: <span className="text-gray-900 font-medium">{activity.activity_data.visited_name}</span></p>
                                 )}
                                 {activity.activity_type === 'bible_study' && (activity.activity_data?.student_name || activity.activity_data?.book) && (
                                     <p className="text-[var(--color-text-muted)]">
-                                        Study: <span className="text-white">
+                                        Study: <span className="text-gray-900 font-medium">
                                             {activity.activity_data?.student_name || 'Unknown'} - {activity.activity_data?.book || 'No Book'}
                                             {activity.activity_data?.session_number ? ` (${activity.activity_data.session_number})` : ''}
                                         </span>
                                     </p>
                                 )}
                                 {activity.activity_type === 'outreach' && activity.activity_data?.event_name && (
-                                    <p className="text-[var(--color-text-muted)]">Event: <span className="text-white">{activity.activity_data.event_name}</span></p>
+                                    <p className="text-[var(--color-text-muted)]">Event: <span className="text-gray-900 font-medium">{activity.activity_data.event_name}</span></p>
                                 )}
                                 {activity.activity_type === 'bible_study' && activity.bible_study_type === 'family' && activity.family_name && (
-                                    <p className="text-[var(--color-text-muted)]">Family: <span className="text-white">{activity.family_name}</span></p>
+                                    <p className="text-[var(--color-text-muted)]">Family: <span className="text-gray-900 font-medium">{activity.family_name}</span></p>
+                                )}
+                                {activity.activity_type === 'bible_study' && activity.activity_data?.format && activity.activity_data.format.length > 0 && (
+                                    <p className="text-[var(--color-text-muted)]">Format: <span className="text-gray-900 font-medium">{activity.activity_data.format.join(', ')}</span></p>
                                 )}
                                 {activity.activity_type === 'outreach' && activity.mission_church_name && (
-                                    <p className="text-[var(--color-text-muted)]">Mission: <span className="text-white">{activity.mission_church_name}</span></p>
+                                    <p className="text-[var(--color-text-muted)]">Mission: <span className="text-gray-900 font-medium">{activity.mission_church_name}</span></p>
                                 )}
                                 {(activity.activity_type === 'soul_winning' || activity.activity_type === 'outreach') && activity.tracts_distributed > 0 && (
-                                    <p className="text-[var(--color-text-muted)]">Tracts: <span className="text-white">{activity.tracts_distributed}</span></p>
+                                    <p className="text-[var(--color-text-muted)]">Tracts: <span className="text-gray-900 font-medium">{activity.tracts_distributed}</span></p>
                                 )}
                             </div>
 
-                            <div className="pt-4 border-t border-white/5 grid grid-cols-2 gap-4">
-                                <div className="text-center p-2 rounded bg-white/5">
+                            <div className="pt-4 border-t border-gray-100 grid grid-cols-2 gap-4">
+                                <div className="text-center p-2 rounded bg-gray-50">
                                     <p className="text-xs text-[var(--color-text-muted)] uppercase font-bold mb-1">Attendance</p>
                                     <p className="text-lg font-bold flex items-center justify-center gap-2">
-                                        <Users size={16} className="text-blue-400" />
+                                        <Users size={16} className="text-blue-500" />
                                         {activity.total_attendance}
                                     </p>
                                 </div>
-                                <div className="text-center p-2 rounded bg-white/5">
+                                <div className="text-center p-2 rounded bg-gray-50">
                                     <p className="text-xs text-[var(--color-text-muted)] uppercase font-bold mb-1">Souls Saved</p>
                                     <p className="text-lg font-bold flex items-center justify-center gap-2">
-                                        <Heart size={16} className="text-red-400" />
+                                        <Heart size={16} className="text-red-500" />
                                         {activity.souls_saved}
                                     </p>
                                 </div>
                             </div>
-                            <p className="text-[10px] text-blue-400/50 mt-1 uppercase font-bold text-right group-hover:text-blue-400 transition-colors">Click to view details</p>
+                            <p className="text-[10px] text-blue-400/70 mt-1 uppercase font-bold text-right group-hover:text-blue-600 transition-colors">Click to view details</p>
                         </div>
                     ))
                 }
@@ -632,6 +639,7 @@ const Activities: React.FC = () => {
                                                     })}
                                                     className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                                 />
+
                                             </div>
                                         </div>
                                     </div>
@@ -978,6 +986,8 @@ const Activities: React.FC = () => {
                                     members={members}
                                     selectedIds={selectedMemberIds}
                                     onChange={setSelectedMemberIds}
+                                    tardyIds={tardyMemberIds}
+                                    onTardyChange={setTardyMemberIds}
                                     searchTerm={memberSearchTerm}
                                     onSearchTermChange={setMemberSearchTerm}
                                     maxHeightClass="max-h-[150px]"

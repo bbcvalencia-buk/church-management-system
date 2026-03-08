@@ -91,7 +91,8 @@ export const updateSundaySchoolAttendanceLogs = async (
     sessionId: string,
     date: string,
     memberIds: string[],
-    assessmentScores?: Record<string, number | null>
+    assessmentScores?: Record<string, number | null>,
+    tardyIds: string[] = []
 ): Promise<void> => {
     await supabase.from('attendance_log')
         .delete()
@@ -105,6 +106,7 @@ export const updateSundaySchoolAttendanceLogs = async (
             event_id: sessionId,
             event_date: date,
             was_present: true,
+            was_tardy: tardyIds.includes(mid),
             assessment_score: assessmentScores?.[mid] ?? null
         }));
         const { error } = await supabase.from('attendance_log').insert(logs);

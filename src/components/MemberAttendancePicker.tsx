@@ -6,7 +6,6 @@ export interface AttendanceMember {
     first_name: string;
     surname: string;
     profile_picture_url?: string;
-
 }
 
 interface MemberAttendancePickerProps {
@@ -14,6 +13,8 @@ interface MemberAttendancePickerProps {
     members: AttendanceMember[];
     selectedIds: string[];
     onChange: (ids: string[]) => void;
+    tardyIds?: string[];
+    onTardyChange?: (ids: string[]) => void;
     onEditMember?: (member: AttendanceMember) => void;
     searchTerm: string;
     onSearchTermChange: (value: string) => void;
@@ -43,6 +44,8 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
     members,
     selectedIds,
     onChange,
+    tardyIds = [],
+    onTardyChange,
     onEditMember,
     searchTerm,
     onSearchTermChange,
@@ -64,7 +67,13 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
         if (nextSelected.length !== selectedIds.length) {
             onChange(nextSelected);
         }
-    }, [showVisitorToggle, includeVisitors, visibleMembers, selectedIds, onChange]);
+        if (onTardyChange) {
+            const nextTardy = tardyIds.filter((id) => nonVisitorIds.has(id));
+            if (nextTardy.length !== tardyIds.length) {
+                onTardyChange(nextTardy);
+            }
+        }
+    }, [showVisitorToggle, includeVisitors, visibleMembers, selectedIds, onChange, tardyIds, onTardyChange]);
 
     const filteredMembers = useMemo(() => {
         const q = searchTerm.trim().toLowerCase();
@@ -75,23 +84,44 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
     }, [visibleMembers, searchTerm]);
 
     const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+    const tardySet = useMemo(() => new Set(tardyIds), [tardyIds]);
     const allSelected = visibleMembers.length > 0 && visibleMembers.every((m) => selectedSet.has(m.id));
 
     const toggleSelectAll = () => {
         if (allSelected) {
             onChange([]);
+            if (onTardyChange) onTardyChange([]);
             return;
         }
         onChange(visibleMembers.map((m) => m.id));
+        if (onTardyChange) onTardyChange([]);
     };
 
     const toggleMember = (id: string, isChecked: boolean) => {
         if (isChecked) {
+            // Remove from tardy if it was there
+            if (onTardyChange && tardySet.has(id)) {
+                onTardyChange(tardyIds.filter(x => x !== id));
+            }
             if (selectedSet.has(id)) return;
             onChange([...selectedIds, id]);
             return;
         }
         onChange(selectedIds.filter((x) => x !== id));
+    };
+
+    const toggleTardy = (id: string, isChecked: boolean) => {
+        if (!onTardyChange) return;
+        if (isChecked) {
+            // Remove from strictly present if it was there
+            if (selectedSet.has(id)) {
+                onChange(selectedIds.filter(x => x !== id));
+            }
+            if (tardySet.has(id)) return;
+            onTardyChange([...tardyIds, id]);
+            return;
+        }
+        onTardyChange(tardyIds.filter(x => x !== id));
     };
 
     return (
@@ -146,36 +176,72 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                 )}
 
                 {filteredMembers.map((member) => {
-                    const isChecked = selectedSet.has(member.id);
+                    const isPresent = selectedSet.has(member.id);
+                    const isTardy = tardySet.has(member.id);
                     const initials = `${member.first_name?.[0] || ""}${member.surname?.[0] || ""}`.toUpperCase();
                     const colorClass = AVATAR_COLORS[hashText(member.id) % AVATAR_COLORS.length];
 
                     return (
-                        <label
+                        <div
                             key={member.id}
-                            className="flex items-center gap-4 p-2.5 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors group"
+                            className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-2.5 rounded-xl transition-colors group ${isPresent ? 'bg-blue-50/50' : isTardy ? 'bg-amber-50/50' : 'hover:bg-gray-50'}`}
                         >
-                            <input
-                                type="checkbox"
-                                className="w-4 h-4 rounded text-blue-600 bg-white border-gray-300 focus:ring-blue-500 focus:ring-2 cursor-pointer transition-all"
-                                checked={isChecked}
-                                onChange={(e) => toggleMember(member.id, e.target.checked)}
-                            />
-                            {member.profile_picture_url ? (
-                                <img src={member.profile_picture_url} alt={`${member.first_name} ${member.surname}`} className="w-8 h-8 rounded-full object-cover shrink-0" />
-                            ) : (
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${colorClass}`}>
-                                    {initials}
-                                </div>
-                            )}
-                            <div className="flex flex-col truncate flex-1">
-                                <span className="text-sm text-gray-900 leading-tight truncate">
-                                    <span className="font-bold">{member.surname}</span>, <span className="text-gray-600 font-medium">{member.first_name}</span>
-                                </span>
-                                {false && (
-                                    <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Visitor</span>
+                            <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
+                                {member.profile_picture_url ? (
+                                    <img src={member.profile_picture_url} alt={`${member.first_name} ${member.surname}`} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                                ) : (
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${colorClass}`}>
+                                        {initials}
+                                    </div>
                                 )}
+                                <div className="flex flex-col truncate flex-1">
+                                    <span className="text-sm text-gray-900 leading-tight truncate">
+                                        <span className="font-bold">{member.surname}</span>, <span className="text-gray-600 font-medium">{member.first_name}</span>
+                                    </span>
+                                </div>
                             </div>
+
+                            {/* Attendance Controls */}
+                            <div className="flex items-center gap-2 w-full sm:w-auto bg-gray-50 p-1 rounded-lg border border-gray-100 flex-shrink-0">
+                                <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-md cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${!isPresent && !isTardy ? 'bg-white shadow-sm text-gray-700 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
+                                    <input
+                                        type="radio"
+                                        name={`attendance_${member.id}`}
+                                        className="sr-only"
+                                        checked={!isPresent && !isTardy}
+                                        onChange={() => {
+                                            if (isPresent) toggleMember(member.id, false);
+                                            if (isTardy) toggleTardy(member.id, false);
+                                        }}
+                                    />
+                                    <span className={!isPresent && !isTardy ? "text-red-500 font-black" : ""}>Absent</span>
+                                </label>
+
+                                {onTardyChange && (
+                                    <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-md cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${isTardy ? 'bg-amber-100 shadow-sm text-amber-800 ring-1 ring-amber-200' : 'text-gray-500 hover:text-amber-600'}`}>
+                                        <input
+                                            type="radio"
+                                            name={`attendance_${member.id}`}
+                                            className="sr-only"
+                                            checked={isTardy}
+                                            onChange={() => toggleTardy(member.id, true)}
+                                        />
+                                        <span className={isTardy ? "text-amber-700 font-black" : ""}>Tardy</span>
+                                    </label>
+                                )}
+
+                                <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-md cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${isPresent ? 'bg-blue-100 shadow-sm text-blue-800 ring-1 ring-blue-200' : 'text-gray-500 hover:text-blue-600'}`}>
+                                    <input
+                                        type="radio"
+                                        name={`attendance_${member.id}`}
+                                        className="sr-only"
+                                        checked={isPresent}
+                                        onChange={() => toggleMember(member.id, true)}
+                                    />
+                                    <span className={isPresent ? "text-blue-700 font-black" : ""}>Present</span>
+                                </label>
+                            </div>
+
                             {onEditMember && (
                                 <button
                                     type="button"
@@ -184,14 +250,14 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                                         e.stopPropagation();
                                         onEditMember(member);
                                     }}
-                                    className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors text-[10px] font-bold uppercase tracking-wide"
+                                    className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors text-[10px] font-bold uppercase tracking-wide ml-auto sm:ml-0"
                                     title="Edit profile"
                                 >
                                     <Edit2 size={12} />
                                     Edit
                                 </button>
                             )}
-                        </label>
+                        </div>
                     );
                 })}
             </div>
