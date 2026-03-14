@@ -222,7 +222,8 @@ const ServiceForm: React.FC = () => {
             setNewVisitors(drafts);
 
             const registeredMemberIds = registeredVisitors.map(v => v.member_id);
-            const remaining = memberIds.filter(mid => !registeredMemberIds.includes(mid));
+            const tardySet = new Set(tardyIds);
+            const remaining = memberIds.filter(mid => !registeredMemberIds.includes(mid) && !tardySet.has(mid));
             setSelectedMemberIds(remaining);
         } catch (error) {
             console.error("Error fetching service attendance:", error);

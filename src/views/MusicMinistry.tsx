@@ -238,7 +238,9 @@ const MusicMinistry: React.FC = () => {
     const fetchSessionAttendance = async (sessionId: string) => {
         try {
             const { memberIds, tardyIds } = await musicService.getMusicSessionAttendanceLogs(sessionId);
-            setSelectedMemberIds(memberIds);
+            const tardySet = new Set(tardyIds);
+            const strictMemberIds = memberIds.filter((id) => !tardySet.has(id));
+            setSelectedMemberIds(strictMemberIds);
             setTardyMemberIds(tardyIds);
         } catch (err) {
             console.error("Error fetching attendance:", err);

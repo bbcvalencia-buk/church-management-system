@@ -108,7 +108,9 @@ const ChurchEvents: React.FC = () => {
     const fetchEventAttendance = async (eventId: string) => {
         try {
             const { memberIds, tardyIds } = await eventService.getChurchEventAttendanceLogs(eventId);
-            setSelectedMemberIds(memberIds);
+            const tardySet = new Set(tardyIds);
+            const strictMemberIds = memberIds.filter((id) => !tardySet.has(id));
+            setSelectedMemberIds(strictMemberIds);
             setTardyMemberIds(tardyIds);
         } catch (err) {
             console.error("Error fetching event attendance:", err);

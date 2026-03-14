@@ -297,7 +297,8 @@ const SundaySchool: React.FC = () => {
             setNewVisitors(drafts);
 
             const registeredMemberIds = registeredVisitors.map(v => v.member_id);
-            const remaining = memberIds.filter(mid => !registeredMemberIds.includes(mid));
+            const tardySet = new Set(tardyIds);
+            const remaining = memberIds.filter(mid => !registeredMemberIds.includes(mid) && !tardySet.has(mid));
             setSelectedMemberIds(remaining);
         } else {
             const defaultDepartment = managedDepartmentIds[0] || 'adult';
@@ -460,9 +461,11 @@ const SundaySchool: React.FC = () => {
             // Save new attendance (Existing + New)
             const uniqueVisitorIds = Array.from(new Set([...selectedVisitorIds, ...cardVisitorMemberIds]));
             const uniqueRegularIds = Array.from(new Set([...selectedRegularIds, ...cardRegularMemberIds]));
+            const tardyRegularIds = tardyMemberIds.filter((id) => !visitorMemberIds.has(id));
             const finalVisitorsCount = Math.max(uniqueVisitorIds.length, manualVisitorsInput);
-            const finalMembersCount = uniqueRegularIds.length;
-            const allMemberIds = Array.from(new Set([...uniqueRegularIds, ...uniqueVisitorIds]));
+            const finalMembersCount = uniqueRegularIds.length + tardyRegularIds.length;
+            const allPresentMemberIds = Array.from(new Set([...uniqueRegularIds, ...uniqueVisitorIds]));
+            const allMemberIds = Array.from(new Set([...allPresentMemberIds, ...tardyRegularIds]));
 
             await sundaySchoolService.updateSundaySchoolSession(savedSession.id, {
                 members_present: finalMembersCount,

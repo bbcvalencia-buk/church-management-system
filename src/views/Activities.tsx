@@ -133,7 +133,9 @@ const Activities: React.FC = () => {
     const fetchActivityAttendance = async (activityId: string) => {
         try {
             const { memberIds, tardyIds } = await activityService.getActivityAttendanceLogs(activityId);
-            setSelectedMemberIds(memberIds);
+            const tardySet = new Set(tardyIds);
+            const strictMemberIds = memberIds.filter((id) => !tardySet.has(id));
+            setSelectedMemberIds(strictMemberIds);
             setTardyMemberIds(tardyIds);
         } catch (err) {
             console.error("Error fetching activity attendance:", err);
