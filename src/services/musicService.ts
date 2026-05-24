@@ -1,5 +1,8 @@
 import { supabase } from "../lib/supabase";
 import type { AttendanceLog } from "../types";
+import * as ministryService from "./ministryService";
+import type { MusicMinistryAssignment } from "./ministryService";
+import { isMissingTableError, markTableMissing } from "./supabaseErrorUtils";
 
 export interface PracticeSession {
     id: string;
@@ -119,7 +122,17 @@ export const updateMusicSessionAttendanceLogs = async (sessionId: string, date: 
 /**
  * Fetches music ministry assignments.
  */
-export const getMusicMinistryAssignments = async (): Promise<any[]> => {
+export const getMusicMinistryAssignments = async (): Promise<MusicMinistryAssignment[]> => {
+    try {
+        return await ministryService.getMusicMinistryAssignments();
+    } catch (err: unknown) {
+        if (!isMissingTableError(err)) {
+            console.warn("Normalized music assignments unavailable, falling back to church_positions:", err);
+        } else {
+            markTableMissing("ministry_assignments");
+        }
+    }
+
     const { data, error } = await supabase
         .from('church_positions')
         .select('member_id, department, position_name')
@@ -129,7 +142,13 @@ export const getMusicMinistryAssignments = async (): Promise<any[]> => {
     if (error) {
         throw new Error(`Failed to fetch music assignments: ${error.message}`);
     }
-    return data || [];
+    return (data || []).map((row) => ({
+        member_id: row.member_id,
+        department: row.department || "",
+        position_name: row.position_name || "",
+        ministry_id: "",
+        ministry_code: "",
+    }));
 };
 
 /**

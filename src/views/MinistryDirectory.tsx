@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import * as memberService from "@/services/memberService";
+import * as ministryService from "@/services/ministryService";
 import * as musicService from "@/services/musicService";
 import type { ChurchPosition } from "@/types";
 import {
@@ -38,6 +39,7 @@ interface PartialMember {
 }
 
 interface PositionWithMember extends ChurchPosition {
+  ministry_id?: string;
   members: PartialMember | null;
 }
 
@@ -52,6 +54,7 @@ const CATEGORIES = [
 const CATEGORY_LABELS: Record<string, string> = {
   leadership: 'Pastoral & Admin',
   music_ministry: 'Music & Creatives',
+  sunday_school: 'Sunday School & Ed.',
   sunday_school_adult: 'Sunday School & Ed.',
   sunday_school_children: 'Sunday School & Ed.',
   beginners_class: 'Sunday School & Ed.',
@@ -59,6 +62,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const LEGACY_CATEGORY_MAP: Record<string, string> = {
+  sunday_school: 'sunday_school_adult',
   sunday_school_children: 'sunday_school_adult',
   beginners_class: 'sunday_school_adult',
 };
@@ -206,10 +210,16 @@ const MinistryDirectory: React.FC = () => {
 
   const fetchPositions = async () => {
     try {
-      const data = await memberService.getChurchPositions();
+      const data = await ministryService.getMinistryAssignments();
       setPositions(data as unknown as PositionWithMember[]);
     } catch (err) {
-      console.error("Error fetching ministries:", err);
+      console.warn("Normalized ministries unavailable, falling back to church_positions:", err);
+      try {
+        const data = await memberService.getChurchPositions();
+        setPositions(data as unknown as PositionWithMember[]);
+      } catch (fallbackErr) {
+        console.error("Error fetching ministries:", fallbackErr);
+      }
     } finally {
       setLoading(false);
     }
@@ -267,7 +277,7 @@ const MinistryDirectory: React.FC = () => {
         return payload;
       });
 
-      await memberService.upsertChurchPosition(insertData);
+      await ministryService.upsertMinistryAssignmentsFromPositions(insertData);
 
       setIsModalOpen(false);
       fetchPositions();
@@ -282,10 +292,14 @@ const MinistryDirectory: React.FC = () => {
     if (!confirmRemove.assignment) return;
     const id = confirmRemove.assignment.id;
     try {
-      await memberService.updateChurchPositions([id], {
-        is_active: false,
-        end_date: new Date().toISOString().split('T')[0]
-      });
+      if (confirmRemove.assignment.ministry_id) {
+        await ministryService.deactivateMinistryAssignment(id);
+      } else {
+        await memberService.updateChurchPositions([id], {
+          is_active: false,
+          end_date: new Date().toISOString().split('T')[0]
+        });
+      }
 
       setConfirmRemove({ isOpen: false, assignment: null });
       fetchPositions();
@@ -314,10 +328,17 @@ const MinistryDirectory: React.FC = () => {
 
     setSavingGroupMeta(true);
     try {
-      await memberService.updateChurchPositions(positionIds, {
-        department: nextName,
-        assignment_reason: nextSchedule || null
-      });
+      if (manageGroup.ministry_id) {
+        await ministryService.updateMinistry(manageGroup.ministry_id, {
+          name: nextName,
+          schedule: nextSchedule || null
+        });
+      } else {
+        await memberService.updateChurchPositions(positionIds, {
+          department: nextName,
+          assignment_reason: nextSchedule || null
+        });
+      }
 
       setManageGroup(null);
       await fetchPositions();
@@ -343,12 +364,20 @@ const MinistryDirectory: React.FC = () => {
     setSavingHeadAssignmentId(targetId);
     try {
       // Clear all heads first
-      await memberService.updateChurchPositions(positionIds, { is_ministry_head: false });
+      if (manageGroup.ministry_id) {
+        await ministryService.updateMinistryAssignments(positionIds, { is_leader: false });
+      } else {
+        await memberService.updateChurchPositions(positionIds, { is_ministry_head: false });
+      }
 
       const nextHeadId = isCurrentlyHead ? null : targetId;
 
       if (nextHeadId) {
-        await memberService.updateChurchPositions([nextHeadId], { is_ministry_head: true });
+        if (manageGroup.ministry_id) {
+          await ministryService.updateMinistryAssignments([nextHeadId], { is_leader: true });
+        } else {
+          await memberService.updateChurchPositions([nextHeadId], { is_ministry_head: true });
+        }
       }
 
       setManageGroup((prev: any) => {
@@ -388,6 +417,7 @@ const MinistryDirectory: React.FC = () => {
     if (!acc[groupKey]) {
       acc[groupKey] = {
         name: groupKey,
+        ministry_id: pos.ministry_id,
         category: normalizedCategory,
         categoryLabel: getCategoryLabel(pos.position_category),
         schedule: pos.assignment_reason || '',

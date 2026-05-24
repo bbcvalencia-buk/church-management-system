@@ -134,6 +134,67 @@ export interface ChurchPosition {
     assignment_reason?: string | null;
 }
 
+export type MinistryCategory =
+    | 'leadership'
+    | 'music_ministry'
+    | 'sunday_school'
+    | 'operations'
+    | 'other_ministries';
+
+export interface Ministry {
+    id: string;
+    code: string;
+    name: string;
+    category: MinistryCategory;
+    description?: string | null;
+    schedule?: string | null;
+    is_active: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface MinistryAssignment {
+    id: string;
+    member_id: string;
+    ministry_id: string;
+    role_name: string;
+    is_leader: boolean;
+    start_date: string;
+    end_date?: string | null;
+    status: 'active' | 'inactive';
+    ministry?: Ministry;
+    members?: Partial<Member> | null;
+}
+
+export interface ChurchOffice {
+    id: string;
+    code: string;
+    name: string;
+    description?: string | null;
+    is_active: boolean;
+    created_at?: string;
+}
+
+export interface SundaySchoolClass {
+    id: string;
+    code: string;
+    name: string;
+    department: 'adult' | 'beginners' | 'nursery' | 'kinder' | 'primary' | 'junior';
+    is_active: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface SundaySchoolEnrollment {
+    id: string;
+    class_id: string;
+    member_id: string;
+    role: 'student' | 'teacher' | 'assistant';
+    status: 'active' | 'inactive';
+    start_date: string;
+    end_date?: string | null;
+}
+
 export interface FamilyRelationship {
     id: string;
     member_id: string;
@@ -273,10 +334,11 @@ export interface Service {
 export interface AttendanceLog {
     id: string;
     member_id: string;
-    event_type: 'service' | 'activity' | 'sunday_school' | 'music_practice' | 'church_event';
+    event_type: 'service' | 'activity' | 'sunday_school' | 'music_practice' | 'church_event' | 'goodnews_session';
     event_id: string;
     event_date: string;
     was_present: boolean;
+    was_tardy?: boolean;
     excuse_reason?: string;
     notes?: string;
     assessment_score?: number | null;
