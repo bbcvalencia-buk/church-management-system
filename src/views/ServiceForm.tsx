@@ -139,7 +139,7 @@ const ServiceForm: React.FC = () => {
     const [showRoleSearch, setShowRoleSearch] = useState<ServiceRole | null>(null);
 
     const visitorMemberIds = useMemo(
-        () => new Set(members.filter(() => false).map((m) => m.id)),
+        () => new Set(members.filter((m) => !m.member_number).map((m) => m.id)),
         [members]
     );
     const isPrimaryService = isPrimaryServiceType(service.service_type);

@@ -336,7 +336,7 @@ const SundaySchool: React.FC = () => {
                 throw new Error(`Visitor card #${invalidCardIndex + 1} is incomplete. Name, Address, and Contact No. are required.`);
             }
 
-            const visitorMemberIds = new Set<string>(); // This set needs to be populated if visitors are members
+            const visitorMemberIds = new Set(members.filter((m) => !m.member_number).map((m) => m.id));
             const selectedVisitorIds = selectedMemberIds.filter((id) => visitorMemberIds.has(id));
             const selectedRegularIds = selectedMemberIds.filter((id) => !visitorMemberIds.has(id));
 
@@ -652,7 +652,7 @@ const SundaySchool: React.FC = () => {
 
     const paginatedSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
-    const visitorMemberIdsInModal = new Set<string>();
+    const visitorMemberIdsInModal = new Set(members.filter((m) => !m.member_number).map((m) => m.id));
     const selectedVisitorCountInModal = selectedMemberIds.filter((id) => visitorMemberIdsInModal.has(id)).length;
     const selectedRegularCountInModal = selectedMemberIds.length - selectedVisitorCountInModal;
     const visitorsCountInModalBase = newVisitors.length > 0 ? newVisitors.length : (Number(newSession.visitors_present) || 0);
