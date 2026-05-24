@@ -87,7 +87,7 @@ const SundaySchool: React.FC = () => {
     const { member: currentMember, roles, loading: authLoading } = useAuth();
     const isPastor = roles.includes(UserRole.PASTOR);
     const isSundaySchoolAdmin =
-        roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN) || roles.includes(UserRole.RECORDING_SECRETARY);
+        roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN);
 
     const [sessions, setSessions] = useState<SundaySchoolSession[]>([]);
     const [members, setMembers] = useState<any[]>([]);
@@ -695,7 +695,7 @@ const SundaySchool: React.FC = () => {
                 <div className="bg-white rounded-2xl border border-red-100 p-8">
                     <h1 className="text-2xl font-bold text-red-600">Access Restricted</h1>
                     <p className="text-sm text-gray-600 mt-2">
-                        This page is available only to Sunday School administrators and assigned teachers.
+                        You are unable to access this section. Please contact the administrator.
                     </p>
                 </div>
             </div>

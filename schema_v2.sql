@@ -4,6 +4,408 @@
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- ============================================================================
+-- SECTION: HELPER FUNCTIONS
+-- ============================================================================
+
+-- Get the member_id of the currently authenticated user based on their email
+CREATE OR REPLACE FUNCTION public.app_current_member_id()
+RETURNS UUID
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  result UUID;
+BEGIN
+  SELECT m.id INTO result
+  FROM public.members m
+  WHERE m.email IS NOT NULL
+    AND lower(m.email) = lower(coalesce(auth.jwt() ->> 'email', ''))
+  ORDER BY m.created_at ASC
+  LIMIT 1;
+  RETURN result;
+END;
+$$;
+
+-- Check if the current user has a specific role using member_id
+CREATE OR REPLACE FUNCTION public.app_has_role(target_role TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.user_roles ur
+    WHERE ur.member_id = public.app_current_member_id()
+      AND ur.role = target_role
+  );
+END;
+$$;
+
+-- Check if the current user has any of the specified roles using member_id
+CREATE OR REPLACE FUNCTION public.app_has_any_role(target_roles TEXT[])
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.user_roles ur
+    WHERE ur.member_id = public.app_current_member_id()
+      AND ur.role = ANY(target_roles)
+  );
+END;
+$$;
+
+-- ============================================================================
+-- SPECIFIC ROLE SHORTCUTS
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION public.app_is_church_admin()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('church_administrator'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_treasurer()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('treasurer'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_pastor()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('pastor'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_recording_secretary()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('recording_secretary'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_goodnews_teacher()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('goodnews_teacher'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_church_clerk()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('church_clerk'); END; $$;
+
+CREATE OR REPLACE FUNCTION public.app_is_activity_coordinator()
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public
+AS $$ BEGIN RETURN public.app_has_role('activity_coordinator'); END; $$;
+
+-- ============================================================================
+-- SUNDAY SCHOOL SPECIFIC HELPERS
+-- ============================================================================
+
+-- Normalize Sunday School department names
+CREATE OR REPLACE FUNCTION public.app_normalize_sunday_school_department(target_department TEXT)
+RETURNS TEXT
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  normalized TEXT := lower(coalesce(target_department, ''));
+BEGIN
+  -- 1. Nursery (Ages 0-2)
+  IF normalized LIKE '%nursery%' OR normalized LIKE '%toddler%' OR normalized LIKE '%baby%' OR normalized LIKE '%infant%' THEN
+    RETURN 'nursery';
+  END IF;
+
+  -- 2. Kinder (Ages 3-5)
+  IF normalized LIKE '%kinder%' OR normalized LIKE '%kindergarten%' OR normalized LIKE '%prep%' THEN
+    RETURN 'kinder';
+  END IF;
+
+  -- 3. Primary (Ages 6-8)
+  IF normalized LIKE '%primary%' OR normalized LIKE '%elementary%' OR normalized LIKE '%kids%' OR normalized LIKE '%children%' THEN
+    RETURN 'primary';
+  END IF;
+
+  -- 4. Junior (Ages 9-12)
+  IF normalized LIKE '%junior%' OR normalized LIKE '%youth%' OR normalized LIKE '%teen%' OR normalized LIKE '%high school%' THEN
+    RETURN 'junior';
+  END IF;
+
+  -- 5. Beginners
+  IF normalized LIKE '%beginner%' THEN
+    RETURN 'beginners';
+  END IF;
+
+  -- 6. Adult
+  IF normalized LIKE '%adult%' OR normalized LIKE '%men%' OR normalized LIKE '%women%' OR normalized LIKE '%senior%' OR normalized LIKE '%couple%' THEN
+    RETURN 'adult';
+  END IF;
+
+  IF normalized IN ('adult', 'beginners', 'nursery', 'kinder', 'primary', 'junior') THEN
+    RETURN normalized;
+  END IF;
+
+  RETURN NULL;
+END;
+$$;
+
+-- Determine the Sunday School department key from position details
+CREATE OR REPLACE FUNCTION public.app_sunday_school_department_key(
+  position_category TEXT,
+  department TEXT,
+  position_name TEXT,
+  specific_role TEXT DEFAULT NULL
+)
+RETURNS TEXT
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  normalized TEXT;
+BEGIN
+  normalized := public.app_normalize_sunday_school_department(
+    coalesce(department, '') || ' ' || coalesce(position_name, '') || ' ' || coalesce(specific_role, '')
+  );
+  IF normalized IS NOT NULL THEN
+    RETURN normalized;
+  END IF;
+
+  IF position_category = 'nursery_class' THEN
+    RETURN 'nursery';
+  END IF;
+
+  IF position_category = 'kinder_class' THEN
+    RETURN 'kinder';
+  END IF;
+
+  IF position_category = 'sunday_school_children' THEN
+    RETURN 'primary'; 
+  END IF;
+
+  IF position_category = 'beginners_class' THEN
+    RETURN 'beginners';
+  END IF;
+  
+  IF position_category = 'sunday_school_adult' THEN
+    RETURN 'adult';
+  END IF;
+
+  RETURN NULL;
+END;
+$$;
+
+-- Check if a position assignment represents a Sunday School teacher/leader role
+CREATE OR REPLACE FUNCTION public.app_is_sunday_school_teacher_assignment(
+  position_name TEXT,
+  specific_role TEXT,
+  is_ministry_head BOOLEAN
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  role_text TEXT := lower(coalesce(position_name, '') || ' ' || coalesce(specific_role, ''));
+BEGIN
+  IF coalesce(is_ministry_head, FALSE) THEN
+    RETURN TRUE;
+  END IF;
+
+  RETURN (
+    role_text LIKE '%teacher%'
+    OR role_text LIKE '%assistant teacher%'
+    OR role_text LIKE '%coordinator%'
+    OR role_text LIKE '%director%'
+    OR role_text LIKE '%superintendent%'
+    OR role_text LIKE '%head%'
+    OR role_text LIKE '%leader%'
+    OR role_text LIKE '%advisor%'
+    OR role_text LIKE '%adviser%'
+    OR role_text LIKE '%facilitator%'
+    OR role_text LIKE '%mentor%'
+  );
+END;
+$$;
+
+-- Get all Sunday School departments the current user is assigned to as a teacher
+CREATE OR REPLACE FUNCTION public.app_sunday_school_teacher_departments()
+RETURNS TEXT[]
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  result TEXT[];
+BEGIN
+  SELECT coalesce(array_agg(DISTINCT dept), ARRAY[]::TEXT[]) INTO result
+  FROM (
+    SELECT public.app_sunday_school_department_key(
+      cp.position_category,
+      cp.department,
+      cp.position_name,
+      cp.specific_role
+    ) AS dept
+    FROM public.church_positions cp
+    WHERE cp.member_id = public.app_current_member_id()
+      AND cp.is_active = TRUE
+      AND cp.position_category IN ('sunday_school_adult', 'sunday_school_children', 'beginners_class', 'nursery_class', 'kinder_class')
+      AND public.app_is_sunday_school_teacher_assignment(cp.position_name, cp.specific_role, cp.is_ministry_head)
+  ) q
+  WHERE dept IS NOT NULL;
+  RETURN result;
+END;
+$$;
+
+-- Check if the current user is a Sunday School teacher
+CREATE OR REPLACE FUNCTION public.app_is_sunday_school_teacher()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN cardinality(public.app_sunday_school_teacher_departments()) > 0;
+END;
+$$;
+
+-- Check if the current user can manage a specific Sunday School department
+CREATE OR REPLACE FUNCTION public.app_can_manage_sunday_school_department(target_department TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN
+    public.app_has_any_role(ARRAY['church_administrator', 'sunday_school_admin'])
+    OR (
+      public.app_is_sunday_school_teacher()
+      AND public.app_normalize_sunday_school_department(target_department) = ANY(public.app_sunday_school_teacher_departments())
+    );
+END;
+$$;
+
+-- Check if a member is within the teaching scope of the current teacher
+CREATE OR REPLACE FUNCTION public.app_member_in_teacher_scope(target_member UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.church_positions cp
+    WHERE cp.member_id = target_member
+      AND cp.is_active = TRUE
+      AND cp.position_category IN ('sunday_school_adult', 'sunday_school_children', 'beginners_class')
+      AND NOT public.app_is_sunday_school_teacher_assignment(cp.position_name, cp.specific_role, cp.is_ministry_head)
+      AND public.app_sunday_school_department_key(cp.position_category, cp.department, cp.position_name, cp.specific_role)
+            = ANY(public.app_sunday_school_teacher_departments())
+  );
+END;
+$$;
+
+-- Check if the current user can manage a specific Sunday School session
+CREATE OR REPLACE FUNCTION public.app_can_manage_sunday_school_session(target_session UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.sunday_school_sessions s
+    WHERE s.id = target_session
+      AND public.app_can_manage_sunday_school_department(s.department)
+  );
+END;
+$$;
+
+-- Check if a member has any active Sunday School assignment
+CREATE OR REPLACE FUNCTION public.app_member_has_sunday_school_assignment(target_member UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.church_positions cp
+    WHERE cp.member_id = target_member
+      AND cp.is_active = TRUE
+      AND cp.position_category IN ('sunday_school_adult', 'sunday_school_children', 'beginners_class')
+      AND public.app_sunday_school_department_key(cp.position_category, cp.department, cp.position_name, cp.specific_role) IS NOT NULL
+  );
+END;
+$$;
+
+-- ============================================================================
+-- COMMON TRIGGERS
+-- ============================================================================
+
+-- Generates a human-readable member number (BBC-YYYY-NNN)
+CREATE OR REPLACE FUNCTION public.generate_member_number(p_year INTEGER) 
+RETURNS TEXT 
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_max_seq INTEGER;
+BEGIN
+    SELECT COALESCE(MAX(member_number_seq), 0)
+    INTO v_max_seq
+    FROM public.members
+    WHERE member_number_year = p_year;
+
+    RETURN 'BBC-' || p_year::TEXT || '-' || LPAD((v_max_seq + 1)::TEXT, 3, '0');
+END;
+$$;
+
+-- Trigger function to automatically set member number on insert
+CREATE OR REPLACE FUNCTION public.set_member_number()
+RETURNS TRIGGER 
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_year INTEGER;
+    v_seq INTEGER;
+BEGIN
+    IF NEW.member_number IS NULL THEN
+        v_year := EXTRACT(YEAR FROM NOW())::INTEGER;
+        
+        SELECT COALESCE(MAX(member_number_seq), 0) + 1
+        INTO v_seq
+        FROM public.members
+        WHERE member_number_year = v_year;
+
+        NEW.member_number_year := v_year;
+        NEW.member_number_seq := v_seq;
+        NEW.member_number := 'BBC-' || v_year::TEXT || '-' || LPAD(v_seq::TEXT, 3, '0');
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+-- ============================================================================
+-- BBC VALENCIA CHURCH MANAGEMENT SYSTEM - SCHEMA V2
+-- ============================================================================
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Safe to re-run: all policies dropped and recreated
 
 -- ============================================================================
@@ -601,7 +1003,7 @@ CREATE POLICY church_positions_delete_policy ON public.church_positions FOR DELE
 -- Members RLS policies (placed here because members_select_policy references church_positions table)
 DROP POLICY IF EXISTS members_select_policy ON public.members;
 CREATE POLICY members_select_policy ON public.members FOR SELECT USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'treasurer', 'sunday_school_admin', 'activity_coordinator'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'treasurer', 'sunday_school_admin', 'activity_coordinator', 'recording_secretary'])
   OR id = public.app_current_member_id()
   OR (public.app_has_role('music_minister') AND EXISTS (
       SELECT 1 FROM public.church_positions cp 
@@ -729,7 +1131,7 @@ ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS services_select_policy ON public.services;
 CREATE POLICY services_select_policy ON public.services FOR SELECT USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'treasurer', 'sunday_school_admin'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'treasurer', 'sunday_school_admin', 'recording_secretary'])
   OR EXISTS (SELECT 1 FROM public.attendance_log al WHERE al.event_type = 'service' AND al.event_id::text = public.services.id::text AND al.member_id = public.app_current_member_id())
 );
 
@@ -746,7 +1148,7 @@ ALTER TABLE public.attendance_log ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS attendance_log_select_policy ON public.attendance_log;
 CREATE POLICY attendance_log_select_policy ON public.attendance_log FOR SELECT USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'recording_secretary'])
   OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
   OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
   OR (public.app_has_role('music_minister') AND event_type = 'music_practice')
@@ -755,7 +1157,7 @@ CREATE POLICY attendance_log_select_policy ON public.attendance_log FOR SELECT U
 
 DROP POLICY IF EXISTS attendance_log_insert_policy ON public.attendance_log;
 CREATE POLICY attendance_log_insert_policy ON public.attendance_log FOR INSERT WITH CHECK (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'recording_secretary'])
   OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
   OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
   OR (public.app_has_role('music_minister') AND event_type = 'music_practice')
@@ -763,12 +1165,12 @@ CREATE POLICY attendance_log_insert_policy ON public.attendance_log FOR INSERT W
 
 DROP POLICY IF EXISTS attendance_log_update_policy ON public.attendance_log;
 CREATE POLICY attendance_log_update_policy ON public.attendance_log FOR UPDATE USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'recording_secretary'])
   OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
   OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
   OR (public.app_has_role('music_minister') AND event_type = 'music_practice')
 ) WITH CHECK (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'recording_secretary'])
   OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
   OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
   OR (public.app_has_role('music_minister') AND event_type = 'music_practice')
@@ -776,7 +1178,7 @@ CREATE POLICY attendance_log_update_policy ON public.attendance_log FOR UPDATE U
 
 DROP POLICY IF EXISTS attendance_log_delete_policy ON public.attendance_log;
 CREATE POLICY attendance_log_delete_policy ON public.attendance_log FOR DELETE USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'recording_secretary'])
   OR (event_type = 'sunday_school' AND (public.app_has_role('sunday_school_admin') OR public.app_can_manage_sunday_school_session(event_id::UUID)))
   OR (public.app_has_role('activity_coordinator') AND event_type = 'activity')
   OR (public.app_has_role('music_minister') AND event_type = 'music_practice')
@@ -827,28 +1229,28 @@ ALTER TABLE public.visitors ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS visitors_select_policy ON public.visitors;
 CREATE POLICY visitors_select_policy ON public.visitors FOR SELECT USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin', 'recording_secretary'])
   OR (public.app_is_sunday_school_teacher() AND sunday_school_session_id IS NOT NULL AND public.app_can_manage_sunday_school_session(sunday_school_session_id::UUID))
 );
 
 DROP POLICY IF EXISTS visitors_insert_policy ON public.visitors;
 CREATE POLICY visitors_insert_policy ON public.visitors FOR INSERT WITH CHECK (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin', 'recording_secretary'])
   OR (public.app_is_sunday_school_teacher() AND sunday_school_session_id IS NOT NULL AND public.app_can_manage_sunday_school_session(sunday_school_session_id::UUID))
 );
 
 DROP POLICY IF EXISTS visitors_update_policy ON public.visitors;
 CREATE POLICY visitors_update_policy ON public.visitors FOR UPDATE USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin', 'recording_secretary'])
   OR (public.app_is_sunday_school_teacher() AND sunday_school_session_id IS NOT NULL AND public.app_can_manage_sunday_school_session(sunday_school_session_id::UUID))
 ) WITH CHECK (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin', 'recording_secretary'])
   OR (public.app_is_sunday_school_teacher() AND sunday_school_session_id IS NOT NULL AND public.app_can_manage_sunday_school_session(sunday_school_session_id::UUID))
 );
 
 DROP POLICY IF EXISTS visitors_delete_policy ON public.visitors;
 CREATE POLICY visitors_delete_policy ON public.visitors FOR DELETE USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin', 'recording_secretary'])
   OR (public.app_is_sunday_school_teacher() AND sunday_school_session_id IS NOT NULL AND public.app_can_manage_sunday_school_session(sunday_school_session_id::UUID))
 );
 
@@ -899,7 +1301,7 @@ ALTER TABLE public.sunday_school_sessions ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS sunday_school_sessions_select_policy ON public.sunday_school_sessions;
 CREATE POLICY sunday_school_sessions_select_policy ON public.sunday_school_sessions FOR SELECT USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'sunday_school_admin', 'recording_secretary'])
   OR public.app_can_manage_sunday_school_department(public.sunday_school_sessions.department)
   OR EXISTS (SELECT 1 FROM public.attendance_log al WHERE al.event_type = 'sunday_school' AND al.event_id::text = public.sunday_school_sessions.id::text AND al.member_id = public.app_current_member_id())
 );
@@ -1028,7 +1430,7 @@ ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS activities_select_policy ON public.activities;
 CREATE POLICY activities_select_policy ON public.activities FOR SELECT USING (
-  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'treasurer', 'sunday_school_admin', 'activity_coordinator'])
+  public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'treasurer', 'sunday_school_admin', 'activity_coordinator', 'recording_secretary'])
 );
 
 DROP POLICY IF EXISTS activities_insert_policy ON public.activities;
@@ -1622,3 +2024,339 @@ DROP INDEX IF EXISTS idx_fin_records_fp;
 CREATE INDEX idx_fin_records_fp 
 ON public.financial_records(member_id, transaction_type, transaction_date) 
 WHERE transaction_type = 'faith_promise';
+
+
+-- ============================================================================
+-- SECTION: NEW V2 TABLES (GOODNEWS, EVENTS, FINANCE, AUDIT)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.church_events (
+    id TEXT PRIMARY KEY, -- Format: EVT-YYYY-NNN
+    event_name TEXT NOT NULL,
+    event_type TEXT CHECK(event_type IN('fellowship','bible_quiz','camp','anniversary','special_program','other')),
+    event_date DATE NOT NULL,
+    location TEXT,
+    total_attendance INT DEFAULT 0,
+    notes TEXT,
+    attachment_urls TEXT[] DEFAULT '{}',
+    created_by UUID REFERENCES public.members(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Hidden sequence columns for ID generation
+    event_year INTEGER,
+    event_seq INTEGER
+);
+
+-- 2. Create function to generate event number
+CREATE OR REPLACE FUNCTION public.set_church_event_number()
+RETURNS TRIGGER 
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_year INTEGER;
+    v_seq INTEGER;
+BEGIN
+    IF NEW.id IS NULL THEN
+        v_year := EXTRACT(YEAR FROM NEW.event_date)::INTEGER;
+        
+        -- Lock the table to prevent duplicate sequence numbers during concurrent inserts
+        -- This is a simple way for moderate traffic sites
+        LOCK TABLE public.church_events IN EXCLUSIVE MODE;
+        
+        SELECT COALESCE(MAX(event_seq), 0) + 1
+        INTO v_seq
+        FROM public.church_events
+        WHERE event_year = v_year;
+
+        NEW.event_year := v_year;
+        NEW.event_seq := v_seq;
+        NEW.id := 'EVT-' || v_year::TEXT || '-' || LPAD(v_seq::TEXT, 3, '0');
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+-- 3. Create the trigger
+DROP TRIGGER IF EXISTS trigger_set_church_event_number ON public.church_events;
+CREATE TRIGGER trigger_set_church_event_number
+BEFORE INSERT ON public.church_events
+-- First, drop policies that depend on this column to allow the type change
+EXECUTE FUNCTION public.set_church_event_number();
+
+-- RLS Policies for church_events
+ALTER TABLE public.church_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "church_events_select_policy" ON public.church_events FOR SELECT USING (true);
+CREATE POLICY "church_events_insert_policy" ON public.church_events FOR INSERT WITH CHECK (public.app_has_any_role(ARRAY['church_administrator', 'pastor', 'church_clerk', 'activity_coordinator', 'recording_secretary']));
+CREATE POLICY "church_events_update_policy" ON public.church_events FOR UPDATE USING (public.app_has_any_role(ARRAY['church_administrator', 'pastor', 'church_clerk', 'activity_coordinator', 'recording_secretary']));
+CREATE POLICY "church_events_delete_policy" ON public.church_events FOR DELETE USING (public.app_has_any_role(ARRAY['church_administrator', 'pastor']));
+
+CREATE TABLE IF NOT EXISTS public.financial_period_locks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    year INT NOT NULL,
+    month INT NOT NULL,
+    locked_by UUID REFERENCES auth.users(id),
+    locked_at TIMESTAMPTZ DEFAULT NOW(),
+    unlock_reason TEXT,
+    unlocked_by UUID REFERENCES auth.users(id),
+    unlocked_at TIMESTAMPTZ,
+    CONSTRAINT period_unique UNIQUE(year, month)
+);
+
+CREATE OR REPLACE FUNCTION public.enforce_period_lock()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    target_date DATE;
+    target_year INT;
+    target_month INT;
+    is_locked BOOLEAN;
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        target_date := OLD.transaction_date;
+    ELSE
+        target_date := NEW.transaction_date;
+    END IF;
+
+    target_year := EXTRACT(YEAR FROM target_date)::INT;
+    target_month := EXTRACT(MONTH FROM target_date)::INT;
+
+    SELECT EXISTS (
+        SELECT 1 FROM public.financial_period_locks
+        WHERE year = target_year 
+          AND month = target_month 
+          AND unlocked_at IS NULL
+    ) INTO is_locked;
+
+    IF is_locked THEN
+        RAISE EXCEPTION 'Period %/% is locked. Contact Church Administrator.', target_year, target_month;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS enforce_period_lock_trigger ON public.financial_records;
+CREATE TRIGGER enforce_period_lock_trigger
+    BEFORE INSERT OR UPDATE OR DELETE
+    ON public.financial_records
+    FOR EACH ROW
+    EXECUTE FUNCTION public.enforce_period_lock();
+
+
+-- LAYER 2: Append-Only Audit Log
+CREATE TABLE IF NOT EXISTS public.financial_audit_log (
+    id BIGSERIAL PRIMARY KEY,
+    action TEXT NOT NULL CHECK (action IN ('INSERT', 'UPDATE', 'DELETE')),
+    financial_record_id UUID NOT NULL,
+    member_id UUID NOT NULL,
+    performed_by UUID REFERENCES auth.users(id),
+    before_data JSONB,
+    after_data JSONB,
+    changed_fields TEXT[],
+    performed_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.financial_audit_log ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION public.app_is_church_admin() RETURNS boolean AS $$
+BEGIN
+  RETURN (
+    EXISTS (
+      SELECT 1
+      FROM user_roles
+      WHERE (user_roles.user_id = auth.uid()) 
+      AND (user_roles.role = 'church_administrator'::text)
+    )
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.app_is_treasurer() RETURNS boolean AS $$
+BEGIN
+  RETURN (
+    EXISTS (
+      SELECT 1
+      FROM user_roles
+      WHERE (user_roles.user_id = auth.uid()) 
+      AND (user_roles.role = 'treasurer'::text)
+    )
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE POLICY "audit_log_select" ON public.financial_audit_log
+    FOR SELECT TO authenticated
+    USING (app_is_church_admin() OR app_is_treasurer());
+
+CREATE OR REPLACE FUNCTION public.log_financial_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    changed_keys TEXT[];
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        INSERT INTO public.financial_audit_log (action, financial_record_id, member_id, performed_by, after_data)
+        VALUES ('INSERT', NEW.id, NEW.member_id, auth.uid(), to_jsonb(NEW));
+        RETURN NEW;
+    ELSIF TG_OP = 'UPDATE' THEN
+        -- Safely extract changed keys without relying on EXCEPT which can be tricky with composite types/nulls
+        SELECT ARRAY(
+            SELECT key FROM jsonb_each(to_jsonb(OLD)) o
+            FULL OUTER JOIN jsonb_each(to_jsonb(NEW)) n USING(key)
+            WHERE o.value IS DISTINCT FROM n.value
+        ) INTO changed_keys;
+        
+        INSERT INTO public.financial_audit_log (action, financial_record_id, member_id, performed_by, before_data, after_data, changed_fields)
+        VALUES ('UPDATE', NEW.id, NEW.member_id, auth.uid(), to_jsonb(OLD), to_jsonb(NEW), changed_keys);
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        INSERT INTO public.financial_audit_log (action, financial_record_id, member_id, performed_by, before_data)
+        VALUES ('DELETE', OLD.id, OLD.member_id, auth.uid(), to_jsonb(OLD));
+        RETURN OLD;
+    END IF;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS log_financial_change_trigger ON public.financial_records;
+CREATE TRIGGER log_financial_change_trigger
+    AFTER INSERT OR UPDATE OR DELETE
+    ON public.financial_records
+    FOR EACH ROW
+    EXECUTE FUNCTION public.log_financial_change();
+
+
+-- LAYER 3: Soft Delete Column
+ALTER TABLE public.financial_records
+ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ,
+ADD COLUMN IF NOT EXISTS deleted_by UUID REFERENCES auth.users(id);
+
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    actor_id UUID REFERENCES public.members(id) ON DELETE SET NULL,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    description TEXT NOT NULL,
+    changes JSONB,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 2. RLS Policies
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS audit_logs_select_policy ON public.audit_logs;
+CREATE POLICY audit_logs_select_policy ON public.audit_logs
+FOR SELECT USING (public.app_has_any_role(ARRAY['church_administrator', 'church_administrator']));
+
+DROP POLICY IF EXISTS audit_logs_insert_policy ON public.audit_logs;
+CREATE POLICY audit_logs_insert_policy ON public.audit_logs
+FOR INSERT WITH CHECK (true); 
+
+-- 3. Trigger Function
+CREATE OR REPLACE FUNCTION public.log_audit_event()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_actor_id UUID;
+    v_actor_name TEXT;
+    v_action TEXT;
+    v_entity_type TEXT;
+    v_entity_id TEXT;
+    v_desc TEXT;
+    v_roles TEXT;
+BEGIN
+    -- Get current user ID
+    BEGIN
+        v_actor_id := public.app_current_member_id();
+    EXCEPTION WHEN OTHERS THEN
+        v_actor_id := NULL;
+    END;
+
+    IF v_actor_id IS NOT NULL THEN
+        SELECT first_name || ' ' || surname INTO v_actor_name FROM public.members WHERE id = v_actor_id;
+        
+        -- Try to get primary role
+        SELECT role INTO v_roles FROM public.user_roles WHERE member_id = v_actor_id LIMIT 1;
+        
+        IF v_roles IS NOT NULL THEN
+            -- format role nicely
+            v_actor_name := INITCAP(REPLACE(v_roles, '_', ' ')) || ' ' || v_actor_name;
+        END IF;
+    ELSE
+        v_actor_name := 'System';
+    END IF;
+
+    v_action := TG_OP;
+    v_entity_type := TG_TABLE_NAME;
+    
+    IF v_action = 'DELETE' THEN
+        v_entity_id := COALESCE(OLD.id::TEXT, 'Unknown');
+    ELSE
+        v_entity_id := COALESCE(NEW.id::TEXT, 'Unknown');
+    END IF;
+
+    -- Human readable defaults
+    v_desc := COALESCE(v_actor_name, 'System') || ' ' || lower(v_action) || 'd record ' || v_entity_id || ' in ' || v_entity_type;
+
+    IF v_entity_type = 'services' THEN
+        v_desc := COALESCE(v_actor_name, 'System') || ' ' || lower(v_action) || 'd Service (' || v_entity_id || ')';
+    ELSIF v_entity_type = 'financial_records' THEN
+        v_desc := COALESCE(v_actor_name, 'System') || ' ' || lower(v_action) || 'd Financial Record (' || COALESCE(NEW.transaction_type, OLD.transaction_type) || ')';
+    ELSIF v_entity_type = 'members' THEN
+        v_desc := COALESCE(v_actor_name, 'System') || ' ' || lower(v_action) || 'd Member Profile (' || v_entity_id || ')';
+    ELSIF v_entity_type = 'church_events' THEN
+        v_desc := COALESCE(v_actor_name, 'System') || ' ' || lower(v_action) || 'd Church Event (' || v_entity_id || ')';
+    ELSIF v_entity_type = 'activities' THEN
+        v_desc := COALESCE(v_actor_name, 'System') || ' ' || lower(v_action) || 'd Activity (' || v_entity_id || ')';
+    ELSIF v_entity_type = 'goodnews_series' THEN
+        v_desc := COALESCE(v_actor_name, 'System') || ' ' || lower(v_action) || 'd Goodnews Class (' || v_entity_id || ')';
+    END IF;
+
+    INSERT INTO public.audit_logs (actor_id, entity_type, entity_id, action, description, changes)
+    VALUES (
+        v_actor_id,
+        v_entity_type,
+        v_entity_id,
+        v_action,
+        v_desc,
+        CASE
+            WHEN v_action = 'INSERT' THEN row_to_json(NEW)::jsonb
+            WHEN v_action = 'UPDATE' THEN jsonb_build_object('old', row_to_json(OLD), 'new', row_to_json(NEW))
+            WHEN v_action = 'DELETE' THEN row_to_json(OLD)::jsonb
+        END
+    );
+    
+    IF v_action = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
+END;
+$$;
+
+-- 4. Apply Triggers
+DO $$
+DECLARE
+    t TEXT;
+BEGIN
+    FOR t IN 
+        SELECT unnest(ARRAY['services', 'financial_records', 'members', 'church_events', 'goodnews_series', 'sunday_school_sessions', 'activities'])
+    LOOP
+        -- Only add triggers if the table exists
+        IF EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = t) THEN
+            EXECUTE format('DROP TRIGGER IF EXISTS trigger_audit_log ON public.%I', t);
+            EXECUTE format('CREATE TRIGGER trigger_audit_log AFTER INSERT OR UPDATE OR DELETE ON public.%I FOR EACH ROW EXECUTE FUNCTION public.log_audit_event()', t);
+        END IF;
+    END LOOP;
+END;
+$$;
+

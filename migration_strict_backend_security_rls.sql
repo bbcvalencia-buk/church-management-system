@@ -123,7 +123,7 @@ CREATE POLICY members_select_policy
 ON public.members
 FOR SELECT
 USING (
-  public.app_has_any_role(ARRAY['super_admin', 'church_clerk', 'treasurer', 'sunday_school_admin', 'activity_coordinator'])
+  public.app_has_any_role(ARRAY['super_admin', 'church_clerk', 'treasurer', 'sunday_school_admin', 'activity_coordinator', 'recording_secretary'])
   OR id = public.app_current_member_id()
   OR (
     public.app_has_role('music_minister')

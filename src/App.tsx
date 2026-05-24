@@ -41,7 +41,7 @@ const CLERK_WRITE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK]
 const SERVICE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY];
 const SERVICE_WRITE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY];
 const DASHBOARD_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.TREASURER];
-const SUNDAY_SCHOOL_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.SUNDAY_SCHOOL_ADMIN, UserRole.RECORDING_SECRETARY];
+const SUNDAY_SCHOOL_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.SUNDAY_SCHOOL_ADMIN];
 const ACTIVITY_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.ACTIVITY_COORDINATOR, UserRole.RECORDING_SECRETARY];
 const MUSIC_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.MUSIC_MINISTER];
 const GOODNEWS_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.GOODNEWS_TEACHER];
@@ -247,7 +247,7 @@ const AccessDenied: React.FC = () => {
     <div className="max-w-2xl mx-auto mt-10 bg-white border border-red-100 rounded-2xl p-8 shadow-sm">
       <h1 className="text-2xl font-bold text-red-600">Access Restricted</h1>
       <p className="text-sm text-gray-600 mt-2">
-        Your account role is not allowed to access this section.
+        You are unable to access this section. Please contact the administrator.
       </p>
       <button
         onClick={() => navigate('/')}
@@ -270,6 +270,10 @@ const HomeLanding: React.FC = () => {
 
   if (hasAllowedRole(roles, DASHBOARD_ROLES)) {
     return <Dashboard />;
+  }
+
+  if (hasAllowedRole(roles, [UserRole.RECORDING_SECRETARY])) {
+    return <Navigate to="/services" replace />;
   }
 
   if (hasAllowedRole(roles, SUNDAY_SCHOOL_ROLES)) {
