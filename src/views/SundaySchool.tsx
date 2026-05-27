@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import * as sundaySchoolService from "@/services/sundaySchoolService";
 import * as memberService from "@/services/memberService";
 import { getLatestSundayISODate } from "@/lib/date";
@@ -103,8 +103,26 @@ const SundaySchool: React.FC = () => {
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     // Pagination and Search
-    const [departmentSearchTerm, setDepartmentSearchTerm] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
+    const [departmentSearchTerm, setDepartmentSearchTerm] = useState(() => {
+        try {
+            const saved = sessionStorage.getItem('sundayschool-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.departmentSearchTerm) return parsed.departmentSearchTerm;
+            }
+        } catch (e) { console.error(e); }
+        return "";
+    });
+    const [currentPage, setCurrentPage] = useState(() => {
+        try {
+            const saved = sessionStorage.getItem('sundayschool-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.currentPage) return Number(parsed.currentPage);
+            }
+        } catch (e) { console.error(e); }
+        return 1;
+    });
     const itemsPerPage = 8;
 
     // Deletion Modal State
@@ -114,14 +132,44 @@ const SundaySchool: React.FC = () => {
     });
 
     // New Session Form State
-    const [newSession, setNewSession] = useState<Partial<SundaySchoolSession>>({
-        session_date: getLatestSundayISODate(),
-        department: 'adult',
-        members_present: 0,
-        visitors_present: 0,
-        total_attendance: 0,
-        souls_saved: 0
+    const [newSession, setNewSession] = useState<Partial<SundaySchoolSession>>(() => {
+        let dept = 'adult';
+        try {
+            const saved = sessionStorage.getItem('sundayschool-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.activeDepartment) dept = parsed.activeDepartment;
+            }
+        } catch (e) { console.error(e); }
+
+        return {
+            session_date: getLatestSundayISODate(),
+            department: dept as any,
+            members_present: 0,
+            visitors_present: 0,
+            total_attendance: 0,
+            souls_saved: 0
+        };
     });
+
+    // Add debug mount/unmount logging
+    useEffect(() => {
+        console.log('[SundaySchool] Mounted! State restored:', { departmentSearchTerm, currentPage, activeDepartment: newSession.department });
+        return () => {
+            console.log('[SundaySchool] Unmounted!');
+        };
+    }, []);
+
+    useEffect(() => {
+        console.log('[SundaySchool] State Changed:', { departmentSearchTerm, currentPage, activeDepartment: newSession.department });
+        try {
+            sessionStorage.setItem('sundayschool-state', JSON.stringify({
+                departmentSearchTerm,
+                currentPage,
+                activeDepartment: newSession.department
+            }));
+        } catch (e) { console.error(e); }
+    }, [departmentSearchTerm, currentPage, newSession.department]);
     const [newVisitors, setNewVisitors] = useState<DraftVisitor[]>([]);
     const [isStudentEditorOpen, setIsStudentEditorOpen] = useState(false);
     const [editingStudent, setEditingStudent] = useState<any | null>(null);
@@ -139,6 +187,10 @@ const SundaySchool: React.FC = () => {
 
     // Assessment scores per member in the report modal
     const [memberAssessmentScores, setMemberAssessmentScores] = useState<Record<string, number | null>>({});
+
+    const visitorMemberIds = useMemo(() => {
+        return new Set((members || []).filter((m: any) => m.is_regular_member === false).map((m: any) => m.id));
+    }, [members]);
 
     const managedDepartmentIds = (isSundaySchoolAdmin || isPastor) ? DEPARTMENTS.map((d) => d.id) : teacherDepartments;
     const hasSundaySchoolAccess = isSundaySchoolAdmin || isPastor || teacherDepartments.length > 0;
@@ -336,7 +388,7 @@ const SundaySchool: React.FC = () => {
                 throw new Error(`Visitor card #${invalidCardIndex + 1} is incomplete. Name, Address, and Contact No. are required.`);
             }
 
-            const visitorMemberIds = new Set(members.filter((m) => !m.member_number).map((m) => m.id));
+
             const selectedVisitorIds = selectedMemberIds.filter((id) => visitorMemberIds.has(id));
             const selectedRegularIds = selectedMemberIds.filter((id) => !visitorMemberIds.has(id));
 
@@ -430,6 +482,13 @@ const SundaySchool: React.FC = () => {
                         gender: visitor.gender,
                         civil_status: visitor.marital_status || 'Single',
                         date_of_birth: visitor.date_of_birth || new Date().toISOString().split('T')[0]
+                    });
+
+                    // Immediately clear the automatically generated member number for the visitor shadow record
+                    await memberService.updateMember(memberData.id, {
+                        member_number: null as any,
+                        member_number_year: null as any,
+                        member_number_seq: null as any
                     });
 
                     cardVisitorMemberIds.push(memberData.id);
@@ -652,8 +711,7 @@ const SundaySchool: React.FC = () => {
 
     const paginatedSessions = filteredSessions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
     const totalPages = Math.ceil(filteredSessions.length / itemsPerPage);
-    const visitorMemberIdsInModal = new Set(members.filter((m) => !m.member_number).map((m) => m.id));
-    const selectedVisitorCountInModal = selectedMemberIds.filter((id) => visitorMemberIdsInModal.has(id)).length;
+    const selectedVisitorCountInModal = selectedMemberIds.filter((id) => visitorMemberIds.has(id)).length;
     const selectedRegularCountInModal = selectedMemberIds.length - selectedVisitorCountInModal;
     const visitorsCountInModalBase = newVisitors.length > 0 ? newVisitors.length : (Number(newSession.visitors_present) || 0);
     const visitorsCountInModal = Math.max(visitorsCountInModalBase, selectedVisitorCountInModal);

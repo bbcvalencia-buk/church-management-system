@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as visitorService from '@/services/visitorService';
+import * as memberService from '@/services/memberService';
+import { splitVisitorName } from '@/lib/visitorDedup';
 import { getLatestSundayISODate } from '@/lib/date';
 import type { Visitor, Member } from '@/types';
 import MultiImageUpload from '@/components/MultiImageUpload';
@@ -86,6 +88,38 @@ const VisitorForm: React.FC = () => {
                 contact_number: visitor.contact_number?.trim() || 'N/A',
                 visitor_card_images: visitor.visitor_card_images || []
             };
+
+            // 1. Ensure shadow member record exists and is synced
+            let memberId = visitor.member_id;
+            const parsedName = splitVisitorName(visitorData.name);
+            const memberPayload = {
+                first_name: parsedName.firstName || 'Visitor',
+                surname: parsedName.surname || '',
+                is_regular_member: false,
+                membership_status: 'active' as const,
+                home_address: visitorData.address,
+                phone_number: visitorData.contact_number,
+                gender: visitorData.gender,
+                civil_status: visitorData.marital_status || 'Single',
+                date_of_birth: visitorData.date_of_birth || new Date().toISOString().split('T')[0]
+            };
+
+            if (memberId) {
+                // Update existing shadow member
+                await memberService.updateMember(memberId, memberPayload);
+            } else {
+                // Create a new shadow member
+                const newMember = await memberService.createMember(memberPayload);
+                memberId = newMember.id;
+                visitorData.member_id = memberId;
+
+                // Immediately clear the automatically generated member number for the visitor shadow record
+                await memberService.updateMember(memberId, {
+                    member_number: null as any,
+                    member_number_year: null as any,
+                    member_number_seq: null as any
+                });
+            }
 
             const savedVisitor = await visitorService.upsertVisitor(visitorData);
 

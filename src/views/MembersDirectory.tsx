@@ -9,8 +9,44 @@ import { exportToCSV } from "../lib/csv";
 const MembersDirectory: React.FC = () => {
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filterStatus, setFilterStatus] = useState<string>("all");
+    const [searchTerm, setSearchTerm] = useState(() => {
+        try {
+            const saved = sessionStorage.getItem('members-directory-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.searchTerm) return parsed.searchTerm;
+            }
+        } catch (e) { console.error(e); }
+        return "";
+    });
+    const [filterStatus, setFilterStatus] = useState<string>(() => {
+        try {
+            const saved = sessionStorage.getItem('members-directory-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.filterStatus) return parsed.filterStatus;
+            }
+        } catch (e) { console.error(e); }
+        return "all";
+    });
+
+    // Add debug mount/unmount logging
+    useEffect(() => {
+        console.log('[MembersDirectory] Mounted! State restored:', { searchTerm, filterStatus });
+        return () => {
+            console.log('[MembersDirectory] Unmounted!');
+        };
+    }, []);
+
+    useEffect(() => {
+        console.log('[MembersDirectory] State Changed:', { searchTerm, filterStatus });
+        try {
+            sessionStorage.setItem('members-directory-state', JSON.stringify({
+                searchTerm,
+                filterStatus
+            }));
+        } catch (e) { console.error(e); }
+    }, [searchTerm, filterStatus]);
 
     useEffect(() => {
         fetchMembers();
@@ -37,6 +73,7 @@ const MembersDirectory: React.FC = () => {
         const matchesFilter =
             (filterStatus === "all") ||
             (filterStatus === "regular" && member.is_regular_member) ||
+            (filterStatus === "visitors" && member.is_regular_member === false) ||
             (member.membership_status === filterStatus);
 
         return matchesSearch && matchesFilter;
@@ -47,10 +84,10 @@ const MembersDirectory: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-[var(--color-text-main)]">
-                        Members Directory
+                        People Directory
                     </h1>
                     <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                        Manage church members, track details, and view profiles.
+                        Manage church members and visitors, track details, and view profiles.
                     </p>
                 </div>
                 <div className="flex gap-3">
@@ -68,7 +105,7 @@ const MembersDirectory: React.FC = () => {
                                 home_address: m.home_address,
                                 membership_status: m.membership_status
                             }));
-                            exportToCSV('Church_Members_Directory.csv', exportData, [
+                            exportToCSV('Church_People_Directory.csv', exportData, [
                                 { key: 'member_number', label: 'Member #' },
                                 { key: 'surname', label: 'Surname' },
                                 { key: 'first_name', label: 'First Name' },
@@ -120,6 +157,7 @@ const MembersDirectory: React.FC = () => {
                     >
                         <option value="all">All People</option>
                         <option value="regular">Regular Members</option>
+                        <option value="visitors">Visitors / Non-Members</option>
                         <option value="active">Active Members</option>
                         <option value="inactive">Inactive</option>
                         <option value="under_discipline">Under Discipline</option>

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Session, User } from '@supabase/supabase-js';
 
@@ -22,6 +22,10 @@ const AuthContext = createContext<AuthContextType>({
     signOut: async () => { },
 });
 
+const LoadingScreen: React.FC = () => (
+    <div className="min-h-screen bg-[#111] flex items-center justify-center text-white">Loading...</div>
+);
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [user, setUser] = useState<User | null>(null);
@@ -29,33 +33,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [roles, setRoles] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const currentUserIdRef = useRef<string | null>(null);
+    const initializedRef = useRef(false);
+    const memberRef = useRef<any | null>(null);
+    const rolesRef = useRef<string[]>([]);
+
+    // Update refs to maintain stable values inside effect closures
+    useEffect(() => {
+        memberRef.current = member;
+    }, [member]);
+
+    useEffect(() => {
+        rolesRef.current = roles;
+    }, [roles]);
+
     useEffect(() => {
         // 1. Check active session on mount
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
+            currentUserIdRef.current = session?.user?.id ?? null;
             if (session?.user) {
                 // fetchMemberProfile will set loading=false when done
                 fetchMemberProfile(session.user.email);
             } else {
                 setLoading(false);
+                initializedRef.current = true;
             }
         });
 
         // 2. Listen for auth changes (login, logout, token refresh)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('[Auth] onAuthStateChange event:', event, 'Session user ID:', session?.user?.id);
+            const newUserId = session?.user?.id ?? null;
+            const previousUserId = currentUserIdRef.current;
+            currentUserIdRef.current = newUserId;
+
             setSession(session);
             setUser(session?.user ?? null);
+
             if (session?.user) {
-                // Immediately set loading=true so children are blocked while
-                // we fetch the member profile and roles. This prevents HomeLanding
-                // from rendering with empty roles and redirecting to /unauthorized.
-                setLoading(true);
+                const isUserChanged = previousUserId !== newUserId;
+                const hasNoProfileYet = !memberRef.current || rolesRef.current.length === 0;
+
+                if (isUserChanged || hasNoProfileYet || !initializedRef.current) {
+                    // Only set loading to true on initial load, login, or actual user identity change
+                    setLoading(true);
+                }
+
                 fetchMemberProfile(session.user.email);
             } else {
                 setMember(null);
                 setRoles([]);
                 setLoading(false);
+                initializedRef.current = true;
             }
         });
 
@@ -108,6 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('[Auth] Error loading member profile:', error);
         } finally {
             setLoading(false);
+            initializedRef.current = true;
         }
     };
 
@@ -119,9 +151,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return (
         <AuthContext.Provider value={{ session, user, member, roles, loading, signOut }}>
-            {/* Block all child rendering until member profile + roles are fully loaded.
-                This prevents HomeLanding from seeing empty roles and redirecting prematurely. */}
-            {!loading && children}
+            {/* Block all child rendering until member profile + roles are fully loaded on initial boot.
+                Once bootstrapped (initializedRef.current is true), continuously render children to prevent
+                unmounting the entire app during silent token refreshes or background checks. */}
+            {initializedRef.current ? children : <LoadingScreen />}
         </AuthContext.Provider>
     );
 };

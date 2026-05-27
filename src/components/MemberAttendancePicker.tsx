@@ -6,6 +6,7 @@ export interface AttendanceMember {
     first_name: string;
     surname: string;
     profile_picture_url?: string;
+    is_regular_member?: boolean;
 }
 
 interface MemberAttendancePickerProps {
@@ -57,7 +58,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
     const visibleMembers = useMemo(() => {
         if (!showVisitorToggle) return members;
         if (includeVisitors) return members;
-        return members;
+        return members.filter((m) => m.is_regular_member !== false);
     }, [members, showVisitorToggle, includeVisitors]);
 
     useEffect(() => {

@@ -139,7 +139,7 @@ const ServiceForm: React.FC = () => {
     const [showRoleSearch, setShowRoleSearch] = useState<ServiceRole | null>(null);
 
     const visitorMemberIds = useMemo(
-        () => new Set(members.filter((m) => !m.member_number).map((m) => m.id)),
+        () => new Set(members.filter((m) => m.is_regular_member === false).map((m) => m.id)),
         [members]
     );
     const isPrimaryService = isPrimaryServiceType(service.service_type);
@@ -436,6 +436,13 @@ const ServiceForm: React.FC = () => {
                         gender: v.gender,
                         civil_status: v.marital_status || 'Single',
                         date_of_birth: v.date_of_birth || new Date().toISOString().split('T')[0]
+                    });
+
+                    // Immediately clear the automatically generated member number for the visitor shadow record
+                    await memberService.updateMember(memberData.id, {
+                        member_number: null as any,
+                        member_number_year: null as any,
+                        member_number_seq: null as any
                     });
 
                     cardVisitorMemberIds.push(memberData.id);

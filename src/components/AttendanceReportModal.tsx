@@ -31,12 +31,18 @@ const AttendanceReportModal: React.FC<AttendanceReportModalProps> = ({
 
     // Tardy members are counted as present for total attendance purposes usually
     const selectedVisitorCount = localSelectedIds.filter((id) =>
-        members.some((m) => m.id === id && false)
+        members.some((m) => m.id === id && m.is_regular_member === false)
     ).length;
-    // We add tardy count to regular count
+    const tardyVisitorCount = localTardyIds.filter((id) =>
+        members.some((m) => m.id === id && m.is_regular_member === false)
+    ).length;
+
+    const totalSelectedVisitors = selectedVisitorCount + tardyVisitorCount;
     const selectedRegularCount = localSelectedIds.length - selectedVisitorCount;
-    const effectiveVisitorsCount = Math.max(visitorsCount, selectedVisitorCount);
-    const effectiveTotal = selectedRegularCount + localTardyIds.length + effectiveVisitorsCount;
+    const tardyRegularCount = localTardyIds.length - tardyVisitorCount;
+
+    const effectiveVisitorsCount = Math.max(visitorsCount, totalSelectedVisitors);
+    const effectiveTotal = selectedRegularCount + tardyRegularCount + effectiveVisitorsCount;
 
     useEffect(() => {
         if (!isOpen) return;

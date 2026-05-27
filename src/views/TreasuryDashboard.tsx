@@ -80,11 +80,56 @@ const TreasuryDashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<'active' | 'deleted' | 'faith_promise'>('active');
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedMonth, setSelectedMonth] = useState('all');
-    const [selectedSunday, setSelectedSunday] = useState('');
-    const [sortDirection, setSortDirection] = useState<'desc' | 'asc'>('desc');
+    const [activeTab, setActiveTab] = useState<'active' | 'deleted' | 'faith_promise'>(() => {
+        try {
+            const saved = sessionStorage.getItem('treasury-dashboard-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.activeTab) return parsed.activeTab;
+            }
+        } catch (e) { console.error(e); }
+        return 'active';
+    });
+    const [selectedYear, setSelectedYear] = useState<number>(() => {
+        try {
+            const saved = sessionStorage.getItem('treasury-dashboard-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.selectedYear) return Number(parsed.selectedYear);
+            }
+        } catch (e) { console.error(e); }
+        return new Date().getFullYear();
+    });
+    const [selectedMonth, setSelectedMonth] = useState<string>(() => {
+        try {
+            const saved = sessionStorage.getItem('treasury-dashboard-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.selectedMonth) return parsed.selectedMonth;
+            }
+        } catch (e) { console.error(e); }
+        return 'all';
+    });
+    const [selectedSunday, setSelectedSunday] = useState<string>(() => {
+        try {
+            const saved = sessionStorage.getItem('treasury-dashboard-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.selectedSunday) return parsed.selectedSunday;
+            }
+        } catch (e) { console.error(e); }
+        return '';
+    });
+    const [sortDirection, setSortDirection] = useState<'desc' | 'asc'>(() => {
+        try {
+            const saved = sessionStorage.getItem('treasury-dashboard-state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.sortDirection) return parsed.sortDirection;
+            }
+        } catch (e) { console.error(e); }
+        return 'desc';
+    });
 
     const [confirmRevert, setConfirmRevert] = useState<{ isOpen: boolean; member_id: string | null; date: string | null; name: string }>({
         isOpen: false, member_id: null, date: null, name: ''
@@ -103,11 +148,43 @@ const TreasuryDashboard: React.FC = () => {
     const [showImport, setShowImport] = useState(false);
     const initializedFiltersRef = useRef(false);
 
+    // Add debug mount/unmount logging
+    useEffect(() => {
+        console.log('[TreasuryDashboard] Mounted! State restored:', { activeTab, selectedYear, selectedMonth, selectedSunday, sortDirection });
+        return () => {
+            console.log('[TreasuryDashboard] Unmounted!');
+        };
+    }, []);
+
+    // Persist changes in sessionStorage
+    useEffect(() => {
+        console.log('[TreasuryDashboard] State Changed:', { activeTab, selectedYear, selectedMonth, selectedSunday, sortDirection });
+        try {
+            sessionStorage.setItem('treasury-dashboard-state', JSON.stringify({
+                activeTab,
+                selectedYear,
+                selectedMonth,
+                selectedSunday,
+                sortDirection
+            }));
+        } catch (e) { console.error(e); }
+    }, [activeTab, selectedYear, selectedMonth, selectedSunday, sortDirection]);
+
     useEffect(() => {
         if (initializedFiltersRef.current) return;
 
         const initializeFiltersFromLatestRecord = async () => {
             try {
+                // If we already have stored state, skip fetching latest date to avoid overwriting selected settings
+                const saved = sessionStorage.getItem('treasury-dashboard-state');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.selectedYear) {
+                        initializedFiltersRef.current = true;
+                        return;
+                    }
+                }
+
                 const latestDate = await financeService.getLatestFinancialTransactionDate('active');
                 if (!latestDate) return;
 
