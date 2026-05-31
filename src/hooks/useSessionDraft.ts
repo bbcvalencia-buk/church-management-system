@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
- * Persists form draft state in sessionStorage so it survives tab switches / navigation
- * but is cleared when the browser session ends.
+ * Persists form draft state in localStorage so it survives tab switches / navigation
+ * and survives browser crashes or mobile OS background suspension.
  *
  * Usage:
  *   const [form, setForm, clearDraft] = useSessionDraft('service-form', INITIAL_STATE);
  *
- * - `form`       — current state (restored from session on mount)
+ * - `form`       — current state (restored from local storage on mount)
  * - `setForm`    — works like a normal setState
  * - `clearDraft` — call after successful save to wipe draft
  */
@@ -18,10 +18,10 @@ export function useSessionDraft<T>(
     const storageKey = `draft:${key}`;
     const isInitialMount = useRef(true);
 
-    // On mount: try to restore from sessionStorage, else use initialState
+    // On mount: try to restore from localStorage, else use initialState
     const [state, setState] = useState<T>(() => {
         try {
-            const saved = sessionStorage.getItem(storageKey);
+            const saved = localStorage.getItem(storageKey);
             if (saved) {
                 const parsed = JSON.parse(saved);
                 // Merge with initialState to handle any new fields added since draft was saved
@@ -33,14 +33,14 @@ export function useSessionDraft<T>(
         return initialState;
     });
 
-    // Persist to sessionStorage on every state change (skip initial mount to avoid writing initialState)
+    // Persist to localStorage on every state change (skip initial mount to avoid writing initialState)
     useEffect(() => {
         if (isInitialMount.current) {
             isInitialMount.current = false;
             return;
         }
         try {
-            sessionStorage.setItem(storageKey, JSON.stringify(state));
+            localStorage.setItem(storageKey, JSON.stringify(state));
         } catch (e) {
             console.warn(`[useSessionDraft] Failed to save draft "${key}":`, e);
         }
@@ -48,7 +48,7 @@ export function useSessionDraft<T>(
 
     // Clear draft — call this on successful form submission
     const clearDraft = useCallback(() => {
-        sessionStorage.removeItem(storageKey);
+        localStorage.removeItem(storageKey);
         setState(initialState);
     }, [storageKey, initialState]);
 
@@ -56,7 +56,7 @@ export function useSessionDraft<T>(
 }
 
 /**
- * Persists a simple value (like a selected member or list of IDs) in sessionStorage.
+ * Persists a simple value (like a selected member or list of IDs) in localStorage.
  * Same idea as useSessionDraft but for non-form values.
  */
 export function useSessionValue<T>(
@@ -68,7 +68,7 @@ export function useSessionValue<T>(
 
     const [value, setValue] = useState<T>(() => {
         try {
-            const saved = sessionStorage.getItem(storageKey);
+            const saved = localStorage.getItem(storageKey);
             if (saved) return JSON.parse(saved);
         } catch (e) { /* ignore */ }
         return initialValue;
@@ -80,14 +80,15 @@ export function useSessionValue<T>(
             return;
         }
         try {
-            sessionStorage.setItem(storageKey, JSON.stringify(value));
+            localStorage.setItem(storageKey, JSON.stringify(value));
         } catch (e) { /* ignore */ }
     }, [value, storageKey]);
 
     const clear = useCallback(() => {
-        sessionStorage.removeItem(storageKey);
+        localStorage.removeItem(storageKey);
         setValue(initialValue);
     }, [storageKey, initialValue]);
 
     return [value, setValue, clear];
 }
+

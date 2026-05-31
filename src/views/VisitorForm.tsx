@@ -11,6 +11,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { User, Phone, MapPin, Calendar, Heart, ArrowLeft, Save, UserPlus, CheckCircle, Upload, FileText } from 'lucide-react';
 import ConvertToMemberModal from '@/components/ConvertToMemberModal';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSessionDraft } from '@/hooks/useSessionDraft';
 
 const VisitorForm: React.FC = () => {
     const { id } = useParams();
@@ -18,16 +19,20 @@ const VisitorForm: React.FC = () => {
     const { showToast } = useToast();
     const isEditMode = !!id;
 
-    const [visitor, setVisitor] = useState<Partial<Visitor>>({
-        visit_date: getLatestSundayISODate(),
-        visit_time: 'AM',
-        gender: 'Male',
-        marital_status: 'Single',
-        follow_up_status: 'pending',
-        is_prospect_for_baptism: false,
-        is_saved: false,
-        visitor_card_images: []
-    });
+    const [visitor, setVisitor, clearVisitorDraft] = useSessionDraft<Partial<Visitor>>(
+        isEditMode ? `visitor-form-edit-${id}` : 'visitor-form-new',
+        {
+            visit_date: getLatestSundayISODate(),
+            visit_time: 'AM',
+            gender: 'Male',
+            marital_status: 'Single',
+            follow_up_status: 'pending',
+            is_prospect_for_baptism: false,
+            is_saved: false,
+            visitor_card_images: []
+        }
+    );
+
     const [loading, setLoading] = useState(isEditMode);
     const [activeTab, setActiveTab] = useState('visit');
     const [showConvertModal, setShowConvertModal] = useState(false);
@@ -124,6 +129,7 @@ const VisitorForm: React.FC = () => {
             const savedVisitor = await visitorService.upsertVisitor(visitorData);
 
             showToast(isEditMode ? "Visitor updated successfully!" : "Visitor added successfully!", 'success');
+            clearVisitorDraft();
 
             if (!isEditMode) {
                 navigate(`/visitors/${savedVisitor.id}`);
