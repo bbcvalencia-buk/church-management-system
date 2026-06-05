@@ -16,6 +16,8 @@ import {
 import { UserRole } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { getSundaySchoolScopeLabel, deriveTeacherDepartments } from '@/lib/sundaySchoolAccess';
+import { getMemberPositions } from '@/services/memberService';
 
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -127,6 +129,30 @@ const RoleManagement: React.FC = () => {
     };
 
     const [selectedMember, setSelectedMember] = useState<any | null>(null);
+    const [selectedMemberScopeLabel, setSelectedMemberScopeLabel] = useState<string>('');
+
+    useEffect(() => {
+        const loadMemberScope = async () => {
+            if (!selectedMember) {
+                setSelectedMemberScopeLabel('');
+                return;
+            }
+
+            try {
+                const positions = await getMemberPositions(selectedMember.id);
+                const teacherDepartments = deriveTeacherDepartments(positions || []);
+                const scopeLabel = teacherDepartments.length > 0
+                    ? getSundaySchoolScopeLabel(teacherDepartments)
+                    : '';
+                setSelectedMemberScopeLabel(scopeLabel);
+            } catch (err) {
+                console.error('Failed to load member positions for Sunday School scope:', err);
+                setSelectedMemberScopeLabel('');
+            }
+        };
+
+        loadMemberScope();
+    }, [selectedMember]);
 
     const resolveProfileEditRequest = async (requestId: string, status: 'approved' | 'rejected') => {
         setResolvingRequestId(requestId);
@@ -294,6 +320,11 @@ const RoleManagement: React.FC = () => {
                                                         ) : (
                                                             <span className="text-[10px] text-gray-400">No access</span>
                                                         )}
+                                        {selectedMember?.id === member.id && selectedMemberScopeLabel ? (
+                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                                {selectedMemberScopeLabel}
+                                            </span>
+                                        ) : null}
                                                     </div>
                                                 </div>
                                                 <ArrowRight size={16} className={`text-gray-300 ${isSelected ? 'text-[var(--color-primary)] opacity-100' : 'opacity-0'}`} />
@@ -330,6 +361,11 @@ const RoleManagement: React.FC = () => {
                                     <p className="text-[var(--color-text-muted)] flex items-center gap-2 text-sm mt-1">
                                         <User size={14} /> ID: {selectedMember.id}
                                     </p>
+                                    {selectedMemberScopeLabel ? (
+                                        <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                                            <Shield size={12} /> Sunday School: {selectedMemberScopeLabel}
+                                        </div>
+                                    ) : null}
                                 </div>
                             </div>
 
