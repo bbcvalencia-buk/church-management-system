@@ -14,10 +14,10 @@ import {
     Clock3
 } from 'lucide-react';
 import { UserRole } from '@/types';
+import type { ChurchPosition } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { getSundaySchoolScopeLabel, deriveTeacherDepartments } from '@/lib/sundaySchoolAccess';
-import { getMemberPositions } from '@/services/memberService';
 
 import ConfirmModal from '@/components/ConfirmModal';
 
@@ -129,30 +129,86 @@ const RoleManagement: React.FC = () => {
     };
 
     const [selectedMember, setSelectedMember] = useState<any | null>(null);
+    const [selectedMemberPositions, setSelectedMemberPositions] = useState<ChurchPosition[]>([]);
     const [selectedMemberScopeLabel, setSelectedMemberScopeLabel] = useState<string>('');
+    const [savingScope, setSavingScope] = useState(false);
 
     useEffect(() => {
         const loadMemberScope = async () => {
             if (!selectedMember) {
+                setSelectedMemberPositions([]);
                 setSelectedMemberScopeLabel('');
                 return;
             }
 
             try {
-                const positions = await getMemberPositions(selectedMember.id);
-                const teacherDepartments = deriveTeacherDepartments(positions || []);
-                const scopeLabel = teacherDepartments.length > 0
-                    ? getSundaySchoolScopeLabel(teacherDepartments)
-                    : '';
-                setSelectedMemberScopeLabel(scopeLabel);
+                const positions = await memberService.getMemberPositions(selectedMember.id);
+                const activePositions = (positions || []).filter((pos) => pos.is_active);
+                setSelectedMemberPositions(activePositions);
+                const teacherDepartments = deriveTeacherDepartments(activePositions);
+                setSelectedMemberScopeLabel(teacherDepartments.length > 0 ? getSundaySchoolScopeLabel(teacherDepartments) : '');
             } catch (err) {
                 console.error('Failed to load member positions for Sunday School scope:', err);
+                setSelectedMemberPositions([]);
                 setSelectedMemberScopeLabel('');
             }
         };
 
         loadMemberScope();
     }, [selectedMember]);
+
+    const getScopePositions = (category: ChurchPosition['position_category']) => {
+        return selectedMemberPositions.filter((pos) => pos.position_category === category);
+    };
+
+    const hasScope = (category: ChurchPosition['position_category']) => getScopePositions(category).length > 0;
+
+    const getScopeLabel = (category: ChurchPosition['position_category']) => {
+        switch (category) {
+            case 'sunday_school_adult': return 'Adult';
+            case 'beginners_class': return 'Beginners';
+            case 'sunday_school_children': return 'Children';
+            default: return category;
+        }
+    };
+
+    const buildScopePosition = (category: ChurchPosition['position_category']): Partial<ChurchPosition> => ({
+        member_id: selectedMember?.id || '',
+        position_category: category,
+        position_name: 'Sunday School Teacher',
+        department:
+            category === 'sunday_school_adult' ? 'Sunday School Adult' :
+            category === 'beginners_class' ? 'Beginners Class' :
+            'Sunday School Children',
+        specific_role: 'Teacher',
+        is_ministry_head: false,
+        start_date: new Date().toISOString().split('T')[0],
+        is_active: true,
+    });
+
+    const toggleScopeCategory = async (category: ChurchPosition['position_category']) => {
+        if (!selectedMember) return;
+        setSavingScope(true);
+        try {
+            const existingIds = getScopePositions(category).map((pos) => pos.id).filter(Boolean) as string[];
+            if (existingIds.length > 0) {
+                await memberService.deleteChurchPositions(selectedMember.id, existingIds);
+            } else {
+                await memberService.upsertChurchPosition([buildScopePosition(category)]);
+            }
+            const positions = await memberService.getMemberPositions(selectedMember.id);
+            const activePositions = (positions || []).filter((pos) => pos.is_active);
+            setSelectedMemberPositions(activePositions);
+            const teacherDepartments = deriveTeacherDepartments(activePositions);
+            setSelectedMemberScopeLabel(teacherDepartments.length > 0 ? getSundaySchoolScopeLabel(teacherDepartments) : '');
+            showToast(`Sunday School ${getScopeLabel(category)} access ${existingIds.length > 0 ? 'removed' : 'assigned'}.`, 'success');
+        } catch (err: any) {
+            console.error(err);
+            showToast(`Failed to update Sunday School scope: ${err.message || err}`, 'error');
+        } finally {
+            setSavingScope(false);
+        }
+    };
 
     const resolveProfileEditRequest = async (requestId: string, status: 'approved' | 'rejected') => {
         setResolvingRequestId(requestId);
@@ -313,7 +369,7 @@ const RoleManagement: React.FC = () => {
                                                         {member.surname}, {member.first_name}
                                                     </h4>
                                                     <div className="flex items-center gap-1.5 mt-0.5">
-                                                        {hasAccess ? (
+                                                            {hasAccess ? (
                                                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-100">
                                                                 <Shield size={10} /> {memberRoles.length} Roles
                                                             </span>
@@ -342,30 +398,55 @@ const RoleManagement: React.FC = () => {
                     {selectedMember ? (
                         <div className="bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden fade-in-up">
                             {/* Header */}
-                            <div className="p-6 border-b border-gray-100 flex items-center gap-5 bg-gradient-to-r from-gray-50 to-white">
-                                <div className="w-20 h-20 rounded-2xl shadow-md overflow-hidden bg-white p-1 border border-gray-100">
-                                    <div className="w-full h-full rounded-xl overflow-hidden bg-gray-50">
-                                        {selectedMember.profile_picture_url ? (
-                                            <img src={selectedMember.profile_picture_url} alt="" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-300 bg-gray-100">
-                                                {selectedMember.first_name[0]}
+                            <div className="p-6 border-b border-gray-100 flex flex-col gap-5 bg-gradient-to-r from-gray-50 to-white">
+                                <div className="flex items-center gap-5">
+                                    <div className="w-20 h-20 rounded-2xl shadow-md overflow-hidden bg-white p-1 border border-gray-100">
+                                        <div className="w-full h-full rounded-xl overflow-hidden bg-gray-50">
+                                            {selectedMember.profile_picture_url ? (
+                                                <img src={selectedMember.profile_picture_url} alt="" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-300 bg-gray-100">
+                                                    {selectedMember.first_name[0]}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-[var(--color-text-main)]">
+                                            {selectedMember.first_name} {selectedMember.surname}
+                                        </h2>
+                                        <p className="text-[var(--color-text-muted)] flex items-center gap-2 text-sm mt-1">
+                                            <User size={14} /> ID: {selectedMember.id}
+                                        </p>
+                                        {selectedMemberScopeLabel ? (
+                                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                                                <Shield size={12} /> Sunday School: {selectedMemberScopeLabel}
                                             </div>
+                                        ) : (
+                                            <p className="text-xs text-gray-400 mt-2">Sunday School teacher scope not assigned.</p>
                                         )}
                                     </div>
                                 </div>
-                                <div>
-                                    <h2 className="text-2xl font-bold text-[var(--color-text-main)]">
-                                        {selectedMember.first_name} {selectedMember.surname}
-                                    </h2>
-                                    <p className="text-[var(--color-text-muted)] flex items-center gap-2 text-sm mt-1">
-                                        <User size={14} /> ID: {selectedMember.id}
+
+                                <div className="rounded-2xl bg-white border border-gray-200 p-4">
+                                    <div className="flex flex-wrap gap-2">
+                                        {(['sunday_school_adult', 'beginners_class', 'sunday_school_children'] as ChurchPosition['position_category'][]).map((category) => {
+                                            const active = hasScope(category);
+                                            return (
+                                                <button
+                                                    key={category}
+                                                    onClick={() => toggleScopeCategory(category)}
+                                                    disabled={savingScope}
+                                                    className={`px-3 py-2 rounded-full border text-xs font-semibold transition-colors ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'} ${savingScope ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                >
+                                                    {getScopeLabel(category)}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="text-[11px] text-gray-500 mt-3">
+                                        Toggle Sunday School department access for this member. Assigning Adult, Beginners, or Children will let them view the corresponding Sunday School reports.
                                     </p>
-                                    {selectedMemberScopeLabel ? (
-                                        <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                                            <Shield size={12} /> Sunday School: {selectedMemberScopeLabel}
-                                        </div>
-                                    ) : null}
                                 </div>
                             </div>
 
