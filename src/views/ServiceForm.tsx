@@ -312,11 +312,11 @@ const ServiceForm: React.FC = () => {
             const supportsVisitorsAndSouls = isPrimaryServiceType(service.service_type);
             const preparedVisitors = supportsVisitorsAndSouls ? normalizeDraftVisitors(newVisitors) : [];
             const invalidCardIndex = preparedVisitors.findIndex(visitor =>
-                !visitor.name || !visitor.address || !visitor.contact
+                !visitor.name || !visitor.date_of_birth
             );
 
             if (invalidCardIndex >= 0) {
-                throw new Error(`Visitor card #${invalidCardIndex + 1} is incomplete. Name, Address, and Contact No. are required.`);
+                throw new Error(`Visitor card #${invalidCardIndex + 1} is incomplete. Name and Date of Birth are required.`);
             }
 
             const selectedVisitorIds = selectedMemberIds.filter((id) => visitorMemberIds.has(id));

@@ -62,6 +62,9 @@ export const normalizeSundaySchoolDepartment = (
     if (haystack.includes("junior") || haystack.includes("youth")) {
         return "junior";
     }
+    if (haystack.includes("children") || haystack.includes("child")) {
+        return "junior";
+    }
     if (haystack.includes("adult")) {
         return "adult";
     }
@@ -70,6 +73,17 @@ export const normalizeSundaySchoolDepartment = (
     if (positionCategory === "sunday school adult") return "adult";
     if (positionCategory === "sunday school children") return "junior";
     return null;
+};
+
+const CHILDREN_DEPARTMENTS: SundaySchoolDepartmentId[] = ["nursery", "kinder", "primary", "junior"];
+
+const isChildrenAssignment = (assignment: SundaySchoolAssignmentLike) => {
+    const positionCategory = normalizeText(assignment.position_category);
+    const department = normalizeText(assignment.department);
+    const positionName = normalizeText(assignment.position_name);
+    const specificRole = normalizeText(assignment.specific_role);
+
+    return [positionCategory, department, positionName, specificRole].some((value) => value.includes("children") || value.includes("child"));
 };
 
 export const isSundaySchoolTeacherAssignment = (assignment: SundaySchoolAssignmentLike) => {
@@ -85,7 +99,11 @@ export const deriveTeacherDepartments = (assignments: SundaySchoolAssignmentLike
     for (const assignment of assignments) {
         if (!isSundaySchoolTeacherAssignment(assignment)) continue;
         const normalizedDept = normalizeSundaySchoolDepartment(assignment);
-        if (normalizedDept) {
+        if (!normalizedDept) continue;
+
+        if (normalizedDept === "junior" && isChildrenAssignment(assignment)) {
+            CHILDREN_DEPARTMENTS.forEach((dept) => departments.add(dept));
+        } else {
             departments.add(normalizedDept);
         }
     }

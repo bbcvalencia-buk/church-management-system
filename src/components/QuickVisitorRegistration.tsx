@@ -113,8 +113,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                     const isEditing = editingId === visitor.id;
                     const isComplete = Boolean(
                         visitor.name.trim() &&
-                        (visitor.address || '').trim() &&
-                        (visitor.contact || '').trim()
+                        (visitor.date_of_birth || '').trim()
                     );
 
                     if (isEditing) {
@@ -144,7 +143,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-[10px] uppercase text-gray-500 font-bold">Address *</label>
+                                            <label className="text-[10px] uppercase text-gray-500 font-bold">Address</label>
                                             <input
                                                 type="text"
                                                 placeholder="Complete Home Address"
@@ -229,7 +228,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <label className="text-[10px] uppercase text-gray-500 font-bold">Date of Birth</label>
+                                            <label className="text-[10px] uppercase text-gray-500 font-bold">Date of Birth *</label>
                                             <input
                                                 type="date"
                                                 value={visitor.date_of_birth || ''}
@@ -240,7 +239,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                     </div>
 
                                     <div className="space-y-1">
-                                        <label className="text-[10px] uppercase text-gray-500 font-bold">Contact No. *</label>
+                                        <label className="text-[10px] uppercase text-gray-500 font-bold">Contact No.</label>
                                         <input
                                             type="text"
                                             value={visitor.contact || ''}
@@ -354,7 +353,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                     )}
                                     {!isComplete && (
                                         <p className="text-[11px] font-semibold text-amber-700">
-                                            Required: Name, Address, Contact No.
+                                            Required: Name and Date of Birth.
                                         </p>
                                     )}
                                 </div>
