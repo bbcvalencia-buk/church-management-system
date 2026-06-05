@@ -35,6 +35,7 @@ import { findExistingMemberForVisitor, splitVisitorName } from "@/lib/visitorDed
 import { useAuth } from "@/contexts/AuthContext";
 import {
     deriveTeacherDepartments,
+    getSundaySchoolScopeLabel,
     isSundaySchoolTeacherAssignment,
     normalizeSundaySchoolDepartment,
     SUNDAY_SCHOOL_POSITION_CATEGORIES
@@ -779,7 +780,7 @@ const SundaySchool: React.FC = () => {
                         <p className="text-xs text-gray-500 mt-0.5">
                             Logged in as <span className="text-blue-600 font-semibold">{currentMember?.first_name} {currentMember?.surname}</span>
                             {!isSundaySchoolAdmin ? (
-                                <span> — {teacherDepartments.map(d => DEPARTMENTS.find(dept => dept.id === d)?.label).join(', ')} Teacher</span>
+                                <span> — {getSundaySchoolScopeLabel(teacherDepartments as any[])} Teacher</span>
                             ) : (
                                 <span> — Admin</span>
                             )}

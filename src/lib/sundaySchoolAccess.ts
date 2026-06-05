@@ -86,6 +86,24 @@ const isChildrenAssignment = (assignment: SundaySchoolAssignmentLike) => {
     return [positionCategory, department, positionName, specificRole].some((value) => value.includes("children") || value.includes("child"));
 };
 
+export const getSundaySchoolDepartmentGroups = (departmentIds: SundaySchoolDepartmentId[]) => {
+    const groups = new Set<string>();
+    const hasChildren = departmentIds.some((id) => CHILDREN_DEPARTMENTS.includes(id));
+
+    if (hasChildren) groups.add("Children");
+    if (departmentIds.includes("adult")) groups.add("Adult");
+    if (departmentIds.includes("beginners")) groups.add("Beginners");
+
+    return Array.from(groups);
+};
+
+export const getSundaySchoolScopeLabel = (departmentIds: SundaySchoolDepartmentId[]) => {
+    const groups = getSundaySchoolDepartmentGroups(departmentIds);
+    if (groups.length === 0) return "";
+    if (groups.length === 3) return "All Departments";
+    return groups.join(" / ");
+};
+
 export const isSundaySchoolTeacherAssignment = (assignment: SundaySchoolAssignmentLike) => {
     if (assignment.is_ministry_head) return true;
     const roleText = normalizeText(`${assignment.position_name || ""} ${assignment.specific_role || ""}`);
@@ -98,7 +116,29 @@ export const deriveTeacherDepartments = (assignments: SundaySchoolAssignmentLike
 
     for (const assignment of assignments) {
         if (!isSundaySchoolTeacherAssignment(assignment)) continue;
+
         const normalizedDept = normalizeSundaySchoolDepartment(assignment);
+        const positionCategory = normalizeText(assignment.position_category);
+
+        if (positionCategory === "sunday school children") {
+            if (normalizedDept && CHILDREN_DEPARTMENTS.includes(normalizedDept)) {
+                departments.add(normalizedDept);
+            } else {
+                CHILDREN_DEPARTMENTS.forEach((dept) => departments.add(dept));
+            }
+            continue;
+        }
+
+        if (positionCategory === "beginners class") {
+            departments.add("beginners");
+            continue;
+        }
+
+        if (positionCategory === "sunday school adult") {
+            departments.add("adult");
+            continue;
+        }
+
         if (!normalizedDept) continue;
 
         if (normalizedDept === "junior" && isChildrenAssignment(assignment)) {

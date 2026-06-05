@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types';
-import { deriveTeacherDepartments, SUNDAY_SCHOOL_POSITION_CATEGORIES } from '@/lib/sundaySchoolAccess';
+import { deriveTeacherDepartments, getSundaySchoolScopeLabel, SUNDAY_SCHOOL_POSITION_CATEGORIES } from '@/lib/sundaySchoolAccess';
 import {
     LayoutDashboard,
     Users,
@@ -56,6 +56,7 @@ const Layout: React.FC = () => {
     const [systemName, setSystemName] = useState('Management System');
     const [churchLogoUrl, setChurchLogoUrl] = useState<string | null>(null);
     const [canAccessSundaySchool, setCanAccessSundaySchool] = useState(false);
+    const [sundaySchoolScopeLabel, setSundaySchoolScopeLabel] = useState('All Departments');
 
     // Notification state
     const [notifOpen, setNotifOpen] = useState(false);
@@ -81,11 +82,13 @@ const Layout: React.FC = () => {
         const resolveSundaySchoolAccess = async () => {
             if (!member?.id) {
                 setCanAccessSundaySchool(false);
+                setSundaySchoolScopeLabel('');
                 return;
             }
 
             if (roles.includes(UserRole.CHURCH_ADMINISTRATOR) || roles.includes(UserRole.PASTOR) || roles.includes(UserRole.SUNDAY_SCHOOL_ADMIN)) {
                 setCanAccessSundaySchool(true);
+                setSundaySchoolScopeLabel('All Departments');
                 return;
             }
 
@@ -104,6 +107,7 @@ const Layout: React.FC = () => {
 
             const teacherDepartments = deriveTeacherDepartments((data || []) as any[]);
             setCanAccessSundaySchool(teacherDepartments.length > 0);
+            setSundaySchoolScopeLabel(teacherDepartments.length > 0 ? getSundaySchoolScopeLabel(teacherDepartments) : '');
         };
 
         resolveSundaySchoolAccess();
@@ -261,23 +265,29 @@ const Layout: React.FC = () => {
                                         {group.section}
                                     </h3>
                                     <div className="space-y-1">
-                                        {visibleItems.map((item) => (
-                                            <NavLink
-                                                key={item.to}
-                                                to={item.to}
-                                                onClick={() => setSidebarOpen(false)}
-                                                className={({ isActive }) => `
+                                        {visibleItems.map((item) => {
+                                            const label = item.to === '/sunday-school' && sundaySchoolScopeLabel
+                                                ? `Sunday School (${sundaySchoolScopeLabel})`
+                                                : item.label;
+
+                                            return (
+                                                <NavLink
+                                                    key={item.to}
+                                                    to={item.to}
+                                                    onClick={() => setSidebarOpen(false)}
+                                                    className={({ isActive }) => `
                             flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 group font-medium
                             ${isActive
                                                         ? 'bg-gray-100 text-[var(--color-primary)]'
                                                         : 'text-[var(--color-text-muted)] hover:bg-gray-50 hover:text-[var(--color-text-main)]'
                                                     }
                           `}
-                                            >
-                                                <item.icon size={18} />
-                                                <span className="font-medium text-sm">{item.label}</span>
-                                            </NavLink>
-                                        ))}
+                                                >
+                                                    <item.icon size={18} />
+                                                    <span className="font-medium text-sm">{label}</span>
+                                                </NavLink>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             );
