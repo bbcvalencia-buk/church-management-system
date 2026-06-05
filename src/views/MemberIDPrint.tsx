@@ -198,14 +198,16 @@ const MemberIDPrint: React.FC = () => {
             ctx.stroke();
 
             // ID Number (left)
-            ctx.textAlign = 'left';
-            ctx.fillStyle = '#9ca3af';
-            ctx.font = `bold ${6 * scale}px Arial`;
-            ctx.fillText('ID NUMBER', 16 * scale, footerY);
-            ctx.fillStyle = '#1f2937';
-            ctx.font = `bold ${10 * scale}px monospace`;
-            const idNum = member.member_number || (member.id_number ?? 0).toString().padStart(4, '0');
-            ctx.fillText(idNum, 16 * scale, footerY + 12 * scale);
+            const idNum = member.is_regular_member ? (member.member_number || (member.id_number ?? 0).toString().padStart(4, '0')) : '';
+            if (idNum) {
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = `bold ${6 * scale}px Arial`;
+                ctx.fillText('ID NUMBER', 16 * scale, footerY);
+                ctx.fillStyle = '#1f2937';
+                ctx.font = `bold ${10 * scale}px monospace`;
+                ctx.fillText(idNum, 16 * scale, footerY + 12 * scale);
+            }
 
             // Joined (right)
             ctx.textAlign = 'right';
@@ -312,14 +314,16 @@ const MemberIDPrint: React.FC = () => {
                     </div>
 
                     {/* Metadata Footer */}
-                    <div className="w-full pt-2 border-t border-gray-100 flex justify-between items-end mt-2">
-                        <div className="text-left">
-                            <p className="text-[6px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">ID Number</p>
-                            <p className="text-xs font-mono font-bold text-gray-800 tracking-tighter">
-                                {member.member_number || (member.id_number ?? 0).toString().padStart(4, '0')}
-                            </p>
-                        </div>
-                        <div className="text-right">
+                    <div className={`w-full pt-2 border-t border-gray-100 flex ${member.is_regular_member ? 'justify-between' : 'justify-center'} items-end mt-2`}>
+                        {member.is_regular_member && (
+                            <div className="text-left">
+                                <p className="text-[6px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">ID Number</p>
+                                <p className="text-xs font-mono font-bold text-gray-800 tracking-tighter">
+                                    {member.member_number || (member.id_number ?? 0).toString().padStart(4, '0')}
+                                </p>
+                            </div>
+                        )}
+                        <div className={member.is_regular_member ? 'text-right' : 'text-center'}>
                             <p className="text-[6px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Joined</p>
                             <p className="text-[9px] font-bold text-gray-800">
                                 {member.membership_date ? new Date(member.membership_date).getFullYear() : 'N/A'}

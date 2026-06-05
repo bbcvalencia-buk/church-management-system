@@ -79,6 +79,9 @@ const MembersDirectory: React.FC = () => {
         return matchesSearch && matchesFilter;
     });
 
+    const regularMembers = filterStatus === 'all' ? filteredMembers.filter(member => member.is_regular_member) : [];
+    const visitorMembers = filterStatus === 'all' ? filteredMembers.filter(member => !member.is_regular_member) : [];
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -179,11 +182,47 @@ const MembersDirectory: React.FC = () => {
                     ))}
                 </div>
             ) : filteredMembers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filteredMembers.map((member) => (
-                        <MemberCard key={member.id} member={member} />
-                    ))}
-                </div>
+                <>
+                    {filterStatus === 'all' && regularMembers.length > 0 && (
+                        <section className="space-y-4">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-[var(--color-text-main)]">Regular Members</h2>
+                                    <p className="text-sm text-[var(--color-text-muted)]">{regularMembers.length} regular member{regularMembers.length === 1 ? '' : 's'}</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {regularMembers.map((member) => (
+                                    <MemberCard key={member.id} member={member} />
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
+                    {filterStatus === 'all' && visitorMembers.length > 0 && (
+                        <section className="space-y-4 pt-8">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <h2 className="text-xl font-semibold text-[var(--color-text-main)]">Visitors / Non-Members</h2>
+                                    <p className="text-sm text-[var(--color-text-muted)]">{visitorMembers.length} visitor record{visitorMembers.length === 1 ? '' : 's'}</p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {visitorMembers.map((member) => (
+                                    <MemberCard key={member.id} member={member} />
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
+                    {filterStatus !== 'all' && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            {filteredMembers.map((member) => (
+                                <MemberCard key={member.id} member={member} />
+                            ))}
+                        </div>
+                    )}
+                </>
             ) : (
                 <div className="text-center py-12 text-[var(--color-text-muted)] card-panel bg-white">
                     <p>No members found matching your criteria.</p>

@@ -718,16 +718,18 @@ const MemberProfile: React.FC = () => {
                                     </h1>
                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 mb-4">
                                         <span className={`px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider ${member.membership_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                                            {member.membership_status} Member
+                                            {member.membership_status} {member.is_regular_member ? 'Member' : 'Visitor'}
                                         </span>
                                         {member.member_number && (
                                             <span className="bg-indigo-600 text-white px-3 py-1 rounded-md font-bold text-[12px] tracking-wider shadow-sm">
                                                 {member.member_number}
                                             </span>
                                         )}
-                                        <span className="text-gray-500 text-sm flex items-center gap-1">
-                                            <span className="opacity-60">ID:</span> <span className="font-bold">#{member.id_number}</span>
-                                        </span>
+                                        {member.is_regular_member && (
+                                            <span className="text-gray-500 text-sm flex items-center gap-1">
+                                                <span className="opacity-60">ID:</span> <span className="font-bold">#{member.id_number}</span>
+                                            </span>
+                                        )}
                                     </div>
                                     <p className="text-gray-500 italic leading-relaxed text-sm max-w-2xl">
                                         "A faithful individual actively participating in our fellowship. Encouraged by their faithfulness in small group."

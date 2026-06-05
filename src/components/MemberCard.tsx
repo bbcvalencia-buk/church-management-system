@@ -45,11 +45,15 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                                     {member.member_number}
                                 </p>
                             )}
-                            <p className="text-xs text-[var(--color-text-muted)] font-medium flex items-center gap-2">
-                                <span className="opacity-70">ID: {member.id_number}</span>
+                            <p className="text-xs text-[var(--color-text-muted)] font-medium flex flex-wrap items-center gap-2">
+                                {member.is_regular_member && (
+                                    <span className="opacity-70">ID: {member.id_number}</span>
+                                )}
                                 {member.nickname && (
                                     <>
-                                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                        {member.is_regular_member && (
+                                            <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                        )}
                                         <span>"{member.nickname}"</span>
                                     </>
                                 )}
@@ -65,6 +69,11 @@ export const MemberCard = ({ member }: MemberCardProps) => {
         `}>
                     {member.membership_status}
                 </div>
+                {!member.is_regular_member && (
+                    <span className="bg-yellow-50 text-yellow-700 text-[10px] font-semibold px-2 py-1 rounded-md border border-yellow-100">
+                        Visitor
+                    </span>
+                )}
             </div>
 
             <div className="space-y-1.5 text-sm text-[var(--color-text-muted)]">
