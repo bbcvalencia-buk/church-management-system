@@ -389,12 +389,9 @@ const SundaySchool: React.FC = () => {
     };
 
     const handleSave = async () => {
-        if (!isSundaySchoolAdmin) {
-            alert("You have read-only access.");
-            return;
-        }
         if (!isSundaySchoolAdmin && !managedDepartmentIds.includes(newSession.department!)) {
-            return alert("You don't have permission to save to this department.");
+            alert("You don't have permission to save to this department.");
+            return;
         }
 
         setSaving(true);
@@ -577,7 +574,7 @@ const SundaySchool: React.FC = () => {
 
     const handleDelete = async () => {
         if (!isSundaySchoolAdmin) {
-            alert("You have read-only access.");
+            alert("Only administrators can delete sessions.");
             return;
         }
         if (!confirmDelete.id) return;
@@ -654,8 +651,8 @@ const SundaySchool: React.FC = () => {
     };
 
     const handleSaveStudentProfile = async () => {
-        if (!isSundaySchoolAdmin) {
-            alert("You have read-only access.");
+        if (!isSundaySchoolAdmin && teacherDepartments.length === 0) {
+            alert("You don't have permission to edit student profiles.");
             return;
         }
         if (!editingStudent?.id) return;
