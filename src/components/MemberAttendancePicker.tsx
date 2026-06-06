@@ -21,6 +21,7 @@ interface MemberAttendancePickerProps {
     onSearchTermChange: (value: string) => void;
     maxHeightClass?: string;
     showVisitorToggle?: boolean;
+    emptyMessage?: string;
 }
 
 const AVATAR_COLORS = [
@@ -52,6 +53,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
     onSearchTermChange,
     maxHeightClass = "max-h-[180px]",
     showVisitorToggle = false,
+    emptyMessage,
 }) => {
     const [includeVisitors, setIncludeVisitors] = useState(false);
 
@@ -169,7 +171,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                 {filteredMembers.length === 0 && (
                     <div className="p-6 text-center text-sm text-gray-500">
                         {members.length === 0
-                            ? "No members in the registry yet. Add members first in Members Directory."
+                            ? (emptyMessage || "No members in the registry yet. Add members first in Members Directory.")
                             : (showVisitorToggle && !includeVisitors && visibleMembers.length === 0
                                 ? "Only visitor records are available. Enable \"Include visitors in search\"."
                                 : `No members match "${searchTerm.trim()}".`)}

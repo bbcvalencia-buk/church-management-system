@@ -686,9 +686,12 @@ const SundaySchool: React.FC = () => {
         }
     };
 
-    const attendanceMembers = isSundaySchoolAdmin
-        ? members
-        : (membersByDepartment[(newSession.department || "") as string] || []);
+    const attendanceMembers = useMemo(() => {
+        if (isSundaySchoolAdmin) return members;
+        const deptStudents = membersByDepartment[(newSession.department || "") as string] || [];
+        const visitors = (members || []).filter((m: any) => m.is_regular_member === false);
+        return [...deptStudents, ...visitors];
+    }, [isSundaySchoolAdmin, members, membersByDepartment, newSession.department]);
 
     const latestDate = sessions.length > 0 ? sessions[0].session_date : null;
     const latestSessions = sessions.filter(s => s.session_date === latestDate);
@@ -1168,6 +1171,7 @@ const SundaySchool: React.FC = () => {
                                         onSearchTermChange={setMemberSearchTerm}
                                         maxHeightClass="max-h-[160px]"
                                         showVisitorToggle
+                                        emptyMessage="No students are assigned to this department yet."
                                     />
                                     {!isSundaySchoolAdmin && attendanceMembers.length === 0 && (
                                         <p className="text-xs font-semibold text-amber-700">
