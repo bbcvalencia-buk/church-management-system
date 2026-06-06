@@ -815,14 +815,13 @@ const SundaySchool: React.FC = () => {
 
                 {/* Department quick links */}
                 <div className="px-6 py-3 flex flex-wrap gap-2">
-                    {DEPARTMENTS.map(dept => {
+                    {DEPARTMENTS.filter((dept) => managedDepartmentIds.includes(dept.id)).map(dept => {
                         const stats = latestDeptStats[dept.id];
-                        const isManaged = managedDepartmentIds.includes(dept.id);
                         return (
                             <button
                                 key={dept.id}
                                 onClick={() => document.getElementById(`dept-${dept.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${isManaged ? 'hover:shadow-sm' : 'opacity-60'}`}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border hover:shadow-sm"
                                 style={{
                                     backgroundColor: `${dept.color}10`,
                                     borderColor: `${dept.color}30`,
@@ -842,7 +841,7 @@ const SundaySchool: React.FC = () => {
 
             {/* Isolated Departments */}
             <div className="space-y-10">
-                {DEPARTMENT_GROUPS.map((group) => (
+                {DEPARTMENT_GROUPS.filter((group) => group.departments.some((deptId) => managedDepartmentIds.includes(deptId))).map((group) => (
                     <div key={group.id}>
                         <div className="px-3 py-2 text-sm font-bold uppercase tracking-widest text-gray-500">
                             {group.label}

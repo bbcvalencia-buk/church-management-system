@@ -121,11 +121,7 @@ export const deriveTeacherDepartments = (assignments: SundaySchoolAssignmentLike
         const positionCategory = normalizeText(assignment.position_category);
 
         if (positionCategory === "sunday school children") {
-            if (normalizedDept && CHILDREN_DEPARTMENTS.includes(normalizedDept)) {
-                departments.add(normalizedDept);
-            } else {
-                CHILDREN_DEPARTMENTS.forEach((dept) => departments.add(dept));
-            }
+            CHILDREN_DEPARTMENTS.forEach((dept) => departments.add(dept));
             continue;
         }
 
