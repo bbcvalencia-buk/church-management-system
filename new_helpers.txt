@@ -239,6 +239,20 @@ DECLARE
   dept_rec RECORD;
   final_depts TEXT[] := ARRAY[]::TEXT[];
 BEGIN
+  -- 1. Check database roles
+  IF public.app_has_role('sunday_school_teacher_beginners') THEN
+    final_depts := array_append(final_depts, 'beginners');
+  END IF;
+
+  IF public.app_has_role('sunday_school_teacher_children') THEN
+    final_depts := array_cat(final_depts, ARRAY['nursery', 'kinder', 'primary', 'junior']::TEXT[]);
+  END IF;
+
+  IF public.app_has_role('sunday_school_teacher_adult') THEN
+    final_depts := array_append(final_depts, 'adult');
+  END IF;
+
+  -- 2. Check position assignments (backwards compatibility)
   FOR dept_rec IN 
     SELECT 
       cp.position_category,

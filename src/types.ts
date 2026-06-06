@@ -9,7 +9,10 @@ export enum UserRole {
     SUNDAY_SCHOOL_ADMIN = 'sunday_school_admin',
     GOODNEWS_TEACHER = 'goodnews_teacher',
     ACTIVITY_COORDINATOR = 'activity_coordinator',
-    MEMBER = 'member'
+    MEMBER = 'member',
+    SUNDAY_SCHOOL_TEACHER_BEGINNERS = 'sunday_school_teacher_beginners',
+    SUNDAY_SCHOOL_TEACHER_CHILDREN = 'sunday_school_teacher_children',
+    SUNDAY_SCHOOL_TEACHER_ADULT = 'sunday_school_teacher_adult'
 }
 
 export type Gender = 'Male' | 'Female';

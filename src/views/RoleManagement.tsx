@@ -32,6 +32,9 @@ const ROLE_DESCRIPTIONS = {
     [UserRole.SUNDAY_SCHOOL_ADMIN]: "Manages Sunday School departments, teachers, and records.",
     [UserRole.GOODNEWS_TEACHER]: "Manages Good News class records.",
     [UserRole.ACTIVITY_COORDINATOR]: "Manages church activities, soul winning, and outreach records.",
+    [UserRole.SUNDAY_SCHOOL_TEACHER_BEGINNERS]: "Sunday School Teacher - Beginners. Manages Beginners sessions and student attendance.",
+    [UserRole.SUNDAY_SCHOOL_TEACHER_CHILDREN]: "Sunday School Teacher - Children. Manages Nursery, Kinder, Primary, and Junior sessions/attendance.",
+    [UserRole.SUNDAY_SCHOOL_TEACHER_ADULT]: "Sunday School Teacher - Adult. Manages Adult sessions and student attendance.",
     [UserRole.MEMBER]: "View-only personal access. Can open own profile and My Financials.",
 };
 
@@ -45,6 +48,9 @@ const ROLE_BADGE_COLORS: Record<string, string> = {
     [UserRole.SUNDAY_SCHOOL_ADMIN]: 'bg-indigo-100 text-indigo-700 border-indigo-200',
     [UserRole.GOODNEWS_TEACHER]: 'bg-emerald-100 text-emerald-700 border-emerald-200',
     [UserRole.ACTIVITY_COORDINATOR]: 'bg-amber-100 text-amber-700 border-amber-200',
+    [UserRole.SUNDAY_SCHOOL_TEACHER_BEGINNERS]: 'bg-rose-100 text-rose-700 border-rose-200',
+    [UserRole.SUNDAY_SCHOOL_TEACHER_CHILDREN]: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+    [UserRole.SUNDAY_SCHOOL_TEACHER_ADULT]: 'bg-violet-100 text-violet-700 border-violet-200',
     [UserRole.MEMBER]: 'bg-gray-100 text-gray-700 border-gray-200',
 };
 
@@ -145,7 +151,8 @@ const RoleManagement: React.FC = () => {
                 const positions = await memberService.getMemberPositions(selectedMember.id);
                 const activePositions = (positions || []).filter((pos) => pos.is_active);
                 setSelectedMemberPositions(activePositions);
-                const teacherDepartments = deriveTeacherDepartments(activePositions);
+                const memberRoles = getRolesForMember(selectedMember.id);
+                const teacherDepartments = deriveTeacherDepartments(activePositions, memberRoles);
                 setSelectedMemberScopeLabel(teacherDepartments.length > 0 ? getSundaySchoolScopeLabel(teacherDepartments) : '');
             } catch (err) {
                 console.error('Failed to load member positions for Sunday School scope:', err);
@@ -155,7 +162,7 @@ const RoleManagement: React.FC = () => {
         };
 
         loadMemberScope();
-    }, [selectedMember]);
+    }, [selectedMember, assignedRoles]);
 
     const getScopePositions = (category: ChurchPosition['position_category']) => {
         return selectedMemberPositions.filter((pos) => pos.position_category === category);
@@ -199,7 +206,8 @@ const RoleManagement: React.FC = () => {
             const positions = await memberService.getMemberPositions(selectedMember.id);
             const activePositions = (positions || []).filter((pos) => pos.is_active);
             setSelectedMemberPositions(activePositions);
-            const teacherDepartments = deriveTeacherDepartments(activePositions);
+            const memberRoles = getRolesForMember(selectedMember.id);
+            const teacherDepartments = deriveTeacherDepartments(activePositions, memberRoles);
             setSelectedMemberScopeLabel(teacherDepartments.length > 0 ? getSundaySchoolScopeLabel(teacherDepartments) : '');
             showToast(`Sunday School ${getScopeLabel(category)} access ${existingIds.length > 0 ? 'removed' : 'assigned'}.`, 'success');
         } catch (err: any) {

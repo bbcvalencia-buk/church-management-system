@@ -111,26 +111,41 @@ export const isSundaySchoolTeacherAssignment = (assignment: SundaySchoolAssignme
     return TEACHER_ROLE_KEYWORDS.some((keyword) => roleText.includes(keyword));
 };
 
-export const deriveTeacherDepartments = (assignments: SundaySchoolAssignmentLike[]): SundaySchoolDepartmentId[] => {
+export const deriveTeacherDepartments = (
+    assignments: SundaySchoolAssignmentLike[],
+    roles: string[] = []
+): SundaySchoolDepartmentId[] => {
     const departments = new Set<SundaySchoolDepartmentId>();
 
+    // 1. Map explicit database roles
+    if (roles.includes("sunday_school_teacher_beginners")) {
+        departments.add("beginners");
+    }
+    if (roles.includes("sunday_school_teacher_children")) {
+        CHILDREN_DEPARTMENTS.forEach((dept) => departments.add(dept));
+    }
+    if (roles.includes("sunday_school_teacher_adult")) {
+        departments.add("adult");
+    }
+
+    // 2. Map position assignments (for backwards compatibility)
     for (const assignment of assignments) {
         if (!isSundaySchoolTeacherAssignment(assignment)) continue;
 
         const normalizedDept = normalizeSundaySchoolDepartment(assignment);
         const positionCategory = normalizeText(assignment.position_category);
 
-        if (positionCategory === "sunday school children") {
+        if (positionCategory === "sunday_school_children") {
             CHILDREN_DEPARTMENTS.forEach((dept) => departments.add(dept));
             continue;
         }
 
-        if (positionCategory === "beginners class") {
+        if (positionCategory === "beginners_class") {
             departments.add("beginners");
             continue;
         }
 
-        if (positionCategory === "sunday school adult") {
+        if (positionCategory === "sunday_school_adult") {
             departments.add("adult");
             continue;
         }

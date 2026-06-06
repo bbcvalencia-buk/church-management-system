@@ -43,6 +43,11 @@ const SERVICE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.
 const SERVICE_WRITE_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY];
 const DASHBOARD_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.TREASURER];
 const SUNDAY_SCHOOL_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.SUNDAY_SCHOOL_ADMIN];
+const SUNDAY_SCHOOL_TEACHER_ROLES = [
+  UserRole.SUNDAY_SCHOOL_TEACHER_BEGINNERS,
+  UserRole.SUNDAY_SCHOOL_TEACHER_CHILDREN,
+  UserRole.SUNDAY_SCHOOL_TEACHER_ADULT
+];
 const ACTIVITY_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.ACTIVITY_COORDINATOR, UserRole.RECORDING_SECRETARY];
 const MUSIC_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.MUSIC_MINISTER];
 const GOODNEWS_ROLES = [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.GOODNEWS_TEACHER];
@@ -114,7 +119,7 @@ const RequireSundaySchoolAccess: React.FC<{ children: React.ReactNode }> = ({ ch
     const checkTeacherAccess = async () => {
       if (loading) return;
 
-      if (hasAllowedRole(roles, SUNDAY_SCHOOL_ROLES)) {
+      if (hasAllowedRole(roles, [...SUNDAY_SCHOOL_ROLES, ...SUNDAY_SCHOOL_TEACHER_ROLES])) {
         setHasTeacherAccess(true);
         setCheckingTeacherAccess(false);
         return;
@@ -141,7 +146,7 @@ const RequireSundaySchoolAccess: React.FC<{ children: React.ReactNode }> = ({ ch
         return;
       }
 
-      const departments = deriveTeacherDepartments((data || []) as any[]);
+      const departments = deriveTeacherDepartments((data || []) as any[], roles);
       setHasTeacherAccess(departments.length > 0);
       setCheckingTeacherAccess(false);
     };
@@ -277,7 +282,7 @@ const HomeLanding: React.FC = () => {
     return <Navigate to="/services" replace />;
   }
 
-  if (hasAllowedRole(roles, SUNDAY_SCHOOL_ROLES)) {
+  if (hasAllowedRole(roles, [...SUNDAY_SCHOOL_ROLES, ...SUNDAY_SCHOOL_TEACHER_ROLES])) {
     return <Navigate to="/sunday-school" replace />;
   }
 
