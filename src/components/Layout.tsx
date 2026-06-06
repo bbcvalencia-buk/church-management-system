@@ -173,14 +173,14 @@ const Layout: React.FC = () => {
         {
             section: 'REGISTRY',
             items: [
-                { to: '/members', icon: Users, label: 'People Directory', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK] },
-                { to: '/visitors', icon: UserPlus, label: 'Visitors', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK] }
+                { to: '/members', icon: Users, label: 'People Directory', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.SUNDAY_SCHOOL_ADMIN, UserRole.GOODNEWS_TEACHER] },
+                { to: '/visitors', icon: UserPlus, label: 'Visitors', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.SUNDAY_SCHOOL_ADMIN, UserRole.GOODNEWS_TEACHER] }
             ]
         },
         {
             section: 'STRUCTURE',
             items: [
-                { to: '/ministries', icon: Shield, label: 'Ministries', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK] }
+                { to: '/ministries', icon: Shield, label: 'Ministries', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.SUNDAY_SCHOOL_ADMIN, UserRole.GOODNEWS_TEACHER] }
             ]
         },
         {
