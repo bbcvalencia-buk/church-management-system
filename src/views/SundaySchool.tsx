@@ -1119,9 +1119,23 @@ const SundaySchool: React.FC = () => {
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Department</label>
-                                        <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-bold text-gray-700 shadow-sm cursor-not-allowed">
-                                            {DEPARTMENTS.find(d => d.id === newSession.department)?.label}
-                                        </div>
+                                        {!newSession.id ? (
+                                            <select
+                                                value={newSession.department}
+                                                onChange={(e) => setNewSession({ ...newSession, department: e.target.value as any })}
+                                                className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm font-sans"
+                                            >
+                                                {availableDepartments.map((dept) => (
+                                                    <option key={dept.id} value={dept.id}>
+                                                        {dept.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-bold text-gray-700 shadow-sm cursor-not-allowed">
+                                                {DEPARTMENTS.find(d => d.id === newSession.department)?.label}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
