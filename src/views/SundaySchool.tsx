@@ -189,6 +189,7 @@ const SundaySchool: React.FC = () => {
     const [isStudentEditorOpen, setIsStudentEditorOpen] = useState(false);
     const [editingStudent, setEditingStudent] = useState<any | null>(null);
     const [studentSaving, setStudentSaving] = useState(false);
+    const [searchAllRegistry, setSearchAllRegistry] = useState(false);
 
     // Attendance Viewer State
     const [attendanceViewerOpen, setAttendanceViewerOpen] = useState(false);
@@ -312,6 +313,7 @@ const SundaySchool: React.FC = () => {
     const handleOpenModal = async (session?: SundaySchoolSession) => {
         setMemberSearchTerm("");
         setMemberAssessmentScores({});
+        setSearchAllRegistry(false);
         if (session) {
             setNewSession(session);
 
@@ -687,11 +689,25 @@ const SundaySchool: React.FC = () => {
     };
 
     const attendanceMembers = useMemo(() => {
-        if (isSundaySchoolAdmin) return members;
+        if (isSundaySchoolAdmin || searchAllRegistry) return members;
         const deptStudents = membersByDepartment[(newSession.department || "") as string] || [];
         const visitors = (members || []).filter((m: any) => m.is_regular_member === false);
-        return [...deptStudents, ...visitors];
-    }, [isSundaySchoolAdmin, members, membersByDepartment, newSession.department]);
+        
+        // Ensure that already selected or tardy members are kept in the list so their selection state is not wiped out
+        const activeIds = new Set([
+            ...selectedMemberIds,
+            ...tardyMemberIds
+        ]);
+        const selectedMembersList = (members || []).filter(m => activeIds.has(m.id));
+
+        const combined = [...deptStudents, ...visitors, ...selectedMembersList];
+        const seen = new Set();
+        return combined.filter(m => {
+            if (seen.has(m.id)) return false;
+            seen.add(m.id);
+            return true;
+        });
+    }, [isSundaySchoolAdmin, searchAllRegistry, members, membersByDepartment, newSession.department, selectedMemberIds, tardyMemberIds]);
 
     const latestDate = sessions.length > 0 ? sessions[0].session_date : null;
     const latestSessions = sessions.filter(s => s.session_date === latestDate);
@@ -1159,6 +1175,27 @@ const SundaySchool: React.FC = () => {
 
                                 {/* Attendance */}
                                 <div className="space-y-4 border-t border-gray-100 pt-6">
+                                    {!isSundaySchoolAdmin && members.length <= 1 && (
+                                        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-sm font-medium">
+                                            <p className="font-bold mb-1">⚠️ Database Policy Restriction</p>
+                                            <p className="text-xs leading-relaxed">
+                                                Only your profile is visible. The Supabase security policy (RLS) is restricting access to students and visitor profiles. Please ensure you have executed the contents of the <strong>fix_sunday_school_roles_rls.sql</strong> patch in your Supabase SQL Editor.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {!isSundaySchoolAdmin && (
+                                        <label className="inline-flex items-center gap-2 text-xs text-gray-700 font-bold bg-gray-50 border border-gray-100 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors w-full">
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
+                                                checked={searchAllRegistry}
+                                                onChange={(e) => setSearchAllRegistry(e.target.checked)}
+                                            />
+                                            <span>Search entire church registry (for unassigned members/students)</span>
+                                        </label>
+                                    )}
+
                                     <MemberAttendancePicker
                                         label="Members Present"
                                         members={attendanceMembers}
@@ -1171,11 +1208,11 @@ const SundaySchool: React.FC = () => {
                                         onSearchTermChange={setMemberSearchTerm}
                                         maxHeightClass="max-h-[160px]"
                                         showVisitorToggle
-                                        emptyMessage="No students are assigned to this department yet."
+                                        emptyMessage={searchAllRegistry ? undefined : "No students are assigned to this department yet."}
                                     />
-                                    {!isSundaySchoolAdmin && attendanceMembers.length === 0 && (
-                                        <p className="text-xs font-semibold text-amber-700">
-                                            No students are assigned to this department yet. Add student assignments in Ministry Directory.
+                                    {!isSundaySchoolAdmin && !searchAllRegistry && attendanceMembers.length === 0 && (
+                                        <p className="text-xs font-semibold text-amber-700 leading-relaxed">
+                                            No students are assigned to this department yet. Add student assignments in Ministry Directory, or check the box above to search and select any member from the registry.
                                         </p>
                                     )}
 
