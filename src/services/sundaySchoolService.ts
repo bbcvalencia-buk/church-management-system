@@ -274,11 +274,11 @@ export const createVisitor = async (visitorData: any): Promise<void> => {
  * Fetches attendance logs for sessions on a specific date and department.
  * Returns an array of { member_id, event_id, assessment_score } for that session/date.
  */
-export const getAttendanceLogsBySessionIds = async (sessionIds: string[]): Promise<{ member_id: string; event_id: string; assessment_score?: number | null }[]> => {
+export const getAttendanceLogsBySessionIds = async (sessionIds: string[]): Promise<{ member_id: string; event_id: string; assessment_score?: number | null; was_tardy?: boolean }[]> => {
     if (sessionIds.length === 0) return [];
     const { data, error } = await supabase
         .from('attendance_log')
-        .select('member_id, event_id, assessment_score')
+        .select('member_id, event_id, assessment_score, was_tardy')
         .in('event_id', sessionIds)
         .eq('event_type', 'sunday_school')
         .eq('was_present', true);
@@ -286,7 +286,7 @@ export const getAttendanceLogsBySessionIds = async (sessionIds: string[]): Promi
     if (error) {
         throw new Error(`Failed to fetch attendance logs by session IDs: ${error.message}`);
     }
-    return (data || []) as { member_id: string; event_id: string; assessment_score?: number | null }[];
+    return (data || []) as { member_id: string; event_id: string; assessment_score?: number | null; was_tardy?: boolean }[];
 };
 
 /**

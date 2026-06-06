@@ -22,7 +22,8 @@ import {
     CheckCircle2,
     Hash,
     ClipboardCheck,
-    Star
+    Star,
+    Clock
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImageUpload from "@/components/ImageUpload";
@@ -200,6 +201,7 @@ const SundaySchool: React.FC = () => {
     const [attendanceViewerSearch, setAttendanceViewerSearch] = useState("");
     const [attendanceViewerScores, setAttendanceViewerScores] = useState<Record<string, number | null>>({});
     const [attendanceViewerScoreStats, setAttendanceViewerScoreStats] = useState<Record<string, { totalScore: number; submissionCount: number }>>({});
+    const [attendanceViewerTardyIds, setAttendanceViewerTardyIds] = useState<Set<string>>(new Set());
 
     // Assessment scores per member in the report modal
     const [memberAssessmentScores, setMemberAssessmentScores] = useState<Record<string, number | null>>({});
@@ -606,12 +608,17 @@ const SundaySchool: React.FC = () => {
             const logs = await sundaySchoolService.getAttendanceLogsBySessionIds([session.id]);
             const presentMemberIds = logs.map((l) => l.member_id);
 
-            // Build per-session score map
+            // Build per-session score map and tardy set
             const sessionScores: Record<string, number | null> = {};
+            const tardySet = new Set<string>();
             for (const log of logs) {
                 sessionScores[log.member_id] = log.assessment_score ?? null;
+                if (log.was_tardy) {
+                    tardySet.add(log.member_id);
+                }
             }
             setAttendanceViewerScores(sessionScores);
+            setAttendanceViewerTardyIds(tardySet);
 
             // Get total days present for this department
             const dayCounts = await sundaySchoolService.getAttendanceCountsByDepartment(session.department);
@@ -1549,9 +1556,15 @@ const SundaySchool: React.FC = () => {
                                                             )}
                                                         </div>
                                                         <div className="text-center">
-                                                            <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                                                                <CheckCircle2 size={9} /> Present
-                                                            </span>
+                                                            {attendanceViewerTardyIds.has(member.id) ? (
+                                                                <span className="inline-flex items-center gap-0.5 bg-yellow-50 text-yellow-700 border border-yellow-200 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                                                                    <Clock size={9} /> Tardy
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                                                                    <CheckCircle2 size={9} /> Present
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <div className="text-center">
                                                             {sessionScore != null && sessionScore > 0 ? (
