@@ -21,7 +21,8 @@ import {
     UserPlus,
     KeyRound,
     MessageSquare,
-    ActivitySquare
+    ActivitySquare,
+    ClipboardCheck
 } from 'lucide-react';
 
 // Human-friendly role labels (short versions for the header)
@@ -186,6 +187,7 @@ const Layout: React.FC = () => {
             section: 'ROUTINE',
             items: [
                 { to: '/services', icon: Calendar, label: 'Services', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY] },
+                { to: '/attendance', icon: ClipboardCheck, label: 'Attendance', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY] },
                 { to: '/sunday-school', icon: Users, label: 'Sunday School', requiresSundaySchoolAccess: true },
                 { to: '/goodnews-class', icon: Users, label: 'Goodnews Classes', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.GOODNEWS_TEACHER] },
                 { to: '/activities', icon: Calendar, label: 'Activities', allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.ACTIVITY_COORDINATOR, UserRole.RECORDING_SECRETARY] },

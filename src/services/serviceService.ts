@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabase";
-import type { Service, ServiceAssignment } from "../types";
+import type { AttendanceLog, Member, Service, ServiceAssignment, ServiceType } from "../types";
 import { isMissingTableError, isTableMarkedMissing, markTableMissing } from "./supabaseErrorUtils";
 
 /**
@@ -212,4 +212,83 @@ export const getAttendanceLogsByEvent = async (eventId: string, eventType: strin
         throw new Error(`Failed to fetch attendance logs: ${error.message}`);
     }
     return data || [];
+};
+
+export type PrimaryServiceType = Extract<ServiceType, 'sunday_morning' | 'sunday_afternoon' | 'wednesday_prayer'>;
+
+export interface ServiceAttendanceLog extends AttendanceLog {
+    member?: Pick<Member, 'id' | 'first_name' | 'surname' | 'member_number' | 'profile_picture_url' | 'is_regular_member'> | null;
+}
+
+export interface ServiceAttendanceReport {
+    services: Service[];
+    logs: ServiceAttendanceLog[];
+}
+
+export interface ServiceAttendanceFilters {
+    startDate?: string;
+    endDate?: string;
+    serviceTypes?: PrimaryServiceType[];
+}
+
+const PRIMARY_SERVICE_TYPES: PrimaryServiceType[] = ['sunday_morning', 'sunday_afternoon', 'wednesday_prayer'];
+
+/**
+ * Fetches primary service records and their member-level attendance logs for reports.
+ */
+export const getServiceAttendanceReport = async ({
+    startDate,
+    endDate,
+    serviceTypes = PRIMARY_SERVICE_TYPES
+}: ServiceAttendanceFilters = {}): Promise<ServiceAttendanceReport> => {
+    let serviceQuery = supabase
+        .from('services')
+        .select('*')
+        .in('service_type', serviceTypes)
+        .order('service_date', { ascending: true })
+        .order('service_type', { ascending: true });
+
+    if (startDate) {
+        serviceQuery = serviceQuery.gte('service_date', startDate);
+    }
+    if (endDate) {
+        serviceQuery = serviceQuery.lte('service_date', endDate);
+    }
+
+    const { data: servicesData, error: servicesError } = await serviceQuery;
+    if (servicesError) {
+        throw new Error(`Failed to fetch service attendance report: ${servicesError.message}`);
+    }
+
+    const services = (servicesData || []) as Service[];
+    const serviceIds = services.map((service) => service.id);
+    if (serviceIds.length === 0) {
+        return { services: [], logs: [] };
+    }
+
+    const { data: logsData, error: logsError } = await supabase
+        .from('attendance_log')
+        .select(`
+            *,
+            member:members (
+                id,
+                first_name,
+                surname,
+                member_number,
+                profile_picture_url,
+                is_regular_member
+            )
+        `)
+        .eq('event_type', 'service')
+        .in('event_id', serviceIds)
+        .order('event_date', { ascending: true });
+
+    if (logsError) {
+        throw new Error(`Failed to fetch service attendance logs: ${logsError.message}`);
+    }
+
+    return {
+        services,
+        logs: (logsData || []) as ServiceAttendanceLog[]
+    };
 };

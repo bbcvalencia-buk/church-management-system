@@ -60,6 +60,18 @@ const getServiceTypeLabel = (serviceType?: string) =>
 const PRIMARY_SERVICE_TYPES = new Set(['sunday_morning', 'sunday_afternoon', 'wednesday_prayer']);
 const isPrimaryServiceType = (serviceType?: string) => PRIMARY_SERVICE_TYPES.has(serviceType || '');
 
+const getServiceDateWarning = (serviceType?: string, serviceDate?: string) => {
+    if (!serviceType || !serviceDate) return "";
+    const day = new Date(`${serviceDate}T00:00:00`).getDay();
+    if ((serviceType === 'sunday_morning' || serviceType === 'sunday_afternoon') && day !== 0) {
+        return "This is marked as a Sunday service, but the selected date is not a Sunday.";
+    }
+    if (serviceType === 'wednesday_prayer' && day !== 3) {
+        return "This is marked as Wednesday Prayer, but the selected date is not a Wednesday.";
+    }
+    return "";
+};
+
 const ROLE_LABELS: Record<ServiceRole, string> = {
     songleader: 'Songleader',
     pastor: 'Pastor',
@@ -143,6 +155,7 @@ const ServiceForm: React.FC = () => {
         [members]
     );
     const isPrimaryService = isPrimaryServiceType(service.service_type);
+    const serviceDateWarning = getServiceDateWarning(service.service_type, service.service_date);
 
     useEffect(() => {
         fetchMembers();
@@ -306,6 +319,11 @@ const ServiceForm: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (serviceDateWarning && !window.confirm(`${serviceDateWarning}\n\nDo you want to save it anyway?`)) {
+            return;
+        }
+
         setSaving(true);
 
         try {
@@ -672,6 +690,11 @@ const ServiceForm: React.FC = () => {
                                         className="form-control min-w-0"
                                     />
                                 </div>
+                                {serviceDateWarning && (
+                                    <p className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                                        {serviceDateWarning}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
