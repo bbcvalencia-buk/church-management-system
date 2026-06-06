@@ -60,7 +60,7 @@ BEGIN
 END;
 $$;
 
--- 2. Update members SELECT policy to allow Sunday School teachers to view visitor records
+-- 2. Update members SELECT policy to allow Sunday School and Goodnews teachers to view member records
 DROP POLICY IF EXISTS members_select_policy ON public.members;
 CREATE POLICY members_select_policy ON public.members FOR SELECT USING (
   public.app_has_any_role(ARRAY['church_administrator', 'church_clerk', 'treasurer', 'sunday_school_admin', 'activity_coordinator', 'recording_secretary'])
@@ -69,10 +69,8 @@ CREATE POLICY members_select_policy ON public.members FOR SELECT USING (
       SELECT 1 FROM public.church_positions cp 
       WHERE cp.member_id = public.members.id AND cp.position_category = 'music_ministry' AND cp.is_active = TRUE
   ))
-  OR (public.app_is_sunday_school_teacher() AND (
-      public.app_member_in_teacher_scope(public.members.id)
-      OR coalesce(is_regular_member, FALSE) = FALSE
-  ))
+  OR public.app_is_sunday_school_teacher()
+  OR public.app_is_goodnews_teacher()
 );
 
 -- 3. Update members INSERT policy to allow Sunday School teachers to insert visitor shadow records
