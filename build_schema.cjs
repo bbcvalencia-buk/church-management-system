@@ -6,6 +6,7 @@ let goodnews = fs.readFileSync('migration_goodnews.sql', 'utf8');
 let events = fs.readFileSync('migration_church_events.sql', 'utf8');
 let finance = fs.readFileSync('migration_financial_security.sql', 'utf8');
 let auditLogs = fs.readFileSync('migration_audit_logs.sql', 'utf8');
+let ministries = fs.readFileSync('migration_ministries_normalized.sql', 'utf8');
 
 // The new Helper Functions block entirely replacing everything from line 13 to line 377 of old schema
 const newHelpers = fs.readFileSync('new_helpers.txt', 'utf8');
@@ -32,6 +33,7 @@ auditLogs = auditLogs.replace(/goodnews_classes/g, 'goodnews_series');
 // Merge AuditLogs correctly into the schema, we replace from 'BEGIN;' to 'COMMIT;'
 auditLogs = auditLogs.replace('BEGIN;', '').replace('COMMIT;', '');
 finance = finance.replace('BEGIN;', '').replace('COMMIT;', '');
+ministries = ministries.replace('BEGIN;', '').replace('COMMIT;', '');
 
 // The church_events trigger completion
 const replacementEvents = `EXECUTE FUNCTION public.set_church_event_number();\n\n-- RLS Policies for church_events\nALTER TABLE public.church_events ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "church_events_select_policy" ON public.church_events FOR SELECT USING (true);\nCREATE POLICY "church_events_insert_policy" ON public.church_events FOR INSERT WITH CHECK (public.app_has_any_role(ARRAY['church_administrator', 'pastor', 'church_clerk', 'activity_coordinator', 'recording_secretary']));\nCREATE POLICY "church_events_update_policy" ON public.church_events FOR UPDATE USING (public.app_has_any_role(ARRAY['church_administrator', 'pastor', 'church_clerk', 'activity_coordinator', 'recording_secretary']));\nCREATE POLICY "church_events_delete_policy" ON public.church_events FOR DELETE USING (public.app_has_any_role(ARRAY['church_administrator', 'pastor']));\n`;
@@ -60,6 +62,10 @@ if (auditSchemaMatch) {
     // If regex fails (because of line endings), append the whole processed auditLogs text
     finalSchema += auditLogs + "\n\n";
 }
+
+// MINISTRIES NORMALIZATION
+finalSchema += "\n\n-- ============================================================================\n-- SECTION: MINISTRIES NORMALIZATION\n-- ============================================================================\n\n";
+finalSchema += ministries + "\n\n";
 
 fs.writeFileSync('schema_v2.sql', finalSchema);
 
