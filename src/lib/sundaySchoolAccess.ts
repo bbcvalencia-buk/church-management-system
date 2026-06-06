@@ -75,7 +75,7 @@ export const normalizeSundaySchoolDepartment = (
     return null;
 };
 
-const CHILDREN_DEPARTMENTS: SundaySchoolDepartmentId[] = ["nursery", "kinder", "primary", "junior"];
+export const CHILDREN_DEPARTMENTS: SundaySchoolDepartmentId[] = ["nursery", "kinder", "primary", "junior"];
 
 const isChildrenAssignment = (assignment: SundaySchoolAssignmentLike) => {
     const positionCategory = normalizeText(assignment.position_category);
