@@ -135,7 +135,11 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                 </label>
                 <button
                     type="button"
-                    className="text-[10px] text-blue-600 font-bold uppercase hover:text-blue-800 hover:underline transition-colors"
+                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
+                        allSelected 
+                            ? "bg-gray-100 text-gray-700 hover:bg-gray-200" 
+                            : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                    }`}
                     onClick={toggleSelectAll}
                 >
                     {allSelected ? "Deselect All" : "Select All"}

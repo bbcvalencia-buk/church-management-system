@@ -21,7 +21,8 @@ import {
     RefreshCcw,
     AlertTriangle,
     Heart,
-    Upload
+    Upload,
+    Download
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useToast } from "@/contexts/ToastContext";
@@ -29,6 +30,7 @@ import FaithPromiseLedgerTab from "@/components/finance/FaithPromiseLedgerTab";
 import FaithPromiseQuickAdd from "@/components/finance/FaithPromiseQuickAdd";
 import FaithPromisePledgeForm from "@/components/finance/FaithPromisePledgeForm";
 import { FaithPromiseImport } from "@/components/finance/FaithPromiseImport";
+import html2canvas from "html2canvas";
 
 interface FinancialRecordWithMember extends FinancialRecord {
     members?: Pick<Member, 'first_name' | 'surname'> | null;
@@ -147,6 +149,23 @@ const TreasuryDashboard: React.FC = () => {
     const [showPledgeForm, setShowPledgeForm] = useState(false);
     const [showImport, setShowImport] = useState(false);
     const initializedFiltersRef = useRef(false);
+    const dashboardRef = useRef<HTMLDivElement>(null);
+
+    const handleDownloadPNG = async () => {
+        if (!dashboardRef.current) return;
+        try {
+            const canvas = await html2canvas(dashboardRef.current, { scale: 2 });
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `TreasuryDashboard_${selectedYear}_${selectedMonth}.png`;
+            link.href = dataUrl;
+            link.click();
+            showToast('Dashboard downloaded as PNG', 'success');
+        } catch (err) {
+            console.error(err);
+            showToast('Failed to download PNG', 'error');
+        }
+    };
 
     // Add debug mount/unmount logging
     useEffect(() => {
@@ -469,7 +488,7 @@ const TreasuryDashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 p-4 md:p-8 bg-[var(--color-bg)] rounded-3xl" ref={dashboardRef}>
             {isCurrentPeriodLocked && selectedMonth !== 'all' && (
                 <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -504,10 +523,16 @@ const TreasuryDashboard: React.FC = () => {
                             <span>{isCurrentPeriodLocked ? 'Unlock Period' : 'Lock Period'}</span>
                         </button>
                     )}
+                    <button
+                            onClick={handleDownloadPNG}
+                            className="bg-white border border-[var(--color-border)] hover:bg-gray-50 text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold"
+                        >
+                            <Download size={18} />
+                            <span>Export PNG</span>
+                        </button>
                     <Link
                         to="/finance/reports"
-                        className="bg-white border border-[var(--color-border)] hover:bg-gray-50 text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm"
-                    >
+                        className="bg-white border border-[var(--color-border)] hover:bg-gray-50 text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
                         <Printer size={18} />
                         <span>Reports</span>
                     </Link>
@@ -545,33 +570,33 @@ const TreasuryDashboard: React.FC = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="card-panel p-6 relative overflow-hidden group border-l-4 border-l-blue-500 bg-white">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bento-grid">
+                <div className="card-panel p-6 relative overflow-hidden group bg-gradient-to-br from-blue-50 to-white border border-blue-100 shadow-sm rounded-2xl">
                     <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                         <DollarSign size={64} className="text-blue-500" />
                     </div>
                     <p className="text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Total Tithes</p>
-                    <h3 className="text-2xl font-bold text-[var(--color-text-main)] mt-1">{formatCurrency(totals.tithe)}</h3>
+                    <h3 className="text-4xl font-extrabold text-[var(--color-text-main)] mt-2 tracking-tight">{formatCurrency(totals.tithe)}</h3>
                 </div>
 
-                <div className="card-panel p-6 relative overflow-hidden group border-l-4 border-l-green-500 bg-white">
+                <div className="card-panel p-6 relative overflow-hidden group bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 shadow-sm rounded-2xl">
                     <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                         <CreditCard size={64} className="text-green-500" />
                     </div>
                     <p className="text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Faith Promise</p>
-                    <h3 className="text-2xl font-bold text-[var(--color-text-main)] mt-1">{formatCurrency(totals.faith_promise)}</h3>
+                    <h3 className="text-4xl font-extrabold text-[var(--color-text-main)] mt-2 tracking-tight">{formatCurrency(totals.faith_promise)}</h3>
                 </div>
 
-                <div className="card-panel p-6 relative overflow-hidden group border-l-4 border-l-pink-500 bg-white">
+                <div className="card-panel p-6 relative overflow-hidden group bg-gradient-to-br from-pink-50 to-white border border-pink-100 shadow-sm rounded-2xl">
                     <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                         <PieChart size={64} className="text-pink-500" />
                     </div>
                     <p className="text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Offerings & Pledges</p>
-                    <h3 className="text-2xl font-bold text-[var(--color-text-main)] mt-1">{formatCurrency(totals.love_gift)}</h3>
+                    <h3 className="text-4xl font-extrabold text-[var(--color-text-main)] mt-2 tracking-tight">{formatCurrency(totals.love_gift)}</h3>
                 </div>
             </div>
 
-            <div className="card-panel p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white">
+            <div className="card-panel p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white rounded-2xl shadow-sm border border-[var(--color-border)]">
                 <div className="flex gap-4">
                     <button
                         className={`font-bold text-lg pb-1 transition-colors ${activeTab === 'active' ? 'text-black border-b-2 border-black' : 'text-gray-400 hover:text-gray-600'}`}
@@ -667,7 +692,7 @@ const TreasuryDashboard: React.FC = () => {
                     onQuickAdd={(memberId, memberName) => setQuickAddMember({ id: memberId, name: memberName })}
                 />
             ) : (
-                <div className={`card-panel overflow-hidden bg-white ${activeTab === 'deleted' ? 'border border-red-200 shadow-red-500/10' : ''}`}>
+                <div className={`card-panel overflow-hidden bg-white rounded-2xl shadow-sm border border-[var(--color-border)] ${activeTab === 'deleted' ? 'border-red-200 shadow-red-500/10' : ''}`}>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>

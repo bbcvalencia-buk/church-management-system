@@ -166,7 +166,7 @@ const Layout: React.FC = () => {
             section: "ROUTINE",
             items: [
                 { to: "/services", icon: Calendar, label: "Services", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY] },
-                { to: "/attendance", icon: ClipboardCheck, label: "Attendance", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY] },
+
                 { to: "/sunday-school", icon: Users, label: "Sunday School", requiresSundaySchoolAccess: true },
                 { to: "/goodnews-class", icon: Users, label: "Goodnews Classes", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.CHURCH_CLERK, UserRole.GOODNEWS_TEACHER] },
                 { to: "/activities", icon: Calendar, label: "Activities", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.ACTIVITY_COORDINATOR, UserRole.RECORDING_SECRETARY] },
@@ -219,7 +219,7 @@ const Layout: React.FC = () => {
                 <nav className="flex items-center gap-2 px-6 flex-1 justify-center">
                     {[{ to: "/", icon: LayoutDashboard, label: "Dashboard", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.TREASURER] },
                       { to: "/members", icon: Users, label: "Members", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK] },
-                      { to: "/attendance", icon: ClipboardCheck, label: "Attendance", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY] }
+
                     ].map(link => {
                         if (!hasPermission(link)) return null;
                         return (
@@ -323,7 +323,7 @@ const Layout: React.FC = () => {
             <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-lg border-t border-gray-200 flex items-center justify-around pb-safe pt-2 px-2 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] pb-2">
                 {[{ to: "/", icon: LayoutDashboard, label: "Dash", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.TREASURER] },
                   { to: "/members", icon: Users, label: "Members", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK] },
-                  { to: "/attendance", icon: ClipboardCheck, label: "Attend", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.RECORDING_SECRETARY] }
+
                 ].map(link => {
                     if (!hasPermission(link)) return null;
                     return (

@@ -606,6 +606,13 @@ const ServiceForm: React.FC = () => {
         ));
     };
 
+    const handleMarkAllPresent = () => {
+        const regularMemberIds = members.filter(m => m.is_regular_member !== false).map(m => m.id);
+        const nonRegularSelected = selectedMemberIds.filter(id => visitorMemberIds.has(id));
+        setSelectedMemberIds(Array.from(new Set([...regularMemberIds, ...nonRegularSelected])));
+        setTardyMemberIds([]);
+    };
+
     if (loading) return <div className="p-8 text-center text-[var(--color-text-muted)]">Loading...</div>;
 
     const ROLES: ServiceRole[] = ['pastor', 'preacher', 'songleader', 'moderator', 'pianist', 'technicals', 'choir', 'mini_ensemble', 'usher', 'other'];
@@ -824,13 +831,22 @@ const ServiceForm: React.FC = () => {
                                     <label className="text-[0.7rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.1em] min-w-[7.6rem] leading-tight">Members Present</label>
                                     <span className="text-lg font-semibold text-[var(--color-primary-dark)] whitespace-nowrap tabular-nums">{Number(service.members_present) || 0} Checked In</span>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAttendanceModalOpen(true)}
-                                    className="w-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
-                                >
-                                    <Users size={18} className="shrink-0" /> <span>Manage Attendance Report</span>
-                                </button>
+                                <div className="flex flex-col gap-2 w-full">
+                                    <button
+                                        type="button"
+                                        onClick={handleMarkAllPresent}
+                                        className="w-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-300 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
+                                    >
+                                        <UserCheck size={18} className="shrink-0" /> <span>Mark All Present</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAttendanceModalOpen(true)}
+                                        className="w-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
+                                    >
+                                        <Users size={18} className="shrink-0" /> <span>Manage Attendance Report</span>
+                                    </button>
+                                </div>
                                 <div className="space-y-1 pt-2 border-t border-[var(--color-border)]">
                                     <label className="text-[0.7rem] text-[var(--color-text-muted)] uppercase font-semibold px-1 tracking-[0.1em]">Visitors / Non-Members Present</label>
                                     <input

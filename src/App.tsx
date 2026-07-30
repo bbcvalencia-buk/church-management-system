@@ -10,7 +10,7 @@ import VisitorForm from './views/VisitorForm';
 import MinistryDirectory from './views/MinistryDirectory';
 import ServiceList from './views/ServiceList';
 import ServiceForm from './views/ServiceForm';
-import Attendance from './views/Attendance';
+
 import SundaySchool from './views/SundaySchool';
 import TreasuryDashboard from './views/TreasuryDashboard';
 import FinancialRecordForm from './views/FinancialRecordForm';
@@ -394,10 +394,7 @@ function App() {
                   path="services/:id"
                   element={<RequireRoles allowedRoles={SERVICE_WRITE_ROLES}><ServiceForm /></RequireRoles>}
                 />
-                <Route
-                  path="attendance"
-                  element={<RequireRoles allowedRoles={SERVICE_ROLES}><Attendance /></RequireRoles>}
-                />
+
                 <Route
                   path="sunday-school"
                   element={<RequireSundaySchoolAccess><SundaySchool /></RequireSundaySchoolAccess>}
