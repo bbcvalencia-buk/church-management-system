@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Check, ChevronDown, Clock, Search, Users, X } from "lucide-react";
+import { CalendarDays, ChevronDown, Search, Users } from "lucide-react";
 import * as memberService from "@/services/memberService";
 import * as serviceService from "@/services/serviceService";
 import type { Member, Service } from "@/types";
 import type { PrimaryServiceType, ServiceAttendanceLog } from "@/services/serviceService";
+import { AttendanceCard } from "@/components/Attendance/AttendanceCard";
 
 const SERVICE_TYPE_LABELS: Record<PrimaryServiceType, string> = {
     sunday_morning: "Sunday Morning",
@@ -20,14 +21,12 @@ const SERVICE_TYPE_ACCENTS: Record<PrimaryServiceType, string> = {
 const PRIMARY_SERVICE_TYPES: PrimaryServiceType[] = ["sunday_morning", "sunday_afternoon", "wednesday_prayer"];
 
 const toISODate = (date: Date) => date.toISOString().slice(0, 10);
-
 const getMonthRange = (offset = 0) => {
     const today = new Date();
     const first = new Date(today.getFullYear(), today.getMonth() + offset, 1);
     const last = new Date(today.getFullYear(), today.getMonth() + offset + 1, 0);
     return { startDate: toISODate(first), endDate: toISODate(last) };
 };
-
 const getYearRange = () => {
     const today = new Date();
     return {
@@ -35,12 +34,8 @@ const getYearRange = () => {
         endDate: `${today.getFullYear()}-12-31`
     };
 };
-
 const formatDate = (value: string, options?: Intl.DateTimeFormatOptions) =>
     new Date(`${value}T00:00:00`).toLocaleDateString("en-US", options || { month: "short", day: "numeric" });
-
-const getMemberName = (member?: Pick<Member, "first_name" | "surname"> | null) =>
-    member ? `${member.surname || ""}, ${member.first_name || ""}`.trim().replace(/^, /, "") : "Unknown member";
 
 const Attendance: React.FC = () => {
     const defaultRange = getMonthRange();
@@ -52,7 +47,6 @@ const Attendance: React.FC = () => {
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
     const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
 
@@ -61,44 +55,34 @@ const Attendance: React.FC = () => {
         [serviceType]
     );
 
-    useEffect(() => {
-        const fetchAttendance = async () => {
-            setLoading(true);
-            setErrorMessage("");
-            try {
-                const [report, allMembers] = await Promise.all([
-                    serviceService.getServiceAttendanceReport({
-                        startDate,
-                        endDate,
-                        serviceTypes: selectedServiceTypes
-                    }),
-                    memberService.getAllMembers()
-                ]);
-                setServices(report.services);
-                setLogs(report.logs);
-                setMembers((allMembers || []).filter((member) => member.is_regular_member !== false));
-                setSelectedServiceId((current) =>
-                    current && report.services.some((service) => service.id === current) ? current : report.services[0]?.id || null
-                );
-            } catch (error: any) {
-                setErrorMessage(error.message || "Failed to load attendance.");
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchAttendance = async () => {
+        setLoading(true);
+        setErrorMessage("");
+        try {
+            const [report, allMembers] = await Promise.all([
+                serviceService.getServiceAttendanceReport({
+                    startDate,
+                    endDate,
+                    serviceTypes: selectedServiceTypes
+                }),
+                memberService.getAllMembers()
+            ]);
+            setServices(report.services);
+            setLogs(report.logs);
+            setMembers((allMembers || []).filter((member) => member.is_regular_member !== false));
+            setSelectedServiceId((current) =>
+                current && report.services.some((service) => service.id === current) ? current : report.services[0]?.id || null
+            );
+        } catch (error: any) {
+            setErrorMessage(error.message || "Failed to load attendance.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchAttendance();
     }, [startDate, endDate, selectedServiceTypes]);
-
-    const logsByService = useMemo(() => {
-        const map = new Map<string, ServiceAttendanceLog[]>();
-        logs.forEach((log) => {
-            const existing = map.get(log.event_id) || [];
-            existing.push(log);
-            map.set(log.event_id, existing);
-        });
-        return map;
-    }, [logs]);
 
     const logByMemberAndService = useMemo(() => {
         const map = new Map<string, ServiceAttendanceLog>();
@@ -118,19 +102,8 @@ const Attendance: React.FC = () => {
             .sort((a, b) => `${a.surname} ${a.first_name}`.localeCompare(`${b.surname} ${b.first_name}`));
     }, [members, searchTerm]);
 
-    const selectedMember = useMemo(
-        () => members.find((member) => member.id === selectedMemberId) || filteredMembers[0] || null,
-        [members, selectedMemberId, filteredMembers]
-    );
-
-    useEffect(() => {
-        if (!selectedMemberId && filteredMembers[0]) {
-            setSelectedMemberId(filteredMembers[0].id);
-        }
-    }, [filteredMembers, selectedMemberId]);
-
     const selectedService = useMemo(
-        () => services.find((service) => service.id === selectedServiceId) || services[0] || null,
+        () => services.find((service) => service.id === selectedServiceId) || null,
         [services, selectedServiceId]
     );
 
@@ -149,48 +122,44 @@ const Attendance: React.FC = () => {
         };
     }, [services]);
 
-    const memberHistory = useMemo(() => {
-        if (!selectedMember) return {};
-        const history: Partial<Record<PrimaryServiceType, Service[]>> = {};
-        PRIMARY_SERVICE_TYPES.forEach((type) => {
-            history[type] = services.filter((service) => {
-                const log = logByMemberAndService.get(`${selectedMember.id}:${service.id}`);
-                return service.service_type === type && log?.was_present !== false;
-            });
-        });
-        return history;
-    }, [selectedMember, services, logByMemberAndService]);
-
-    const serviceTypeTotals = useMemo(() => {
-        if (!selectedMember) return {};
-        const totals: Partial<Record<PrimaryServiceType, { attended: number; possible: number; rate: number }>> = {};
-        PRIMARY_SERVICE_TYPES.forEach((type) => {
-            const possible = services.filter((service) => service.service_type === type).length;
-            const attended = memberHistory[type]?.length || 0;
-            totals[type] = {
-                attended,
-                possible,
-                rate: possible > 0 ? Math.round((attended / possible) * 100) : 0
-            };
-        });
-        return totals;
-    }, [memberHistory, selectedMember, services]);
-
-    const selectedServiceLogs = useMemo(() => {
-        if (!selectedService) return [];
-        return (logsByService.get(selectedService.id) || [])
-            .filter((log) => log.was_present !== false)
-            .sort((a, b) => getMemberName(a.member).localeCompare(getMemberName(b.member)));
-    }, [logsByService, selectedService]);
-
     const applyQuickRange = (range: "this_month" | "last_month" | "this_year") => {
         const next = range === "this_year" ? getYearRange() : getMonthRange(range === "last_month" ? -1 : 0);
         setStartDate(next.startDate);
         setEndDate(next.endDate);
     };
 
+    const handleCheckIn = async (memberId: string, status: 'present' | 'absent' | 'tardy') => {
+        if (!selectedServiceId) return;
+        
+        const existingLog = logByMemberAndService.get(`${memberId}:${selectedServiceId}`);
+        const logData = {
+            id: existingLog?.id, // Optional, Supabase upsert requires this for updating if it exists
+            member_id: memberId,
+            event_id: selectedServiceId,
+            event_type: 'service',
+            event_date: selectedService?.service_date || new Date().toISOString().slice(0,10),
+            was_present: status === 'present' || status === 'tardy',
+            was_tardy: status === 'tardy',
+        };
+
+        // Optimistic UI update
+        const updatedLog = { ...existingLog, ...logData } as ServiceAttendanceLog;
+        setLogs(prev => {
+            const next = prev.filter(l => !(l.member_id === memberId && l.event_id === selectedServiceId));
+            return [...next, updatedLog];
+        });
+
+        try {
+            await serviceService.upsertAttendanceLog(logData);
+        } catch (err: any) {
+            console.error(err);
+            setErrorMessage("Failed to update attendance: " + err.message);
+            fetchAttendance(); // Revert on failure
+        }
+    };
+
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-20">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h1 className="text-2xl font-bold text-[var(--color-text-main)]">Attendance</h1>
@@ -259,200 +228,56 @@ const Attendance: React.FC = () => {
                     <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 flex items-center gap-2"><Users size={14} /> Avg Attendance</p>
                     <p className="text-3xl font-black mt-2 text-gray-900">{summary.averageAttendance}</p>
                 </div>
-                <div className="card-panel bg-white p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Most Attended</p>
-                    <p className="text-lg font-black mt-2 text-gray-900">{summary.mostAttended ? summary.mostAttended.total_attendance : 0}</p>
-                    <p className="text-xs text-gray-500 truncate">
-                        {summary.mostAttended ? `${formatDate(summary.mostAttended.service_date)} | ${SERVICE_TYPE_LABELS[summary.mostAttended.service_type as PrimaryServiceType]}` : "No services"}
-                    </p>
-                </div>
-                <div className="card-panel bg-white p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Low Attendance</p>
-                    <div className="mt-2 space-y-1">
-                        {summary.lowAttendanceDates.length > 0 ? summary.lowAttendanceDates.map((service) => (
+                <div className="card-panel bg-white p-5 md:col-span-2">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Select Service to Edit</p>
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                        {services.map((service) => (
                             <button
                                 key={service.id}
                                 onClick={() => setSelectedServiceId(service.id)}
-                                className="block w-full text-left text-xs text-gray-600 hover:text-blue-700 truncate"
+                                className={`flex-shrink-0 flex flex-col items-start p-2 rounded-xl border min-w-[120px] transition-colors ${selectedServiceId === service.id ? 'bg-gray-900 text-white border-gray-900' : SERVICE_TYPE_ACCENTS[service.service_type as PrimaryServiceType]}`}
                             >
-                                {formatDate(service.service_date)} | {service.total_attendance} attended
+                                <span className="text-[11px] font-black uppercase opacity-80">{SERVICE_TYPE_LABELS[service.service_type as PrimaryServiceType].replace("Sunday ", "").replace("Wednesday ", "Wed ")}</span>
+                                <span className="text-sm font-bold mt-1">{formatDate(service.service_date)}</span>
                             </button>
-                        )) : (
-                            <p className="text-xs text-gray-400">No services</p>
-                        )}
+                        ))}
+                        {services.length === 0 && <span className="text-sm text-gray-400 py-2">No services found</span>}
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-                <div className="xl:col-span-8 card-panel bg-white overflow-hidden">
-                    <div className="p-5 border-b border-gray-100 flex items-center justify-between gap-3">
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-900">Member Attendance Matrix</h2>
-                            <p className="text-xs text-gray-500 mt-1">P = present, T = tardy, A = absent.</p>
-                        </div>
-                        {loading && <span className="text-xs font-bold text-blue-600">Loading...</span>}
-                    </div>
-                    <div className="overflow-auto max-h-[560px]">
-                        <table className="w-full min-w-[780px] text-sm">
-                            <thead className="sticky top-0 bg-gray-50 z-10">
-                                <tr>
-                                    <th className="sticky left-0 bg-gray-50 text-left p-3 border-b border-gray-100 min-w-[220px] text-xs uppercase tracking-widest text-gray-500">Member</th>
-                                    {services.map((service) => (
-                                        <th key={service.id} className="p-2 border-b border-gray-100 text-center min-w-[76px]">
-                                            <button
-                                                onClick={() => setSelectedServiceId(service.id)}
-                                                className={`w-full rounded-lg border px-2 py-1.5 text-[10px] font-black uppercase leading-tight ${selectedService?.id === service.id ? "bg-gray-900 text-white border-gray-900" : SERVICE_TYPE_ACCENTS[service.service_type as PrimaryServiceType]}`}
-                                            >
-                                                <span className="block">{formatDate(service.service_date)}</span>
-                                                <span className="block opacity-80">{SERVICE_TYPE_LABELS[service.service_type as PrimaryServiceType].replace("Sunday ", "").replace("Wednesday ", "Wed ")}</span>
-                                            </button>
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredMembers.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={services.length + 1} className="p-8 text-center text-gray-400">No matching members.</td>
-                                    </tr>
-                                ) : (
-                                    filteredMembers.map((member) => (
-                                        <tr key={member.id} className="border-b border-gray-50 hover:bg-gray-50/70">
-                                            <td className="sticky left-0 bg-white p-3 font-semibold text-gray-900">
-                                                <button
-                                                    onClick={() => setSelectedMemberId(member.id)}
-                                                    className={`text-left hover:text-blue-700 ${selectedMember?.id === member.id ? "text-blue-700" : ""}`}
-                                                >
-                                                    <span className="block">{member.surname}, {member.first_name}</span>
-                                                    {member.member_number && <span className="block text-[10px] text-gray-400 font-bold">{member.member_number}</span>}
-                                                </button>
-                                            </td>
-                                            {services.map((service) => {
-                                                const log = logByMemberAndService.get(`${member.id}:${service.id}`);
-                                                const status = log?.was_tardy ? "T" : log?.was_present ? "P" : "A";
-                                                const className = status === "T"
-                                                    ? "bg-amber-50 text-amber-700 border-amber-100"
-                                                    : status === "P"
-                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                                                        : "bg-gray-50 text-gray-300 border-gray-100";
-                                                return (
-                                                    <td key={service.id} className="p-2 text-center">
-                                                        <span className={`inline-flex w-8 h-8 items-center justify-center rounded-lg border text-xs font-black ${className}`}>
-                                                            {status}
-                                                        </span>
-                                                    </td>
-                                                );
-                                            })}
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+            <div className="mt-8">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-gray-900">Member Check-in</h2>
+                    {loading && <span className="text-xs font-bold text-blue-600">Loading...</span>}
                 </div>
-
-                <div className="xl:col-span-4 space-y-6">
-                    <div className="card-panel bg-white p-5">
-                        <h2 className="text-lg font-bold text-gray-900">Member Attendance History</h2>
-                        {selectedMember ? (
-                            <div className="mt-4 space-y-5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-black">
-                                        {selectedMember.first_name?.[0]}{selectedMember.surname?.[0]}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="font-bold text-gray-900 truncate">{selectedMember.first_name} {selectedMember.surname}</p>
-                                        <p className="text-xs text-gray-500">{selectedMember.member_number || "No member number"}</p>
-                                    </div>
-                                </div>
-                                {PRIMARY_SERVICE_TYPES.map((type) => {
-                                    const total = serviceTypeTotals[type];
-                                    const dates = memberHistory[type] || [];
-                                    return (
-                                        <div key={type} className="border-t border-gray-100 pt-4">
-                                            <div className="flex items-center justify-between gap-3">
-                                                <p className="text-xs font-black uppercase tracking-widest text-gray-500">{SERVICE_TYPE_LABELS[type]}</p>
-                                                <span className="text-xs font-black text-gray-900">
-                                                    {total?.attended || 0}/{total?.possible || 0} | {total?.rate || 0}%
-                                                </span>
-                                            </div>
-                                            <div className="mt-2 flex flex-wrap gap-1.5">
-                                                {dates.length > 0 ? dates.map((service) => (
-                                                    <button
-                                                        key={service.id}
-                                                        onClick={() => setSelectedServiceId(service.id)}
-                                                        className="px-2 py-1 rounded-md bg-gray-50 hover:bg-blue-50 text-[11px] font-semibold text-gray-600 hover:text-blue-700"
-                                                    >
-                                                        {formatDate(service.service_date, { month: "short", day: "numeric", year: "numeric" })}
-                                                    </button>
-                                                )) : (
-                                                    <span className="text-xs text-gray-400">No dates present in this range.</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        ) : (
-                            <p className="mt-4 text-sm text-gray-400">Select a member from the matrix.</p>
-                        )}
+                
+                {filteredMembers.length === 0 ? (
+                    <div className="p-12 text-center text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
+                        No matching members found.
                     </div>
-
-                    <div className="card-panel bg-white p-5">
-                        <h2 className="text-lg font-bold text-gray-900">Service Attendance Detail</h2>
-                        {selectedService ? (
-                            <div className="mt-4 space-y-4">
-                                <div className={`rounded-xl border p-4 ${SERVICE_TYPE_ACCENTS[selectedService.service_type as PrimaryServiceType]}`}>
-                                    <p className="text-xs font-black uppercase tracking-widest">{SERVICE_TYPE_LABELS[selectedService.service_type as PrimaryServiceType]}</p>
-                                    <p className="text-xl font-black mt-1">{formatDate(selectedService.service_date, { month: "long", day: "numeric", year: "numeric" })}</p>
-                                    <div className="grid grid-cols-3 gap-2 mt-4 text-center">
-                                        <div className="bg-white/80 rounded-lg p-2">
-                                            <p className="text-[10px] uppercase font-bold opacity-70">Members</p>
-                                            <p className="font-black">{selectedService.members_present}</p>
-                                        </div>
-                                        <div className="bg-white/80 rounded-lg p-2">
-                                            <p className="text-[10px] uppercase font-bold opacity-70">Visitors</p>
-                                            <p className="font-black">{selectedService.visitors_present}</p>
-                                        </div>
-                                        <div className="bg-white/80 rounded-lg p-2">
-                                            <p className="text-[10px] uppercase font-bold opacity-70">Total</p>
-                                            <p className="font-black">{selectedService.total_attendance}</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
-                                    {selectedServiceLogs.length > 0 ? selectedServiceLogs.map((log) => (
-                                        <div key={log.id} className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 p-3">
-                                            <div className="min-w-0">
-                                                <p className="text-sm font-bold text-gray-900 truncate">{getMemberName(log.member)}</p>
-                                                <p className="text-[11px] text-gray-400">{log.member?.member_number || "No member number"}</p>
-                                            </div>
-                                            {log.was_tardy ? (
-                                                <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-[10px] font-black uppercase text-amber-700">
-                                                    <Clock size={12} /> Tardy
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase text-emerald-700">
-                                                    <Check size={12} /> Present
-                                                </span>
-                                            )}
-                                        </div>
-                                    )) : (
-                                        <div className="p-6 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-xl">
-                                            No member attendance logs for this service.
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="mt-4 p-6 text-center text-sm text-gray-400 border border-dashed border-gray-200 rounded-xl">
-                                No service selected.
-                            </div>
-                        )}
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {filteredMembers.map(member => {
+                            const log = logByMemberAndService.get(`${member.id}:${selectedServiceId}`);
+                            const historyLogs = services.map(service => ({
+                                service,
+                                log: logByMemberAndService.get(`${member.id}:${service.id}`)
+                            })).filter(h => h.service.id !== selectedServiceId);
+                            
+                            return (
+                                <AttendanceCard
+                                    key={member.id}
+                                    member={member}
+                                    selectedService={selectedService}
+                                    log={log}
+                                    historyLogs={historyLogs}
+                                    onCheckIn={(status) => handleCheckIn(member.id, status)}
+                                />
+                            );
+                        })}
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

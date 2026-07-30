@@ -292,3 +292,19 @@ export const getServiceAttendanceReport = async ({
         logs: (logsData || []) as ServiceAttendanceLog[]
     };
 };
+
+/**
+ * Upserts a single attendance log.
+ */
+export const upsertAttendanceLog = async (log: any) => {
+    const { data, error } = await supabase
+        .from('attendance_log')
+        .upsert(log)
+        .select()
+        .single();
+
+    if (error) {
+        throw new Error(`Failed to upsert attendance log: ${error.message}`);
+    }
+    return data;
+};
