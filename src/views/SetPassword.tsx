@@ -92,26 +92,28 @@ const SetPassword: React.FC = () => {
 
     if (initializing || sessionStatus === 'checking') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#f4f6f8]">
-                <div className="h-8 w-8 border-4 border-[#1565c0] border-t-transparent rounded-none animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
+                <div className="h-8 w-8 border-2 border-[var(--color-text-main)] border-t-transparent rounded-full animate-spin" />
             </div>
         );
     }
 
     if (sessionStatus === 'invalid') {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#f4f6f8] p-4">
-                <div className="max-w-md w-full bg-white rounded-none shadow-xl border-t-4 border-red-500 overflow-hidden p-8 text-center space-y-4">
-                    <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
-                    <h2 className="text-2xl font-bold text-gray-900">Invalid or Expired Link</h2>
-                    <p className="text-gray-600">
+            <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-4">
+                <div className="max-w-md w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-10 text-center space-y-6">
+                    <div className="w-16 h-16 border border-[var(--color-border)] flex items-center justify-center mx-auto">
+                        <AlertCircle className="w-8 h-8 text-[var(--color-text-main)]" />
+                    </div>
+                    <h2 className="text-2xl font-black text-[var(--color-text-main)] font-outfit uppercase tracking-tight">Invalid Link</h2>
+                    <p className="text-[var(--color-text-muted)] text-sm font-inter">
                         This invite link is invalid or has expired. Please contact your church administrator for a new invite.
                     </p>
                     <button
                         onClick={() => navigate('/login')}
-                        className="mt-6 px-6 py-2 bg-[#1565c0] text-[var(--color-text-main)] rounded-none font-medium hover:bg-[#0d47a1] transition-colors inline-block"
+                        className="btn-primary w-full py-4 mt-4"
                     >
-                        Return to Login
+                        RETURN TO PORTAL
                     </button>
                 </div>
             </div>
@@ -119,86 +121,86 @@ const SetPassword: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#f4f6f8] p-4">
-            <div className="w-full max-w-[480px] bg-white rounded-none shadow-xl border-t-4 border-[#1565c0] overflow-hidden">
-                <div className="p-10 space-y-6">
+        <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-4">
+            <div className="w-full max-w-[480px] bg-[var(--color-surface)] border border-[var(--color-border)] p-10">
+                <div className="space-y-8">
                     {/* Header */}
-                    <div className="text-center space-y-4">
-                        <div className="mx-auto w-16 h-16 bg-[#1565c0] rounded-none flex items-center justify-center mb-2">
+                    <div className="text-center space-y-4 border-b border-[var(--color-border)] pb-8">
+                        <div className="mx-auto w-16 h-16 border border-[var(--color-border)] flex items-center justify-center mb-2">
                             <Church className="text-[var(--color-text-main)] w-8 h-8" />
                         </div>
-                        <h2 className="text-[26px] font-bold text-[#1f2937] leading-tight">
-                            Welcome to BBC<br />Management System
+                        <h2 className="text-3xl font-black text-[var(--color-text-main)] font-outfit uppercase tracking-tight leading-tight">
+                            System<br />Activation
                         </h2>
-                        <p className="text-[#6b7280] text-[15px]">
-                            Please set your password to activate your account.
+                        <p className="text-[var(--color-text-muted)] text-xs uppercase tracking-widest font-bold">
+                            Initialize account credentials
                         </p>
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-none flex items-center gap-3 text-sm">
-                            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                        <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-4 text-xs font-bold uppercase tracking-widest flex items-center gap-3">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
                             <span>{error}</span>
                         </div>
                     )}
 
-                    <form onSubmit={handleSetPassword} className="space-y-6">
+                    <form onSubmit={handleSetPassword} className="space-y-8">
                         {/* New Password */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-[#374151]">
+                        <div className="space-y-3">
+                            <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest">
                                 Password
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
+                                    <Lock className="h-4 w-4 text-[var(--color-text-muted)]" />
                                 </div>
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full border border-gray-300 bg-white pl-12 pr-12 py-3 text-[#1f2937] focus:border-[#1565c0] focus:ring-1 focus:ring-[#1565c0] outline-none transition-colors rounded-none font-mono tracking-widest"
+                                    className="block w-full border border-[var(--color-border)] bg-[var(--color-background)] pl-12 pr-12 py-3 text-[var(--color-text-main)] focus:border-[var(--color-text-main)] outline-none transition-colors text-sm font-mono tracking-widest"
                                     placeholder="••••••••"
                                 />
                                 <div
-                                    className="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
+                                    className="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]"
                                     onClick={() => setShowPassword(!showPassword)}
                                 >
-                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </div>
                             </div>
                         </div>
 
                         {/* Confirm Password */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-semibold text-[#374151]">
+                        <div className="space-y-3">
+                            <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest">
                                 Confirm Password
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-gray-400" />
+                                    <Lock className="h-4 w-4 text-[var(--color-text-muted)]" />
                                 </div>
                                 <input
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className={`block w-full border ${password === confirmPassword && confirmPassword.length > 0 ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-white'} pl-12 pr-4 py-3 text-[#1f2937] focus:border-[#1565c0] focus:ring-1 focus:ring-[#1565c0] outline-none transition-colors rounded-none font-mono tracking-widest`}
+                                    className={`block w-full border ${password === confirmPassword && confirmPassword.length > 0 ? 'border-[var(--color-text-main)]' : 'border-[var(--color-border)]'} bg-[var(--color-background)] pl-12 pr-4 py-3 text-[var(--color-text-main)] focus:border-[var(--color-text-main)] outline-none transition-colors text-sm font-mono tracking-widest`}
                                     placeholder="••••••••"
                                 />
                             </div>
                         </div>
 
                         {/* Password Requirements */}
-                        <div className="bg-[#f8f9fa] rounded-none p-4 border border-gray-100 flex justify-between">
-                            <div className="flex items-center gap-2">
-                                {hasLength ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Circle className="w-4 h-4 text-gray-300" />}
-                                <span className={`text-[13px] ${hasLength ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
-                                    At least 8 characters
+                        <div className="bg-[var(--color-background)] border border-[var(--color-border)] p-4 flex justify-between">
+                            <div className="flex items-center gap-3">
+                                {hasLength ? <CheckCircle2 className="w-4 h-4 text-[var(--color-text-main)]" /> : <Circle className="w-4 h-4 text-[var(--color-text-muted)]" />}
+                                <span className={`text-[10px] font-bold uppercase tracking-widest ${hasLength ? 'text-[var(--color-text-main)]' : 'text-[var(--color-text-muted)]'}`}>
+                                    8+ Characters
                                 </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                {hasMatch ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Circle className="w-4 h-4 text-gray-300" />}
-                                <span className={`text-[13px] ${hasMatch ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
-                                    Passwords match
+                            <div className="flex items-center gap-3">
+                                {hasMatch ? <CheckCircle2 className="w-4 h-4 text-[var(--color-text-main)]" /> : <Circle className="w-4 h-4 text-[var(--color-text-muted)]" />}
+                                <span className={`text-[10px] font-bold uppercase tracking-widest ${hasMatch ? 'text-[var(--color-text-main)]' : 'text-[var(--color-text-muted)]'}`}>
+                                    Match
                                 </span>
                             </div>
                         </div>
@@ -206,12 +208,12 @@ const SetPassword: React.FC = () => {
                         <button
                             type="submit"
                             disabled={!isReady || loading}
-                            className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-bold text-[var(--color-text-main)] bg-[#1565c0] hover:bg-[#0d47a1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1565c0] disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-wide rounded-none shadow-md mt-6"
+                            className="btn-primary w-full py-4 mt-2"
                         >
                             {loading ? (
-                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-none animate-spin" />
+                                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto" />
                             ) : (
-                                "SET PASSWORD"
+                                "INITIALIZE CREDENTIALS"
                             )}
                         </button>
                     </form>
