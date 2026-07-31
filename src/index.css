@@ -13,11 +13,11 @@
   --color-surface: oklch(0.98 0.01 60);
   --color-surface-hover: oklch(0.96 0.01 60);
   --color-border: oklch(0.85 0.01 60);
-  --color-primary: oklch(0.45 0.15 260); /* Brand Blue */
-  --color-primary-dark: oklch(0.35 0.15 260);
-  --color-primary-glow: oklch(0.45 0.15 260 / 0.15);
-  --color-primary-light: oklch(0.92 0.04 260); /* Light tint — replaces bg-blue-50/100 */
-  --color-primary-medium: oklch(0.55 0.12 260); /* Medium — replaces text-blue-500/600 */
+  --color-primary: oklch(0.48 0.18 255); /* BBC Royal Blue — matched to church logo */
+  --color-primary-dark: oklch(0.38 0.18 255);
+  --color-primary-glow: oklch(0.48 0.18 255 / 0.12);
+  --color-primary-light: oklch(0.93 0.03 255); /* Soft tint for badges/backgrounds */
+  --color-primary-medium: oklch(0.58 0.14 255); /* Mid-tone for secondary text */
   --color-text-main: oklch(0.2 0.02 60);
   --color-text-muted: oklch(0.5 0.02 60);
   --color-text-light: oklch(0.98 0.01 60);
