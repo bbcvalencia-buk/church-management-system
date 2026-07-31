@@ -25,6 +25,8 @@ import SpiritualForm from "../components/members/SpiritualForm";
 import PositionsForm from "../components/members/PositionsForm";
 import FamilyForm from "../components/members/FamilyForm";
 import FaithPromiseForm from "../components/members/FaithPromiseForm";
+import EditRequestModal from "@/components/MemberProfile/EditRequestModal";
+import MinistryMatesModal from "@/components/MemberProfile/MinistryMatesModal";
 
 const MINISTRY_CATEGORY_LABELS: Record<string, string> = {
     leadership: "Pastoral & Admin",
@@ -1225,98 +1227,23 @@ const MemberProfile: React.FC = () => {
                     </div>
                 )}
 
-                {/* Edit Request Modal (view mode) */}
                 {showEditRequestModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-xl w-full max-w-lg p-6 space-y-4">
-                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                <MessageSquare size={18} className="text-amber-600" />
-                                Request Profile Edit
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                                Describe what needs to be corrected. Admin will review this request.
-                            </p>
-                            <textarea
-                                value={editRequestMessage}
-                                onChange={(e) => setEditRequestMessage(e.target.value)}
-                                rows={5}
-                                className="w-full rounded-xl border border-gray-200 p-3 text-sm text-gray-900 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none"
-                                placeholder="Example: Please update my phone number and home address."
-                            />
-                            <div className="flex justify-end gap-2">
-                                <button
-                                    onClick={() => {
-                                        setShowEditRequestModal(false);
-                                        setEditRequestMessage("");
-                                    }}
-                                    className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleRequestEdit}
-                                    disabled={submittingEditRequest || !editRequestMessage.trim()}
-                                    className="px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-bold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {submittingEditRequest ? "Submitting..." : "Send Request"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <EditRequestModal
+                        editRequestMessage={editRequestMessage}
+                        onChange={setEditRequestMessage}
+                        submitting={submittingEditRequest}
+                        onSubmit={handleRequestEdit}
+                        onClose={() => { setShowEditRequestModal(false); setEditRequestMessage(""); }}
+                    />
                 )}
 
-                {/* Ministry Mates Modal (view mode) */}
                 {showMinistryMatesModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[80vh] flex flex-col">
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="text-[18px] font-bold text-gray-900">
-                                    Ministry: {formatMinistryDepartment(selectedMinistryName) || selectedMinistryName}
-                                </h3>
-                                <button onClick={() => setShowMinistryMatesModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                                </button>
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-                                {loadingMates ? (
-                                    <div className="text-center py-6 text-gray-400 animate-pulse font-medium text-sm">Loading members...</div>
-                                ) : selectedMinistryMates.length > 0 ? (
-                                    selectedMinistryMates.map((mate: any, idx: number) => (
-                                        <div key={idx} className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 bg-gray-50/50">
-                                            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
-                                                {mate.avatar ? (
-                                                    <img src={mate.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center"><User size={20} className="text-gray-400" /></div>
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-gray-900 text-sm truncate">{mate.name}</p>
-                                                <p className="text-xs text-gray-500 truncate">{mate.position}</p>
-                                            </div>
-                                            {mate.isHead && (
-                                                <span className="shrink-0 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-2 py-1 uppercase">Head</span>
-                                            )}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-6 px-4">
-                                        <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
-                                            <Users size={20} className="text-gray-400" />
-                                        </div>
-                                        <p className="text-gray-500 font-medium text-sm">No other mates found in this ministry yet.</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="pt-2">
-                                <button onClick={() => setShowMinistryMatesModal(false)} className="w-full py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl text-sm hover:bg-gray-200 transition-colors">
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <MinistryMatesModal
+                        ministryName={selectedMinistryName}
+                        mates={selectedMinistryMates}
+                        loading={loadingMates}
+                        onClose={() => setShowMinistryMatesModal(false)}
+                    />
                 )}
             </div>
         );

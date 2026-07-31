@@ -30,7 +30,7 @@ import FaithPromiseLedgerTab from "@/components/finance/FaithPromiseLedgerTab";
 import FaithPromiseQuickAdd from "@/components/finance/FaithPromiseQuickAdd";
 import FaithPromisePledgeForm from "@/components/finance/FaithPromisePledgeForm";
 import { FaithPromiseImport } from "@/components/finance/FaithPromiseImport";
-import html2canvas from "html2canvas";
+
 
 interface FinancialRecordWithMember extends FinancialRecord {
     members?: Pick<Member, 'first_name' | 'surname'> | null;
@@ -151,21 +151,7 @@ const TreasuryDashboard: React.FC = () => {
     const initializedFiltersRef = useRef(false);
     const dashboardRef = useRef<HTMLDivElement>(null);
 
-    const handleDownloadPNG = async () => {
-        if (!dashboardRef.current) return;
-        try {
-            const canvas = await html2canvas(dashboardRef.current, { scale: 2 });
-            const dataUrl = canvas.toDataURL('image/png');
-            const link = document.createElement('a');
-            link.download = `TreasuryDashboard_${selectedYear}_${selectedMonth}.png`;
-            link.href = dataUrl;
-            link.click();
-            showToast('Dashboard downloaded as PNG', 'success');
-        } catch (err) {
-            console.error(err);
-            showToast('Failed to download PNG', 'error');
-        }
-    };
+
 
     // Add debug mount/unmount logging
     useEffect(() => {
@@ -523,13 +509,7 @@ const TreasuryDashboard: React.FC = () => {
                             <span>{isCurrentPeriodLocked ? 'Unlock Period' : 'Lock Period'}</span>
                         </button>
                     )}
-                    <button
-                            onClick={handleDownloadPNG}
-                            className="bg-white border border-[var(--color-border)] hover:bg-gray-50 text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold"
-                        >
-                            <Download size={18} />
-                            <span>Export PNG</span>
-                        </button>
+
                     <Link
                         to="/finance/reports"
                         className="bg-white border border-[var(--color-border)] hover:bg-gray-50 text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm">

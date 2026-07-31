@@ -6,6 +6,7 @@ import type { FinancialRecord, Member, SystemSettings } from "@/types";
 import { Printer, ArrowLeft, Download, Loader2 } from "lucide-react";
 // @ts-ignore
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 interface RecordWithMember extends FinancialRecord {
     members: Member | null;
@@ -115,6 +116,8 @@ const FinancialReportPrint: React.FC = () => {
     });
     const [loading, setLoading] = useState(false);
     const [generatingPdf, setGeneratingPdf] = useState(false);
+    const [generatingPng, setGeneratingPng] = useState(false);
+    const reportRef = React.useRef<HTMLDivElement>(null);
 
     const yearOptions = useMemo(() => {
         const currentYear = new Date().getFullYear();
@@ -383,6 +386,24 @@ const FinancialReportPrint: React.FC = () => {
         return y + 6;
     };
 
+    const handleDownloadPng = async () => {
+        if (!reportRef.current || reportData.length === 0) return;
+        setGeneratingPng(true);
+        try {
+            const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `Financial_Report_${year}.png`;
+            link.href = dataUrl;
+            link.click();
+        } catch (error) {
+            console.error("PNG generation failed:", error);
+            alert("Failed to generate PNG: " + (error as Error).message);
+        } finally {
+            setGeneratingPng(false);
+        }
+    };
+
     const handleDownloadPdf = async () => {
         setGeneratingPdf(true);
         try {
@@ -559,15 +580,15 @@ const FinancialReportPrint: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--color-background)]">
-            <div className="p-6 border-b border-white/10 space-y-6">
+        <div className="min-h-screen bg-[var(--color-bg)]">
+            <div className="p-6 border-b border-[var(--color-border)] space-y-6 bg-white shadow-sm">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-xl font-bold flex items-center gap-2">
-                        <Printer size={20} /> Report Configuration
+                    <h1 className="text-xl font-bold flex items-center gap-2 text-[var(--color-text-main)]">
+                        <Printer size={20} className="text-[var(--color-primary)]" /> Report Configuration
                     </h1>
                     <button
                         onClick={() => window.history.back()}
-                        className="text-sm text-[var(--color-text-muted)] hover:text-white flex items-center gap-1"
+                        className="text-sm font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] flex items-center gap-1 transition-colors"
                     >
                         <ArrowLeft size={16} /> Back
                     </button>
@@ -575,11 +596,11 @@ const FinancialReportPrint: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-[var(--color-text-muted)]">FISCAL YEAR</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Fiscal Year</label>
                         <select
                             value={year}
                             onChange={(e) => setYear(parseInt(e.target.value, 10))}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-2.5 text-white"
+                            className="form-control"
                         >
                             {yearOptions.map((optionYear) => (
                                 <option key={optionYear} value={optionYear}>{optionYear}</option>
@@ -588,11 +609,11 @@ const FinancialReportPrint: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-[var(--color-text-muted)]">SELECT MEMBER</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)]">Select Member</label>
                         <select
                             value={selectedMemberId}
                             onChange={(e) => setSelectedMemberId(e.target.value)}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg p-2.5 text-white"
+                            className="form-control"
                         >
                             <option value="all">-- Print All Contributors --</option>
                             {members.map((member) => (
@@ -602,50 +623,60 @@ const FinancialReportPrint: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20 flex items-center justify-between flex-wrap gap-4">
+                <div className="p-4 bg-[var(--color-primary)]/10 rounded-xl border border-[var(--color-primary)]/20 flex items-center justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-6 flex-wrap">
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex items-center gap-2 cursor-pointer group">
                             <input
                                 type="checkbox"
                                 checked={includeLoveGifts}
                                 onChange={(e) => setIncludeLoveGifts(e.target.checked)}
-                                className="w-4 h-4 rounded border-white/20 bg-black/20 text-[var(--color-primary)]"
+                                className="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                             />
-                            <span className="text-sm">Show Love Gifts</span>
+                            <span className="text-sm font-semibold text-[var(--color-text-main)] group-hover:text-[var(--color-primary)] transition-colors">Show Love Gifts</span>
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex items-center gap-2 cursor-pointer group">
                             <input
                                 type="checkbox"
                                 checked={includePledges}
                                 onChange={(e) => setIncludePledges(e.target.checked)}
-                                className="w-4 h-4 rounded border-white/20 bg-black/20 text-[var(--color-primary)]"
+                                className="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                             />
-                            <span className="text-sm">Show Pledges</span>
+                            <span className="text-sm font-semibold text-[var(--color-text-main)] group-hover:text-[var(--color-primary)] transition-colors">Show Pledges</span>
                         </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
+                        <label className="flex items-center gap-2 cursor-pointer group">
                             <input
                                 type="checkbox"
                                 checked={showOnlyGiftAndPledgeContributors}
                                 onChange={(e) => setShowOnlyGiftAndPledgeContributors(e.target.checked)}
-                                className="w-4 h-4 rounded border-white/20 bg-black/20 text-[var(--color-primary)]"
+                                className="w-4 h-4 rounded border-gray-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
                             />
-                            <span className="text-sm">Show Only Love Gift/Pledge Contributors</span>
+                            <span className="text-sm font-semibold text-[var(--color-text-main)] group-hover:text-[var(--color-primary)] transition-colors">Show Only Love Gift/Pledge Contributors</span>
                         </label>
                     </div>
 
-                    <button
-                        onClick={handleDownloadPdf}
-                        disabled={generatingPdf || loading || reportData.length === 0}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
-                    >
-                        {generatingPdf ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-                        Download PDF
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handleDownloadPng}
+                            disabled={generatingPng || loading || reportData.length === 0}
+                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+                        >
+                            {generatingPng ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                            Download PNG
+                        </button>
+                        <button
+                            onClick={handleDownloadPdf}
+                            disabled={generatingPdf || loading || reportData.length === 0}
+                            className="btn-primary flex items-center gap-2"
+                        >
+                            {generatingPdf ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
+                            Download PDF
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <div className="flex justify-center bg-gray-100 p-8 min-h-screen overflow-auto">
-                <div className="md:w-[210mm] w-full bg-white text-black shadow-2xl p-8 min-h-[297mm]">
+                <div ref={reportRef} className="md:w-[210mm] w-full bg-white text-black shadow-2xl p-8 min-h-[297mm]">
                     {loading ? (
                         <div className="text-center py-20 text-gray-400">Generating Report...</div>
                     ) : reportData.length === 0 ? (

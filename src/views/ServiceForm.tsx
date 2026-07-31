@@ -28,6 +28,9 @@ import { deleteFile } from "@/lib/storage";
 import { findExistingMemberForVisitor, splitVisitorName } from "@/lib/visitorDedup";
 import SuccessModal from "@/components/SuccessModal";
 import { SearchMemberModal } from "@/components/SearchMemberModal";
+import ServiceRolesPanel from "@/components/ServiceForm/ServiceRolesPanel";
+import ServiceStatsPanel from "@/components/ServiceForm/ServiceStatsPanel";
+import { MULTI_MEMBER_ROLES } from "@/components/ServiceForm/constants";
 import { useSessionDraft, useSessionValue } from "@/hooks/useSessionDraft";
 
 // Initial state for a new service
@@ -72,20 +75,7 @@ const getServiceDateWarning = (serviceType?: string, serviceDate?: string) => {
     return "";
 };
 
-const ROLE_LABELS: Record<ServiceRole, string> = {
-    songleader: 'Songleader',
-    pastor: 'Pastor',
-    moderator: 'Moderator',
-    pianist: 'Pianist',
-    technicals: 'Technicals',
-    mini_ensemble: 'Mini Ensemble',
-    usher: 'Usher',
-    choir: 'Choir',
-    preacher: 'Preacher',
-    other: 'Other'
-};
 
-const MULTI_MEMBER_ROLES: ServiceRole[] = ['choir', 'mini_ensemble', 'usher', 'technicals', 'pianist'];
 
 const inferVisitTimeFromService = (serviceType?: string): 'AM' | 'PM' =>
     serviceType === 'sunday_afternoon' ? 'PM' : 'AM';
@@ -615,8 +605,6 @@ const ServiceForm: React.FC = () => {
 
     if (loading) return <div className="p-8 text-center text-[var(--color-text-muted)]">Loading...</div>;
 
-    const ROLES: ServiceRole[] = ['pastor', 'preacher', 'songleader', 'moderator', 'pianist', 'technicals', 'choir', 'mini_ensemble', 'usher', 'other'];
-
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-20">
             {/* Header */}
@@ -706,81 +694,12 @@ const ServiceForm: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Service Roles */}
-                    <div className="card-panel p-6 space-y-4 bg-white">
-                        <h3 className="text-[1.22rem] leading-6 font-semibold tracking-tight flex items-center gap-2 mb-4 text-[var(--color-text-main)]">
-                            <UserCheck className="text-[var(--color-primary)]" size={20} />
-                            Service Roles / Roster
-                        </h3>
-
-                        <div className="space-y-6">
-                            {ROLES.map(role => {
-                                const roleAssignments = assignments.filter(a => a.role === role);
-                                const isMulti = MULTI_MEMBER_ROLES.includes(role);
-
-                                return (
-                                    <div key={role} className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-                                                {role === 'pastor' && <Shield size={14} className="text-blue-500" />}
-                                                {role === 'preacher' && <BookOpen size={14} className="text-purple-500" />}
-                                                {role === 'choir' && <Music size={14} className="text-indigo-500" />}
-                                                {role === 'songleader' && <Mic size={14} className="text-pink-500" />}
-                                                {ROLE_LABELS[role]}
-                                            </label>
-                                            {(isMulti || roleAssignments.length === 0) && (
-                                                <button
-                                                    onClick={() => setShowRoleSearch(role)}
-                                                    className="text-[11px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 px-2 py-1 bg-blue-50 rounded-lg transition-colors"
-                                                >
-                                                    <Plus size={12} /> Assign {isMulti ? 'More' : ''}
-                                                </button>
-                                            )}
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            {roleAssignments.map((a, idx) => (
-                                                <div key={`${a.member_id}-${idx}`} className="flex flex-col gap-2 p-3 bg-gray-50 rounded-xl border border-gray-100 group">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 border border-white shadow-sm">
-                                                                {a.member?.profile_picture_url ? (
-                                                                    <img src={a.member.profile_picture_url} alt="" className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                                                        <Users size={14} />
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <span className="text-sm font-bold text-gray-900">
-                                                                {a.member?.first_name} {a.member?.surname}
-                                                            </span>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => removeAssignment(a.member_id!, role)}
-                                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                                        >
-                                                            <IconX size={14} />
-                                                        </button>
-                                                    </div>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Notes/Assignments (e.g. Lead, Alto, etc.)"
-                                                        value={a.notes || ''}
-                                                        onChange={(e) => updateAssignmentNotes(a.member_id!, role, e.target.value)}
-                                                        className="text-xs bg-white border border-gray-100 rounded-lg px-2 py-1.5 focus:border-blue-200 outline-none placeholder:text-gray-300"
-                                                    />
-                                                </div>
-                                            ))}
-                                            {roleAssignments.length === 0 && (
-                                                <div className="text-[11px] italic text-gray-400 pl-1">No one assigned</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    <ServiceRolesPanel
+                        assignments={assignments}
+                        onAssign={setShowRoleSearch}
+                        onRemove={removeAssignment}
+                        onUpdateNotes={updateAssignmentNotes}
+                    />
 
                     {/* Sermon */}
                     <div className="card-panel p-6 space-y-4 bg-white">
@@ -813,135 +732,14 @@ const ServiceForm: React.FC = () => {
                 </div>
 
                 {/* Right Column: Stats */}
-                <div className="lg:col-span-1 space-y-6">
-                    <div className="card-panel p-6 space-y-6 bg-white">
-                        <h3 className="text-[1.16rem] leading-6 font-semibold tracking-tight flex items-center gap-2 text-[var(--color-text-main)]">
-                            <Users className="text-[var(--color-primary)]" size={20} />
-                            Attendance Stats
-                        </h3>
-
-                        <div className="space-y-4">
-                            <div className="p-4 bg-[var(--color-primary)]/10 rounded-lg border border-[var(--color-primary)]/20 text-center">
-                                <p className="text-[0.7rem] uppercase tracking-[0.1em] text-[var(--color-text-muted)] font-semibold mb-1">Total Attendance</p>
-                                <p className="text-4xl font-bold text-[var(--color-primary-dark)] tracking-tight tabular-nums">{service.total_attendance}</p>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="flex justify-between items-center gap-3 px-1">
-                                    <label className="text-[0.7rem] font-semibold text-[var(--color-text-muted)] uppercase tracking-[0.1em] min-w-[7.6rem] leading-tight">Members Present</label>
-                                    <span className="text-lg font-semibold text-[var(--color-primary-dark)] whitespace-nowrap tabular-nums">{Number(service.members_present) || 0} Checked In</span>
-                                </div>
-                                <div className="flex flex-col gap-2 w-full">
-                                    <button
-                                        type="button"
-                                        onClick={handleMarkAllPresent}
-                                        className="w-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-300 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
-                                    >
-                                        <UserCheck size={18} className="shrink-0" /> <span>Mark All Present</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsAttendanceModalOpen(true)}
-                                        className="w-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
-                                    >
-                                        <Users size={18} className="shrink-0" /> <span>Manage Attendance Report</span>
-                                    </button>
-                                </div>
-                                <div className="space-y-1 pt-2 border-t border-[var(--color-border)]">
-                                    <label className="text-[0.7rem] text-[var(--color-text-muted)] uppercase font-semibold px-1 tracking-[0.1em]">Visitors / Non-Members Present</label>
-                                    <input
-                                        type="number"
-                                        value={isPrimaryService ? service.visitors_present : 0}
-                                        onChange={(e) => update('visitors_present', parseInt(e.target.value) || 0)}
-                                        className="form-control text-center text-2xl font-semibold tabular-nums text-[var(--color-primary-dark)] px-3 disabled:opacity-60 disabled:bg-gray-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        min="0"
-                                        disabled={!isPrimaryService}
-                                    />
-                                    <p className="text-[11px] text-[var(--color-text-muted)] font-semibold px-1 mt-1">
-                                        {isPrimaryService
-                                            ? `Visitor cards encoded: ${newVisitors.length}`
-                                            : "Visitors can only be recorded for Sunday Morning, Sunday Afternoon, and Wednesday Prayer Meeting."}
-                                    </p>
-                                </div>
-                                {isPrimaryService && (
-                                    <div className="space-y-1 pt-2">
-                                        <label className="text-[0.7rem] text-[var(--color-text-muted)] uppercase font-semibold px-1 tracking-[0.1em]">Visitor Card URL (Image)</label>
-                                        <ImageUpload
-                                            value={(service as any).visitor_card_url || ''}
-                                            onChange={(url) => update('visitor_card_url', url)}
-                                            folder={`services/${service.service_type || 'general'}`}
-                                            label=""
-                                            description="Upload visitor card or service photo"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="card-panel p-6 space-y-6 bg-white">
-                        <h3 className="text-[1.16rem] leading-6 font-semibold tracking-tight flex items-center gap-2 text-[var(--color-text-main)]">
-                            <Heart className="text-red-400" size={20} />
-                            Spiritual Results
-                        </h3>
-
-                        <div className="space-y-4">
-                            <div className="space-y-1">
-                                <label className="form-label">Souls Saved</label>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={isPrimaryService ? service.souls_saved : 0}
-                                        onChange={(e) => update('souls_saved', parseInt(e.target.value) || 0)}
-                                        className="form-control text-right font-semibold tabular-nums disabled:opacity-60 disabled:bg-gray-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        disabled={!isPrimaryService}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="form-label">Members who Prayed</label>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={service.members_who_prayed}
-                                        onChange={(e) => update('members_who_prayed', parseInt(e.target.value) || 0)}
-                                        className="form-control text-right font-semibold tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="form-label">Baptism Prospects</label>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={service.prospects_for_baptism}
-                                        onChange={(e) => update('prospects_for_baptism', parseInt(e.target.value) || 0)}
-                                        className="form-control text-right font-semibold tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="form-label">Visitors Saved</label>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={isPrimaryService ? service.visitors_saved : 0}
-                                        onChange={(e) => update('visitors_saved', parseInt(e.target.value) || 0)}
-                                        className="form-control text-right font-semibold tabular-nums disabled:opacity-60 disabled:bg-gray-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                        disabled={!isPrimaryService}
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <ServiceStatsPanel
+                    service={service}
+                    isPrimaryService={isPrimaryService}
+                    newVisitors={newVisitors}
+                    onUpdate={update}
+                    onMarkAllPresent={handleMarkAllPresent}
+                    onOpenAttendance={() => setIsAttendanceModalOpen(true)}
+                />
 
                 {/* New Visitors Panel */}
                 {isPrimaryService && (

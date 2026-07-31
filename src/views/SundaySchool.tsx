@@ -8,22 +8,13 @@ import { UserRole } from "@/types";
 import {
     BookOpen,
     Plus,
-    TrendingUp,
     Heart,
     Users,
     UserPlus,
-    Search,
     Eye,
     Edit2,
-    ChevronLeft,
-    ChevronRight,
     Calendar,
-    X,
-    CheckCircle2,
-    Hash,
     ClipboardCheck,
-    Star,
-    Clock
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import ImageUpload from "@/components/ImageUpload";
@@ -34,6 +25,8 @@ import SuccessModal from "@/components/SuccessModal";
 import MemberAttendancePicker from "@/components/MemberAttendancePicker";
 import { findExistingMemberForVisitor, splitVisitorName } from "@/lib/visitorDedup";
 import { useAuth } from "@/contexts/AuthContext";
+import StudentEditorModal from "@/components/SundaySchool/StudentEditorModal";
+import AttendanceViewerModal from "@/components/SundaySchool/AttendanceViewerModal";
 import {
     CHILDREN_DEPARTMENTS,
     deriveTeacherDepartments,
@@ -1374,233 +1367,31 @@ const SundaySchool: React.FC = () => {
                 )
             }
 
-            {
-                isStudentEditorOpen && editingStudent && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
-                            <div className="px-6 py-5 border-b border-gray-100">
-                                <h3 className="text-lg font-bold text-gray-900">Edit Student Profile</h3>
-                                <p className="text-xs text-gray-500 mt-1">Update student details for your class roster.</p>
-                            </div>
-                            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">First Name</label>
-                                    <input
-                                        type="text"
-                                        value={editingStudent.first_name}
-                                        onChange={(e) => setEditingStudent({ ...editingStudent, first_name: e.target.value })}
-                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Surname</label>
-                                    <input
-                                        type="text"
-                                        value={editingStudent.surname}
-                                        onChange={(e) => setEditingStudent({ ...editingStudent, surname: e.target.value })}
-                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Phone Number</label>
-                                    <input
-                                        type="text"
-                                        value={editingStudent.phone_number}
-                                        onChange={(e) => setEditingStudent({ ...editingStudent, phone_number: e.target.value })}
-                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Date of Birth</label>
-                                    <input
-                                        type="date"
-                                        value={editingStudent.date_of_birth || ""}
-                                        onChange={(e) => setEditingStudent({ ...editingStudent, date_of_birth: e.target.value })}
-                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                    />
-                                </div>
-                                <div className="sm:col-span-2">
-                                    <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Home Address</label>
-                                    <input
-                                        type="text"
-                                        value={editingStudent.home_address}
-                                        onChange={(e) => setEditingStudent({ ...editingStudent, home_address: e.target.value })}
-                                        className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
-                                    />
-                                </div>
-                            </div>
-                            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50">
-                                <button
-                                    onClick={() => {
-                                        setIsStudentEditorOpen(false);
-                                        setEditingStudent(null);
-                                    }}
-                                    className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handleSaveStudentProfile}
-                                    disabled={studentSaving}
-                                    className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {studentSaving ? "Saving..." : "Save Student"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            {isStudentEditorOpen && editingStudent && (
+                <StudentEditorModal
+                    editingStudent={editingStudent}
+                    studentSaving={studentSaving}
+                    onClose={() => { setIsStudentEditorOpen(false); setEditingStudent(null); }}
+                    onSave={handleSaveStudentProfile}
+                    onChange={setEditingStudent}
+                />
+            )}
 
             {/* Attendance Viewer Modal */}
-            {
-                attendanceViewerOpen && attendanceViewerSession && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-sans animate-in fade-in duration-200">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
-                            {/* Header */}
-                            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                        <Users size={20} className="text-emerald-600" />
-                                        Attendance Details
-                                    </h3>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        {DEPARTMENTS.find(d => d.id === attendanceViewerSession.department)?.label} — {new Date(attendanceViewerSession.session_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                                    </p>
-                                </div>
-                                <button
-                                    onClick={() => { setAttendanceViewerOpen(false); setAttendanceViewerSession(null); }}
-                                    className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-                                >
-                                    <X size={18} />
-                                </button>
-                            </div>
-
-                            {/* Summary bar */}
-                            <div className="px-6 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center gap-4 text-sm">
-                                <span className="font-bold text-emerald-700">
-                                    {attendanceViewerMembers.length} present
-                                </span>
-                                <span className="text-gray-400">|</span>
-                                <span className="text-gray-600">
-                                    Total: <strong>{attendanceViewerSession.total_attendance}</strong>
-                                </span>
-                                {(attendanceViewerSession.visitors_present || 0) > 0 && (
-                                    <>
-                                        <span className="text-gray-400">|</span>
-                                        <span className="text-gray-600">
-                                            Visitors: <strong>{attendanceViewerSession.visitors_present}</strong>
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Search */}
-                            <div className="px-6 py-3 border-b border-gray-100">
-                                <div className="relative">
-                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search students..."
-                                        value={attendanceViewerSearch}
-                                        onChange={(e) => setAttendanceViewerSearch(e.target.value)}
-                                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Member List */}
-                            <div className="flex-1 overflow-y-auto">
-                                {attendanceViewerLoading ? (
-                                    <div className="p-8 text-center text-gray-500">Loading attendance data...</div>
-                                ) : attendanceViewerMembers.length === 0 ? (
-                                    <div className="p-8 text-center text-gray-400">
-                                        <Users size={32} className="mx-auto mb-2 opacity-40" />
-                                        <p className="font-medium">No attendance records found</p>
-                                        <p className="text-xs mt-1">No members were marked present for this session.</p>
-                                    </div>
-                                ) : (
-                                    <div className="divide-y divide-gray-50">
-                                        {/* Table Header */}
-                                        <div className="px-4 py-2.5 bg-gray-50/80 grid grid-cols-20 gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest sticky top-0" style={{ gridTemplateColumns: '24px 1fr 60px 56px 56px' }}>
-                                            <div>#</div>
-                                            <div>Student Name</div>
-                                            <div className="text-center">Status</div>
-                                            <div className="text-center">Score</div>
-                                            <div className="text-center">Days</div>
-                                        </div>
-                                        {attendanceViewerMembers
-                                            .filter((m) => {
-                                                if (!attendanceViewerSearch) return true;
-                                                const term = attendanceViewerSearch.toLowerCase();
-                                                return `${m.first_name || ''} ${m.surname || ''}`.toLowerCase().includes(term);
-                                            })
-                                            .map((member, idx) => {
-                                                const sessionScore = attendanceViewerScores[member.id];
-                                                const scoreStats = attendanceViewerScoreStats[member.id];
-                                                return (
-                                                    <div
-                                                        key={member.id}
-                                                        className="px-4 py-2.5 items-center hover:bg-gray-50/50 transition-colors text-sm grid"
-                                                        style={{ gridTemplateColumns: '24px 1fr 60px 56px 56px', gap: '8px' }}
-                                                    >
-                                                        <div className="text-gray-400 font-medium text-xs">{idx + 1}</div>
-                                                        <div>
-                                                            <p className="font-semibold text-gray-900 text-sm truncate">
-                                                                {member.first_name} {member.surname}
-                                                            </p>
-                                                            {scoreStats && scoreStats.submissionCount > 0 && (
-                                                                <p className="text-[10px] text-gray-400 mt-0.5">
-                                                                    Avg: {Math.round(scoreStats.totalScore / scoreStats.submissionCount)} ({scoreStats.submissionCount}x)
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                        <div className="text-center">
-                                                            {attendanceViewerTardyIds.has(member.id) ? (
-                                                                <span className="inline-flex items-center gap-0.5 bg-yellow-50 text-yellow-700 border border-yellow-200 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                                                                    <Clock size={9} /> Tardy
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
-                                                                    <CheckCircle2 size={9} /> Present
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="text-center">
-                                                            {sessionScore != null && sessionScore > 0 ? (
-                                                                <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                                                                    <Star size={9} /> {sessionScore}
-                                                                </span>
-                                                            ) : (
-                                                                <span className="text-gray-300 text-xs">—</span>
-                                                            )}
-                                                        </div>
-                                                        <div className="text-center">
-                                                            <span className="inline-flex items-center gap-0.5 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                                                                <Hash size={9} />
-                                                                {attendanceDayCounts[member.id] || 0}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Footer */}
-                            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end">
-                                <button
-                                    onClick={() => { setAttendanceViewerOpen(false); setAttendanceViewerSession(null); }}
-                                    className="px-5 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold transition-colors"
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            {attendanceViewerOpen && attendanceViewerSession && (
+                <AttendanceViewerModal
+                    session={attendanceViewerSession}
+                    members={attendanceViewerMembers}
+                    loading={attendanceViewerLoading}
+                    search={attendanceViewerSearch}
+                    onSearchChange={setAttendanceViewerSearch}
+                    scores={attendanceViewerScores}
+                    scoreStats={attendanceViewerScoreStats}
+                    tardyIds={attendanceViewerTardyIds}
+                    dayCounts={attendanceDayCounts}
+                    onClose={() => { setAttendanceViewerOpen(false); setAttendanceViewerSession(null); }}
+                />
+            )}
 
             <SuccessModal
                 isOpen={showSuccessModal}
