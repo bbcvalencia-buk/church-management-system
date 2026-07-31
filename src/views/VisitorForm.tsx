@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as visitorService from '@/services/visitorService';
@@ -8,7 +7,7 @@ import { getLatestSundayISODate } from '@/lib/date';
 import type { Visitor, Member } from '@/types';
 import MultiImageUpload from '@/components/MultiImageUpload';
 import { useToast } from '@/contexts/ToastContext';
-import { User, Phone, MapPin, Calendar, Heart, ArrowLeft, Save, UserPlus, CheckCircle, Upload, FileText } from 'lucide-react';
+import { User, Phone, MapPin, Calendar, Heart, ArrowLeft, Save, FileText, CheckCircle } from 'lucide-react';
 import ConvertToMemberModal from '@/components/ConvertToMemberModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSessionDraft } from '@/hooks/useSessionDraft';
@@ -58,7 +57,6 @@ const VisitorForm: React.FC = () => {
         try {
             const data = await visitorService.getVisitorById(id!);
             if (data) {
-                // Handle legacy single image -> array
                 const images = data.visitor_card_images || (data.visitor_card_image_url ? [data.visitor_card_image_url] : []);
                 setVisitor({ ...data, visitor_card_images: images });
             }
@@ -85,7 +83,6 @@ const VisitorForm: React.FC = () => {
         setLoading(true);
 
         try {
-            // Visitor card images are handled by MultiImageUpload component immediately
             const visitorData = {
                 ...visitor,
                 name: visitor.name?.trim() || 'Unknown',
@@ -94,7 +91,6 @@ const VisitorForm: React.FC = () => {
                 visitor_card_images: visitor.visitor_card_images || []
             };
 
-            // 1. Ensure shadow member record exists and is synced
             let memberId = visitor.member_id;
             const parsedName = splitVisitorName(visitorData.name);
             const memberPayload = {
@@ -110,15 +106,12 @@ const VisitorForm: React.FC = () => {
             };
 
             if (memberId) {
-                // Update existing shadow member
                 await memberService.updateMember(memberId, memberPayload);
             } else {
-                // Create a new shadow member
                 const newMember = await memberService.createMember(memberPayload);
                 memberId = newMember.id;
                 visitorData.member_id = memberId;
 
-                // Immediately clear the automatically generated member number for the visitor shadow record
                 await memberService.updateMember(memberId, {
                     member_number: null as any,
                     member_number_year: null as any,
@@ -144,54 +137,45 @@ const VisitorForm: React.FC = () => {
 
     if (loading && isEditMode) return (
         <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-none h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
+            <div className="animate-spin h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
         </div>
     );
 
+    const inputClasses = "w-full bg-transparent border border-[var(--color-border)] rounded-[0.5rem] p-3 text-[var(--color-text-main)] outline-none font-medium text-[13px] focus:border-[var(--color-primary)] transition-colors";
+    const labelClasses = "text-[11px] font-bold text-[var(--color-text-main)] uppercase tracking-widest";
+    const sectionClasses = "bg-[var(--color-surface)] rounded-[0.5rem] border border-[var(--color-border)] overflow-hidden";
+
     return (
         <div className="max-w-6xl mx-auto pb-20 fade-in">
-            {/* Top Navigation / Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm sticky top-4 z-20">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-[var(--color-surface)] p-6 rounded-[0.5rem] border border-[var(--color-border)] sticky top-4 z-20">
                 <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="p-2 hover:bg-gray-100 rounded-none transition-colors text-gray-600"
-                    >
+                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-[0.5rem] transition-colors text-gray-600">
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none mb-1">
+                        <h1 className="text-2xl font-bold text-[var(--color-text-main)] tracking-tight leading-none mb-1 uppercase">
                             {isEditMode ? 'Edit Visitor' : 'New Visitor Registration'}
                         </h1>
-                        <p className="text-sm font-semibold text-gray-500">
+                        <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest">
                             {isEditMode ? `Managing ${visitor.name}` : 'Register a new visitor for follow-up'}
                         </p>
                     </div>
                 </div>
 
                 <div className="flex gap-3">
-                    <button
-                        type="button"
-                        onClick={() => navigate('/visitors')}
-                        className="px-6 py-2.5 rounded-none text-sm font-bold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 transition-colors"
-                    >
+                    <button type="button" onClick={() => navigate('/visitors')} className="px-6 py-2.5 rounded-[0.5rem] text-[12px] font-bold text-[var(--color-text-main)] hover:bg-gray-100 transition-colors border border-[var(--color-border)] uppercase tracking-widest">
                         Cancel
                     </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        className="bg-[#2563eb] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] px-8 py-2.5 rounded-none flex items-center gap-2 transition-all shadow-md  font-bold disabled:opacity-50"
-                    >
-                        <Save size={18} />
+                    <button onClick={handleSubmit} disabled={loading} className="bg-[var(--color-primary)] text-white px-8 py-2.5 rounded-[0.5rem] flex items-center gap-2 transition-all font-bold text-[12px] disabled:opacity-50 uppercase tracking-widest">
+                        <Save size={16} />
                         {loading ? 'Saving...' : 'Save Visitor'}
                     </button>
                 </div>
             </div>
 
             <div className="flex flex-col md:flex-row gap-8">
-                {/* Fixed Sidebar */}
                 <div className="w-full md:w-64 shrink-0">
-                    <div className="bg-white rounded-[24px] border border-gray-100 p-3 shadow-sm sticky top-36">
+                    <div className="bg-[var(--color-surface)] rounded-[0.5rem] border border-[var(--color-border)] p-3 sticky top-36">
                         <nav className="flex flex-col gap-1">
                             {TABS.map(tab => (
                                 <button
@@ -201,12 +185,12 @@ const VisitorForm: React.FC = () => {
                                         setActiveTab(tab.id);
                                         document.getElementById(tab.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-bold transition-all ${activeTab === tab.id
-                                        ? 'bg-gray-50 text-[var(--color-text-main)]'
-                                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-[0.5rem] text-[11px] font-bold transition-all uppercase tracking-widest ${activeTab === tab.id
+                                        ? 'bg-gray-100 text-[var(--color-text-main)]'
+                                        : 'text-[var(--color-text-muted)] hover:bg-gray-50'
                                         }`}
                                 >
-                                    <tab.icon size={18} />
+                                    <tab.icon size={16} />
                                     {tab.label}
                                 </button>
                             ))}
@@ -214,115 +198,66 @@ const VisitorForm: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Main Form Fields */}
                 <div className="flex-1 space-y-8">
                     <form onSubmit={handleSubmit} className="space-y-8">
-                        {/* 1. Visit Details */}
-                        <div id="visit" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
-                                    <Calendar className="text-[var(--color-text-main)]" size={20} />
-                                </div>
-                                <h3 className="text-[18px] font-bold text-gray-900">Visit Details</h3>
+                        <div id="visit" className={sectionClasses}>
+                            <div className="p-6 border-b border-[var(--color-border)] flex items-center gap-3">
+                                <Calendar className="text-[var(--color-text-main)]" size={18} />
+                                <h3 className="text-[13px] font-bold uppercase tracking-widest text-[var(--color-text-main)]">Visit Details</h3>
                             </div>
                             <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Visit Date</label>
-                                    <input
-                                        type="date"
-                                        value={visitor.visit_date}
-                                        onChange={(e) => update('visit_date', e.target.value)}
-                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
-                                        required
-                                    />
+                                    <label className={labelClasses}>Visit Date</label>
+                                    <input type="date" value={visitor.visit_date} onChange={(e) => update('visit_date', e.target.value)} className={inputClasses} required />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Service Time</label>
-                                    <select
-                                        value={visitor.visit_time}
-                                        onChange={(e) => update('visit_time', e.target.value)}
-                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
-                                    >
+                                    <label className={labelClasses}>Service Time</label>
+                                    <select value={visitor.visit_time} onChange={(e) => update('visit_time', e.target.value)} className={inputClasses}>
                                         <option value="AM">AM Service</option>
                                         <option value="PM">PM Service</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Invited By</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
-                                        value={visitor.invited_by || ''}
-                                        onChange={(e) => update('invited_by', e.target.value)}
-                                        placeholder="Member / Teacher Name"
-                                    />
+                                    <label className={labelClasses}>Invited By</label>
+                                    <input type="text" className={inputClasses} value={visitor.invited_by || ''} onChange={(e) => update('invited_by', e.target.value)} placeholder="MEMBER / TEACHER NAME" />
                                 </div>
                             </div>
                         </div>
 
-                        {/* 2. Personal Information */}
-                        <div id="personal" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
-                                    <User className="text-[var(--color-text-main)]" size={20} />
-                                </div>
-                                <h3 className="text-[18px] font-bold text-gray-900">Personal Information</h3>
+                        <div id="personal" className={sectionClasses}>
+                            <div className="p-6 border-b border-[var(--color-border)] flex items-center gap-3">
+                                <User className="text-[var(--color-text-main)]" size={18} />
+                                <h3 className="text-[13px] font-bold uppercase tracking-widest text-[var(--color-text-main)]">Personal Information</h3>
                             </div>
                             <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2 md:col-span-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
-                                        value={visitor.name || ''}
-                                        onChange={(e) => update('name', e.target.value)}
-                                        placeholder="e.g. Maria Clara"
-                                        required
-                                    />
+                                    <label className={labelClasses}>Full Name</label>
+                                    <input type="text" className={inputClasses} value={visitor.name || ''} onChange={(e) => update('name', e.target.value)} placeholder="E.G. MARIA CLARA" required />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Age</label>
-                                    <input
-                                        type="number"
-                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
-                                        value={visitor.age || ''}
-                                        onChange={(e) => {
-                                            if (!e.target.value.trim()) {
-                                                update('age', undefined);
-                                                return;
-                                            }
-                                            update('age', parseInt(e.target.value, 10));
-                                        }}
-                                        placeholder="e.g. 25"
-                                    />
+                                    <label className={labelClasses}>Age</label>
+                                    <input type="number" className={inputClasses} value={visitor.age || ''} onChange={(e) => {
+                                        if (!e.target.value.trim()) {
+                                            update('age', undefined);
+                                            return;
+                                        }
+                                        update('age', parseInt(e.target.value, 10));
+                                    }} placeholder="E.G. 25" />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Date of Birth</label>
-                                    <input
-                                        type="date"
-                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm text-gray-500"
-                                        value={visitor.date_of_birth || ''}
-                                        onChange={(e) => update('date_of_birth', e.target.value)}
-                                    />
+                                    <label className={labelClasses}>Date of Birth</label>
+                                    <input type="date" className={inputClasses} value={visitor.date_of_birth || ''} onChange={(e) => update('date_of_birth', e.target.value)} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Gender</label>
-                                    <select
-                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
-                                        value={visitor.gender}
-                                        onChange={(e) => update('gender', e.target.value as any)}
-                                    >
+                                    <label className={labelClasses}>Gender</label>
+                                    <select className={inputClasses} value={visitor.gender} onChange={(e) => update('gender', e.target.value as any)}>
                                         <option value="Male">Male</option>
                                         <option value="Female">Female</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Marital Status</label>
-                                    <select
-                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
-                                        value={visitor.marital_status}
-                                        onChange={(e) => update('marital_status', e.target.value as any)}
-                                    >
+                                    <label className={labelClasses}>Marital Status</label>
+                                    <select className={inputClasses} value={visitor.marital_status} onChange={(e) => update('marital_status', e.target.value as any)}>
                                         <option value="Single">Single</option>
                                         <option value="Married">Married</option>
                                         <option value="Widow">Widow</option>
@@ -331,140 +266,87 @@ const VisitorForm: React.FC = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Current Church</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
-                                        value={visitor.church_name || ''}
-                                        onChange={(e) => update('church_name', e.target.value)}
-                                        placeholder="Church affiliation (if any)"
-                                    />
+                                    <label className={labelClasses}>Current Church</label>
+                                    <input type="text" className={inputClasses} value={visitor.church_name || ''} onChange={(e) => update('church_name', e.target.value)} placeholder="CHURCH AFFILIATION (IF ANY)" />
                                 </div>
                             </div>
                         </div>
 
-                        {/* 3. Contact Details */}
-                        <div id="contact" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
-                                    <MapPin className="text-[var(--color-text-main)]" size={20} />
-                                </div>
-                                <h3 className="text-[18px] font-bold text-gray-900">Contact Details</h3>
+                        <div id="contact" className={sectionClasses}>
+                            <div className="p-6 border-b border-[var(--color-border)] flex items-center gap-3">
+                                <MapPin className="text-[var(--color-text-main)]" size={18} />
+                                <h3 className="text-[13px] font-bold uppercase tracking-widest text-[var(--color-text-main)]">Contact Details</h3>
                             </div>
                             <div className="p-8 grid grid-cols-1 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Home Address</label>
-                                    <textarea
-                                        value={visitor.address || ''}
-                                        onChange={(e) => update('address', e.target.value)}
-                                        placeholder="Complete Address"
-                                        required
-                                        className="min-h-[100px] w-full bg-white border border-gray-200 rounded-none p-4 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-medium text-sm resize-none"
-                                    />
+                                    <label className={labelClasses}>Home Address</label>
+                                    <textarea value={visitor.address || ''} onChange={(e) => update('address', e.target.value)} placeholder="COMPLETE ADDRESS" required className={`${inputClasses} min-h-[100px] resize-none`} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Office Address (Optional)</label>
-                                    <textarea
-                                        value={visitor.office_address || ''}
-                                        onChange={(e) => update('office_address', e.target.value)}
-                                        placeholder="Office Address"
-                                        className="min-h-[90px] w-full bg-white border border-gray-200 rounded-none p-4 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-medium text-sm resize-none"
-                                    />
+                                    <label className={labelClasses}>Office Address (Optional)</label>
+                                    <textarea value={visitor.office_address || ''} onChange={(e) => update('office_address', e.target.value)} placeholder="OFFICE ADDRESS" className={`${inputClasses} min-h-[90px] resize-none`} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Contact Number</label>
-                                    <div className="flex bg-white border border-gray-200 rounded-none focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 shadow-sm transition-all overflow-hidden">
-                                        <div className="p-3 text-gray-400 bg-gray-50 border-r border-gray-200"><Phone size={18} /></div>
-                                        <input
-                                            type="tel"
-                                            className="w-full p-3 text-gray-900 outline-none font-semibold text-sm bg-transparent"
-                                            value={visitor.contact_number || ''}
-                                            onChange={(e) => update('contact_number', e.target.value)}
-                                            placeholder="+1 (555) 000-0000"
-                                            required
-                                        />
+                                    <label className={labelClasses}>Contact Number</label>
+                                    <div className="flex bg-transparent border border-[var(--color-border)] rounded-[0.5rem] focus-within:border-[var(--color-primary)] transition-colors overflow-hidden">
+                                        <div className="p-3 text-[var(--color-text-muted)] border-r border-[var(--color-border)]"><Phone size={16} /></div>
+                                        <input type="tel" className="w-full p-3 text-[var(--color-text-main)] outline-none font-medium text-[13px] bg-transparent" value={visitor.contact_number || ''} onChange={(e) => update('contact_number', e.target.value)} placeholder="+1 (555) 000-0000" required />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* 4. Spiritual Status */}
-                        <div id="spiritual" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
-                                    <Heart className="text-[var(--color-text-main)]" size={20} />
-                                </div>
-                                <h3 className="text-[18px] font-bold text-gray-900">Spiritual Status</h3>
+                        <div id="spiritual" className={sectionClasses}>
+                            <div className="p-6 border-b border-[var(--color-border)] flex items-center gap-3">
+                                <Heart className="text-[var(--color-text-main)]" size={18} />
+                                <h3 className="text-[13px] font-bold uppercase tracking-widest text-[var(--color-text-main)]">Spiritual Status</h3>
                             </div>
                             <div className="p-8 space-y-4">
-                                <label className="flex items-center justify-between p-4 bg-gray-50 rounded-none border border-gray-200 cursor-pointer hover:bg-white transition-colors">
+                                <label className="flex items-center justify-between p-4 border border-[var(--color-border)] rounded-[0.5rem] cursor-pointer hover:bg-gray-50 transition-colors">
                                     <div>
-                                        <span className="font-bold text-gray-900 text-sm">Is Saved?</span>
-                                        <p className="text-xs font-semibold text-gray-500 mt-0.5">Check if visitor has accepted Christ</p>
+                                        <span className={labelClasses}>Is Saved?</span>
+                                        <p className="text-[11px] font-bold text-[var(--color-text-muted)] mt-1 uppercase tracking-widest">Check if visitor has accepted Christ</p>
                                     </div>
-                                    <div className={`w-12 h-6 rounded-none flex items-center transition-colors p-1 border ${visitor.is_saved ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] border-[var(--color-border)]' : 'bg-gray-200 border-gray-300'}`}>
-                                        <input
-                                            type="checkbox"
-                                            checked={visitor.is_saved || false}
-                                            onChange={(e) => update('is_saved', e.target.checked)}
-                                            className="hidden"
-                                        />
-                                        <div className={`w-4 h-4 rounded-none bg-white transition-transform transform shadow-sm ${visitor.is_saved ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                                    </div>
+                                    <input type="checkbox" checked={visitor.is_saved || false} onChange={(e) => update('is_saved', e.target.checked)} className="rounded-[0.25rem] border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)] w-4 h-4" />
                                 </label>
-                                <label className="flex items-center justify-between p-4 bg-gray-50 rounded-none border border-gray-200 cursor-pointer hover:bg-white transition-colors">
+                                <label className="flex items-center justify-between p-4 border border-[var(--color-border)] rounded-[0.5rem] cursor-pointer hover:bg-gray-50 transition-colors">
                                     <div>
-                                        <span className="font-bold text-gray-900 text-sm">Prospect for Baptism?</span>
-                                        <p className="text-xs font-semibold text-gray-500 mt-0.5">Check if visitor is a candidate for baptism</p>
+                                        <span className={labelClasses}>Prospect for Baptism?</span>
+                                        <p className="text-[11px] font-bold text-[var(--color-text-muted)] mt-1 uppercase tracking-widest">Check if visitor is a candidate for baptism</p>
                                     </div>
-                                    <div className={`w-12 h-6 rounded-none flex items-center transition-colors p-1 border ${visitor.is_prospect_for_baptism ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] border-[var(--color-border)]' : 'bg-gray-200 border-gray-300'}`}>
-                                        <input
-                                            type="checkbox"
-                                            checked={visitor.is_prospect_for_baptism || false}
-                                            onChange={(e) => update('is_prospect_for_baptism', e.target.checked)}
-                                            className="hidden"
-                                        />
-                                        <div className={`w-4 h-4 rounded-none bg-white transition-transform transform shadow-sm ${visitor.is_prospect_for_baptism ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                                    </div>
+                                    <input type="checkbox" checked={visitor.is_prospect_for_baptism || false} onChange={(e) => update('is_prospect_for_baptism', e.target.checked)} className="rounded-[0.25rem] border-[var(--color-border)] text-[var(--color-primary)] focus:ring-[var(--color-primary)] w-4 h-4" />
                                 </label>
 
                                 {isEditMode && canConvert && !visitor.converted_to_member && visitor.status !== 'converted' && (
-                                    <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between bg-white rounded-none p-4 border shadow-sm">
+                                    <div className="pt-4 mt-4 border-t border-[var(--color-border)] flex items-center justify-between p-4 border border-[var(--color-border)] rounded-[0.5rem]">
                                         <div>
-                                            <span className="font-bold text-gray-900 text-sm">Convert to Member</span>
-                                            <p className="text-xs font-semibold text-gray-500 mt-0.5">Convert this visitor fully to the main Member Registry</p>
+                                            <span className={labelClasses}>Convert to Member</span>
+                                            <p className="text-[11px] font-bold text-[var(--color-text-muted)] mt-1 uppercase tracking-widest">Convert this visitor fully to the main Member Registry</p>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowConvertModal(true)}
-                                            className="text-green-600 bg-white hover:bg-green-50 px-4 py-2 rounded-none flex items-center gap-2 transition-colors text-sm font-bold border-2 border-green-200"
-                                        >
-                                            <CheckCircle size={18} />
+                                        <button type="button" onClick={() => setShowConvertModal(true)} className="text-[var(--color-text-main)] hover:bg-gray-100 px-4 py-2 rounded-[0.5rem] flex items-center gap-2 transition-colors text-[11px] font-bold border border-[var(--color-border)] uppercase tracking-widest">
+                                            <CheckCircle size={14} />
                                             Convert to Member
                                         </button>
                                     </div>
                                 )}
                                 {(visitor.converted_to_member || visitor.status === 'converted') && (
-                                    <div className="pt-4 mt-4 border-t border-gray-100">
-                                        <div className="flex items-center gap-2 text-green-600 text-sm font-bold px-4 py-3 bg-green-50 rounded-none border border-green-200 w-full justify-center">
-                                            <CheckCircle size={18} /> Fully Converted Member
+                                    <div className="pt-4 mt-4 border-t border-[var(--color-border)]">
+                                        <div className="flex items-center gap-2 text-[var(--color-primary)] text-[11px] font-bold px-4 py-3 bg-gray-50 rounded-[0.5rem] border border-[var(--color-border)] w-full justify-center uppercase tracking-widest">
+                                            <CheckCircle size={14} /> Fully Converted Member
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* 5. Visitor Cards */}
-                        <div id="cards" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
-                            <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
-                                    <FileText className="text-[var(--color-text-main)]" size={20} />
-                                </div>
-                                <h3 className="text-[18px] font-bold text-gray-900">Visitor Cards</h3>
+                        <div id="cards" className={sectionClasses}>
+                            <div className="p-6 border-b border-[var(--color-border)] flex items-center gap-3">
+                                <FileText className="text-[var(--color-text-main)]" size={18} />
+                                <h3 className="text-[13px] font-bold uppercase tracking-widest text-[var(--color-text-main)]">Visitor Cards</h3>
                             </div>
                             <div className="p-8">
-                                <p className="text-[12px] font-semibold text-gray-500 mb-4">Upload photos of visitor cards (Front/Back) or other relevant documents.</p>
-                                <div className="border border-dashed border-gray-300 rounded-none bg-gray-50">
+                                <p className="text-[11px] font-bold text-[var(--color-text-muted)] mb-4 uppercase tracking-widest">Upload photos of visitor cards (Front/Back) or other relevant documents.</p>
+                                <div className="border border-[var(--color-border)] rounded-[0.5rem] bg-transparent">
                                     <MultiImageUpload
                                         values={visitor.visitor_card_images || []}
                                         onChange={(urls) => update('visitor_card_images', urls)}
@@ -475,7 +357,6 @@ const VisitorForm: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-
                     </form>
                 </div>
             </div>

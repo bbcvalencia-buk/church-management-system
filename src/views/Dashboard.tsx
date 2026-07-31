@@ -81,114 +81,92 @@ const Dashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    title="Tot. Members"
-                    value={stats.activeMembers}
-                    icon={Users}
-                    color="blue"
-                    trend="+3 this month"
-                    link="/members"
-                />
-                <StatCard
-                    title="Souls (Week)"
-                    value={stats.soulsSavedThisWeek}
-                    icon={Heart}
-                    color="pink"
-                    trend="+2 vs last week"
-                    link="/services"
-                />
-                <StatCard
-                    title="Tithes (Month)"
-                    value={formatCurrency(stats.tithesThisMonth)}
-                    icon={DollarSign}
-                    color="emerald"
-                    trend="75% of goal"
-                    link="/finance"
-                />
-                <StatCard
-                    title="Activities"
-                    value={stats.activitiesCount}
-                    icon={Activity}
-                    color="violet"
-                    trend="Next: Sat Outreach"
-                    link="/activities"
-                />
-                <StatCard
-                    title="Church Events"
-                    value={stats.churchEventsCount}
-                    icon={Calendar}
-                    color="amber"
-                    trend="Special Programs"
-                    link="/church-events"
-                />
+            {/* Asymmetric Hub Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 border-t border-[var(--color-border)] mb-12">
+                {/* Hero Metric - Span 8 columns */}
+                <div className="lg:col-span-8 p-8 md:p-12 border-b lg:border-r border-[var(--color-border)] bg-[var(--color-bg)] flex flex-col justify-between min-h-[360px]">
+                    <div>
+                        <h2 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] flex items-center gap-2">
+                            <Users size={14} /> Total Active Members
+                        </h2>
+                        <div className="mt-4 font-display text-[var(--color-text-main)] tracking-tighter" style={{ fontSize: 'clamp(5rem, 8vw, 10rem)', lineHeight: '1', fontWeight: 800, marginLeft: '-0.05em' }}>
+                            {stats.activeMembers}
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-8 md:gap-16 mt-12">
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)]">Monthly Growth</p>
+                            <p className="text-2xl font-bold text-[var(--color-text-main)]">+3</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)]">Active GN</p>
+                            <p className="text-2xl font-bold text-[var(--color-text-main)]">{stats.activeGoodnewsSeries}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Context Metrics - Span 4 columns */}
+                <div className="lg:col-span-4 flex flex-col bg-[var(--color-bg)]">
+                    <div className="flex-1 p-8 border-b border-[var(--color-border)] flex flex-col justify-center">
+                        <h2 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] flex items-center gap-2 mb-2">
+                            <Heart size={14} /> Souls Saved (Week)
+                        </h2>
+                        <p className="font-display text-5xl md:text-6xl font-bold tracking-tight text-[var(--color-text-main)]">
+                            {stats.soulsSavedThisWeek}
+                        </p>
+                    </div>
+                    <div className="flex-1 p-8 border-b border-[var(--color-border)] flex flex-col justify-center">
+                        <h2 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] flex items-center gap-2 mb-2">
+                            <DollarSign size={14} /> Tithes (Month)
+                        </h2>
+                        <p className="font-display text-3xl md:text-4xl font-bold tracking-tight text-[var(--color-text-main)]">
+                            {formatCurrency(stats.tithesThisMonth)}
+                        </p>
+                    </div>
+                    <div className="flex-1 p-8 border-b border-[var(--color-border)] flex flex-col justify-center">
+                        <h2 className="text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] flex items-center gap-2 mb-2">
+                            <Activity size={14} /> Activities
+                        </h2>
+                        <p className="font-display text-5xl md:text-6xl font-bold tracking-tight text-[var(--color-text-main)]">
+                            {stats.activitiesCount}
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            {/* Extended Stats Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <StatCard
-                    title="Active Goodnews"
-                    value={stats.activeGoodnewsSeries}
-                    icon={BookOpen}
-                    color="amber"
-                    trend="Ongoing areas"
-                    link="/goodnews-class"
-                />
-                <StatCard
-                    title="GN Children Reached"
-                    value={stats.goodnewsChildrenReached}
-                    icon={Users}
-                    color="sky"
-                    trend="Total attendees"
-                    link="/goodnews-class"
-                />
-                <StatCard
-                    title="GN Souls Saved"
-                    value={stats.goodnewsSoulsSaved}
-                    icon={Heart}
-                    color="rose"
-                    trend="Total conversions"
-                    link="/goodnews-class"
-                />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 {/* Spiritual Harvest Chart */}
-                <div className="lg:col-span-2 card-panel p-6 space-y-4">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--color-text-main)]">
-                            <TrendingUp className="text-[var(--color-primary)]" size={20} />
-                            Spiritual Harvest
+                <div className="lg:col-span-2 space-y-4">
+                    <div className="flex justify-between items-center mb-6 border-b border-[var(--color-border)] pb-4">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 text-[var(--color-text-main)]">
+                            <TrendingUp className="text-[var(--color-text-main)]" size={16} />
+                            Spiritual Harvest Trend
                         </h3>
-                        {/* <select className="bg-black/20 border border-white/10 rounded px-2 py-1 text-xs">
-                            <option>Last 7 Days</option>
-                        </select> */}
                     </div>
                     <div className="h-[300px] w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorSouls" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="var(--color-text-main)" stopOpacity={0.1} />
+                                        <stop offset="95%" stopColor="var(--color-text-main)" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                                <XAxis dataKey="name" stroke="var(--color-text-muted)" fontSize={10} tickLine={false} axisLine={false} />
+                                <YAxis stroke="var(--color-text-muted)" fontSize={10} tickLine={false} axisLine={false} />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                                    itemStyle={{ color: 'var(--color-primary)' }}
+                                    contentStyle={{ backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '0', boxShadow: 'none' }}
+                                    itemStyle={{ color: 'var(--color-text-main)', fontSize: '12px', fontWeight: 'bold' }}
                                     cursor={{ stroke: 'var(--color-border)', strokeWidth: 1 }}
                                 />
                                 <Area
-                                    type="monotone"
+                                    type="step"
                                     dataKey="souls"
-                                    stroke="var(--color-primary)"
+                                    stroke="var(--color-text-main)"
                                     fillOpacity={1}
                                     fill="url(#colorSouls)"
-                                    strokeWidth={3}
+                                    strokeWidth={2}
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -196,10 +174,10 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Quick Actions / Shortcut */}
-                <div className="space-y-6">
-                    <div className="card-panel p-6">
-                        <h3 className="text-lg font-bold mb-4 text-[var(--color-text-main)]">Quick Actions</h3>
-                        <div className="grid grid-cols-1 gap-2">
+                <div className="space-y-12">
+                    <div>
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4 text-[var(--color-text-muted)] border-b border-[var(--color-border)] pb-4">Quick Actions</h3>
+                        <div className="flex flex-col">
                             <QuickActionLink to="/members/new" label="Register New Member" sub="Add to church database" />
                             <QuickActionLink to="/finance/new" label="Record Tithes/Offers" sub="Sunday contribution entry" />
                             <QuickActionLink to="/services/new" label="Log Last Service" sub="Attendance & spiritual results" />
@@ -208,28 +186,28 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="card-panel p-6 bg-gradient-to-br from-[var(--color-primary)]/5 to-transparent">
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-[var(--color-text-main)]">
-                            <Heart className="text-pink-500" size={18} />
+                    <div>
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2 text-[var(--color-text-muted)] border-b border-[var(--color-border)] pb-4">
+                            <Heart size={14} />
                             Upcoming Birthdays
                         </h3>
-                        <div className="space-y-4">
+                        <div className="space-y-0">
                             {birthdays.length === 0 ? (
-                                <p className="text-xs text-[var(--color-text-muted)] italic">No birthdays in the next 30 days.</p>
+                                <p className="text-xs text-[var(--color-text-muted)] py-4">No birthdays in the next 30 days.</p>
                             ) : (
                                 birthdays.map((m, i) => {
                                     const dob = new Date(m.date_of_birth);
                                     const month = dob.toLocaleString('default', { month: 'short' }).toUpperCase();
                                     const day = dob.getDate();
                                     return (
-                                        <div key={i} className="flex gap-4 items-center p-2 rounded hover:bg-white/50 transition-colors">
-                                            <div className="bg-[var(--color-surface)] h-10 w-10 shrink-0 rounded flex flex-col items-center justify-center font-bold border border-[var(--color-border)] shadow-sm">
-                                                <span className="text-[10px] text-pink-500">{month}</span>
-                                                <span className="text-sm text-gray-700">{day}</span>
+                                        <div key={i} className="flex gap-4 items-center py-3 border-b border-[var(--color-border)]">
+                                            <div className="bg-transparent h-10 w-10 shrink-0 flex flex-col items-center justify-center font-bold border border-[var(--color-text-main)]">
+                                                <span className="text-[8px] uppercase tracking-widest text-[var(--color-text-main)]">{month}</span>
+                                                <span className="text-sm text-[var(--color-text-main)]">{day}</span>
                                             </div>
                                             <div>
-                                                <p className="font-bold text-sm text-[var(--color-text-main)]">{m.first_name} {m.surname}</p>
-                                                <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider font-bold">Member Birthday</p>
+                                                <p className="font-bold text-sm text-[var(--color-text-main)] uppercase tracking-wider">{m.first_name} {m.surname}</p>
+                                                <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-widest">Member Birthday</p>
                                             </div>
                                         </div>
                                     );
@@ -237,8 +215,8 @@ const Dashboard: React.FC = () => {
                             )}
                         </div>
                         <Link to="/members">
-                            <button className="w-full mt-6 text-xs text-[var(--color-primary)] font-bold uppercase tracking-widest hover:text-[var(--color-text-main)] transition-colors">
-                                View Member Directory
+                            <button className="w-full mt-4 text-[10px] text-[var(--color-text-main)] border border-[var(--color-text-main)] py-2 font-bold uppercase tracking-widest hover:bg-[var(--color-text-main)] hover:text-[var(--color-bg)] transition-colors">
+                                View Directory
                             </button>
                         </Link>
                     </div>
@@ -279,12 +257,12 @@ const StatCard = ({ title, value, icon: Icon, color, trend, link }: any) => {
 };
 
 const QuickActionLink = ({ to, label, sub }: any) => (
-    <Link to={to} className="flex items-center justify-between p-3 rounded-none bg-[var(--color-bg)] border border-transparent hover:border-[var(--color-border)] hover:bg-white hover:shadow-sm transition-all group">
+    <Link to={to} className="flex items-center justify-between py-3 border-b border-[var(--color-border)] hover:bg-[var(--color-text-main)] hover:text-[var(--color-bg)] transition-all group px-2">
         <div>
-            <p className="font-bold text-sm text-[var(--color-text-main)] group-hover:text-[var(--color-primary)] transition-colors">{label}</p>
-            <p className="text-[10px] text-[var(--color-text-muted)]">{sub}</p>
+            <p className="font-bold text-[10px] uppercase tracking-widest text-[var(--color-text-main)] group-hover:text-[var(--color-bg)] transition-colors">{label}</p>
+            <p className="text-[10px] text-[var(--color-text-muted)] group-hover:text-[var(--color-bg)]/70">{sub}</p>
         </div>
-        <ArrowRight size={14} className="text-[var(--color-text-muted)] group-hover:translate-x-1 transition-transform" />
+        <ArrowRight size={14} className="text-[var(--color-text-main)] group-hover:text-[var(--color-bg)] group-hover:translate-x-1 transition-transform" />
     </Link>
 );
 

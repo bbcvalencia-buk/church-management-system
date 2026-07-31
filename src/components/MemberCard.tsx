@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Member } from '@/types';
 import { Link } from 'react-router-dom';
@@ -15,7 +14,7 @@ export const MemberCard = ({ member }: MemberCardProps) => {
     return (
         <Link
             to={`/members/${member.id}`}
-            className="card-panel p-5 flex flex-col gap-4 hover:-translate-y-1 hover:shadow-[var(--shadow-hover)] transition-all duration-300 group relative overflow-hidden bg-white border-[var(--color-border)]"
+            className="card-panel p-5 flex flex-col gap-4 break-inside-avoid mb-4 group relative overflow-hidden"
         >
             <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
@@ -23,11 +22,11 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                         <img
                             src={member.profile_picture_url}
                             alt={`${member.first_name} ${member.surname}`}
-                            className="w-14 h-14 rounded-none object-cover shadow-sm ring-1 ring-black/5"
+                            className="w-14 h-14 rounded-lg object-cover ring-1 ring-black/5"
                         />
                     ) : (
                         <div className={`
-              w-14 h-14 rounded-none flex items-center justify-center text-xl font-bold shadow-sm ring-1 ring-black/5
+              w-14 h-14 rounded-lg flex items-center justify-center text-xl font-bold ring-1 ring-black/5
               ${isMale ? 'bg-gray-50 text-[var(--color-text-main)]' : 'bg-transparent text-[var(--color-text-muted)]'}
             `}>
                             {fallbackInitial}
@@ -41,7 +40,7 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                         </h3>
                         <div className="flex flex-col gap-0.5 mt-1">
                             {member.member_number && (
-                                <p className="text-sm font-bold text-indigo-600 tracking-tight">
+                                <p className="text-sm font-bold text-[var(--color-primary)] tracking-tight">
                                     {member.member_number}
                                 </p>
                             )}
@@ -52,7 +51,7 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                                 {member.nickname && (
                                     <>
                                         {member.is_regular_member && (
-                                            <span className="w-1 h-1 rounded-none bg-gray-300"></span>
+                                            <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                                         )}
                                         <span>"{member.nickname}"</span>
                                     </>
@@ -63,14 +62,14 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                 </div>
 
                 <div className={`
-          px-2.5 py-1 rounded-none text-[10px] font-bold uppercase tracking-wide border
+          px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide border
           ${member.membership_status === 'active' ? 'bg-green-50 text-green-700 border-green-100' :
                         member.membership_status === 'inactive' ? 'bg-gray-50 text-gray-600 border-gray-100' : 'bg-red-50 text-red-600 border-red-100'}
         `}>
                     {member.membership_status}
                 </div>
                 {!member.is_regular_member && (
-                    <span className="bg-yellow-50 text-yellow-700 text-[10px] font-semibold px-2 py-1 rounded-none border border-yellow-100">
+                    <span className="bg-yellow-50 text-yellow-700 text-[10px] font-semibold px-2 py-1 rounded-lg border border-yellow-100 ml-2">
                         Visitor
                     </span>
                 )}
@@ -92,17 +91,17 @@ export const MemberCard = ({ member }: MemberCardProps) => {
             {/* Badges */}
             <div className="flex flex-wrap gap-2 mt-auto pt-3 border-t border-dashed border-[var(--color-border)]">
                 {member.is_pastor && (
-                    <span className="bg-purple-50 text-purple-700 text-[10px] font-semibold px-2 py-1 rounded-none flex items-center gap-1 border border-purple-100">
+                    <span className="bg-purple-50 text-purple-700 text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 border border-purple-100">
                         <Shield size={10} /> Pastor
                     </span>
                 )}
                 {member.is_pastors_wife && (
-                    <span className="bg-transparent text-pink-700 text-[10px] font-semibold px-2 py-1 rounded-none flex items-center gap-1 border border-pink-100">
+                    <span className="bg-pink-50 text-pink-700 text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 border border-pink-100">
                         <User size={10} /> Pastor's Wife
                     </span>
                 )}
                 {member.is_regular_member && (
-                    <span className="bg-gray-50 text-blue-700 text-[10px] font-semibold px-2 py-1 rounded-none border border-blue-100">Regular Member</span>
+                    <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2 py-1 rounded-lg border border-blue-100">Regular Member</span>
                 )}
             </div>
 

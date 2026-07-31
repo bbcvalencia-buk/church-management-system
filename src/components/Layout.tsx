@@ -198,93 +198,72 @@ const Layout: React.FC = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-[#f8fafc] text-[var(--color-text-main)] w-full flex-col pt-14 md:pt-28 pb-20 md:pb-0">
-            {/* Desktop Floating Pill (N5) */}
-            <header className="hidden md:flex fixed top-6 left-1/2 -translate-x-1/2 z-40 items-center justify-between bg-white/80 backdrop-blur-xl border border-gray-200 shadow-lg rounded-none px-4 py-2 w-[95%] max-w-5xl transition-all">
+        <div className="flex min-h-screen bg-[var(--color-bg)] text-[var(--color-text-main)] w-full flex-col md:flex-row pt-14 md:pt-0 pb-20 md:pb-0">
+            {/* Desktop Editorial Sidebar */}
+            <aside className="hidden md:flex flex-col fixed top-0 left-0 z-40 h-screen w-64 border-r border-[var(--color-border)] bg-[var(--color-bg)] transition-all">
                 {/* Logo Area */}
-                <div className="flex items-center gap-3 pr-6 border-r border-gray-200">
-                    <div className="w-9 h-9 rounded-none bg-[var(--color-primary)] flex items-center justify-center shadow-md overflow-hidden shrink-0">
+                <div className="flex items-center gap-3 p-6 border-b border-[var(--color-border)]">
+                    <div className="w-9 h-9 rounded-none bg-[var(--color-primary)] flex items-center justify-center overflow-hidden shrink-0">
                         {churchLogoUrl ? (
                             <img src={churchLogoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
                         ) : (
                             <Shield className="text-[var(--color-text-main)]" size={18} />
                         )}
                     </div>
-                    <div className="min-w-0 max-w-[150px]">
+                    <div className="min-w-0 flex-1">
                         <h1 className="font-bold text-sm tracking-tight text-[var(--color-text-main)] truncate">{churchName}</h1>
                     </div>
                 </div>
 
-                {/* Center Quick Links */}
-                <nav className="flex items-center gap-2 px-6 flex-1 justify-center">
-                    {[{ to: "/", icon: LayoutDashboard, label: "Dashboard", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK, UserRole.TREASURER] },
-                      { to: "/members", icon: Users, label: "Members", allowedRoles: [UserRole.CHURCH_ADMINISTRATOR, UserRole.PASTOR, UserRole.CHURCH_CLERK] },
-
-                    ].map(link => {
-                        if (!hasPermission(link)) return null;
+                {/* Navigation Links */}
+                <nav className="flex-1 overflow-y-auto py-6 space-y-6">
+                    {navItems.map((group, idx) => {
+                        const visibleItems = group.items.filter(item => hasPermission(item as any));
+                        if (visibleItems.length === 0) return null;
                         return (
-                            <NavLink
-                                key={link.to}
-                                to={link.to}
-                                className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-none transition-all duration-200 font-medium text-sm ${isActive ? 'bg-[var(--color-primary)] text-[var(--color-text-main)] shadow-md' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}
-                            >
-                                <link.icon size={18} />
-                                <span>{link.label}</span>
-                            </NavLink>
+                            <div key={idx}>
+                                <h3 className="px-6 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] mb-3">{group.section}</h3>
+                                <div className="space-y-1">
+                                    {visibleItems.map((item) => {
+                                        const label = item.to === "/sunday-school" && sundaySchoolScopeLabel ? `Sunday School (${sundaySchoolScopeLabel})` : item.label;
+                                        return (
+                                            <NavLink
+                                                key={item.to}
+                                                to={item.to}
+                                                className={({ isActive }) => `flex items-center gap-3 px-6 py-2 transition-all duration-200 group text-[10px] font-bold uppercase tracking-widest ${isActive ? 'text-[var(--color-primary)] border-l-2 border-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] hover:border-l-2 hover:border-[var(--color-border)] border-l-2 border-transparent'}`}
+                                            >
+                                                <item.icon size={16} className="shrink-0" />
+                                                <span className="truncate">{label}</span>
+                                            </NavLink>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         );
                     })}
                 </nav>
-
-                {/* Right Actions */}
-                <div className="flex items-center gap-3 pl-6 border-l border-gray-200">
-                    <div className="relative" ref={notifRef}>
-                        <button onClick={() => setNotifOpen(!notifOpen)} className="relative cursor-pointer hover:bg-gray-100 p-2 rounded-none transition-colors">
-                            <Bell size={20} className="text-gray-600" />
-                            {pendingRequests.length > 0 && (
-                                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-red-500 rounded-none border-2 border-white text-[10px] text-[var(--color-text-main)] font-bold flex items-center justify-center">
-                                    {pendingRequests.length}
-                                </span>
-                            )}
-                        </button>
-                        {notifOpen && (
-                            <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-none shadow-xl z-50 overflow-hidden">
-                                <div className="p-4 border-b border-gray-100">
-                                    <h3 className="text-sm font-bold text-gray-900">Notifications</h3>
-                                </div>
-                                <div className="max-h-[320px] overflow-y-auto">
-                                    {pendingRequests.length > 0 ? (
-                                        pendingRequests.map((req) => (
-                                            <Link key={req.id} to={`/members/${req.target_member_id}`} onClick={() => setNotifOpen(false)} className="flex items-start gap-3 p-4 hover:bg-gray-50 transition-colors border-b border-gray-50">
-                                                <div className="w-8 h-8 rounded-none bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
-                                                    <MessageSquare size={14} className="text-amber-600" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-gray-900 truncate">Edit request: {req.members?.first_name} {req.members?.surname}</p>
-                                                    <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{req.request_message}</p>
-                                                </div>
-                                            </Link>
-                                        ))
-                                    ) : (
-                                        <div className="p-6 text-center text-sm text-gray-400">No new notifications</div>
-                                    )}
-                                </div>
+                
+                {/* User Area & Sign Out */}
+                <div className="p-6 border-t border-[var(--color-border)]">
+                    <div className="flex items-center gap-3 mb-4">
+                        {member?.profile_picture_url ? (
+                            <img src={member.profile_picture_url} alt="Profile" className="w-9 h-9 rounded-none object-cover ring-1 ring-[var(--color-border)]" />
+                        ) : (
+                            <div className="w-9 h-9 rounded-none bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center text-sm font-bold uppercase ring-1 ring-[var(--color-border)]">
+                                {member?.first_name ? member.first_name[0] : (user?.email?.[0] || 'U')}
                             </div>
                         )}
-                    </div>
-                    
-                    <button onClick={toggleSidebar} className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-none transition-colors">
-                        <Menu size={20} className="text-gray-600" />
-                    </button>
-                    
-                    {member?.profile_picture_url ? (
-                        <img src={member.profile_picture_url} alt="Profile" className="w-9 h-9 rounded-none object-cover shadow-sm ring-2 ring-white" />
-                    ) : (
-                        <div className="w-9 h-9 rounded-none bg-[var(--color-primary)] text-[var(--color-text-main)] flex items-center justify-center text-sm font-bold shadow-sm uppercase ring-2 ring-white">
-                            {member?.first_name ? member.first_name[0] : (user?.email?.[0] || 'U')}
+                        <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-[var(--color-text-main)] truncate">{member?.first_name} {member?.surname}</p>
+                            <p className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-widest truncate">{formatRoleDisplay(roles)}</p>
                         </div>
-                    )}
+                    </div>
+                    <button onClick={handleSignOut} className="w-full flex items-center gap-2 px-0 py-2 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-muted)] hover:text-red-600 transition-colors">
+                        <LogOut size={16} />
+                        Sign Out
+                    </button>
                 </div>
-            </header>
+            </aside>
 
             {/* Mobile Top Header */}
             <header className="md:hidden fixed top-0 left-0 right-0 h-14 border-b border-[var(--color-border)] flex items-center justify-between px-4 bg-white/90 backdrop-blur-md z-30 shadow-sm">
@@ -393,7 +372,7 @@ const Layout: React.FC = () => {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 flex flex-col min-w-0 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
+            <main className="flex-1 flex flex-col min-w-0 md:ml-64 w-full px-4 sm:px-6 lg:px-10 py-6">
                 <Outlet />
             </main>
         </div>

@@ -10,8 +10,6 @@ interface ProfileHeaderProps {
     id?: string;
     setIsViewing: (viewing: boolean) => void;
     setShowEditRequestModal: (show: boolean) => void;
-    activeTab: string;
-    setActiveTab: (tab: string) => void;
 }
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({
@@ -22,8 +20,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     id,
     setIsViewing,
     setShowEditRequestModal,
-    activeTab,
-    setActiveTab,
 }) => {
     return (
         <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-8 pb-0 overflow-hidden relative">
@@ -102,22 +98,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Tabs Navigation */}
-            <div className="flex items-center gap-8 mt-4 border-t border-gray-100 px-8">
-                {['Overview', 'Attendance'].map((tab) => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`py-4 px-1 text-sm font-bold border-b-2 transition-all ${activeTab === tab
-                            ? 'border-[var(--color-border)] text-[var(--color-text-main)]'
-                            : 'border-transparent text-gray-400 hover:text-gray-600'
-                            }`}
-                    >
-                        {tab}
-                    </button>
-                ))}
             </div>
         </div>
     );

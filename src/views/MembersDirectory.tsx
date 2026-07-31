@@ -170,10 +170,10 @@ const MembersDirectory: React.FC = () => {
 
             {/* Grid */}
             {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4">
                     {Array.from({ length: 8 }).map((_, i) => (
-                        <div key={i} className="card-panel p-4 flex items-center gap-4 bg-white min-h-[96px] overflow-hidden border border-[var(--color-border)] shadow-sm">
-                            <div className="w-12 h-12 rounded-none bg-gray-200 animate-pulse shrink-0"></div>
+                        <div key={i} className="card-panel p-4 flex items-center gap-4 bg-white min-h-[96px] overflow-hidden border border-[var(--color-border)] shadow-sm mb-4 break-inside-avoid">
+                            <div className="w-12 h-12 rounded-lg bg-gray-200 animate-pulse shrink-0"></div>
                             <div className="flex-1 space-y-2">
                                 <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
                                 <div className="h-3 bg-gray-100 rounded w-1/2 animate-pulse"></div>
@@ -191,7 +191,7 @@ const MembersDirectory: React.FC = () => {
                                     <p className="text-sm text-[var(--color-text-muted)]">{regularMembers.length} regular member{regularMembers.length === 1 ? '' : 's'}</p>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4">
                                 {regularMembers.map((member) => (
                                     <MemberCard key={member.id} member={member} />
                                 ))}
@@ -207,7 +207,7 @@ const MembersDirectory: React.FC = () => {
                                     <p className="text-sm text-[var(--color-text-muted)]">{visitorMembers.length} visitor record{visitorMembers.length === 1 ? '' : 's'}</p>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4">
                                 {visitorMembers.map((member) => (
                                     <MemberCard key={member.id} member={member} />
                                 ))}
@@ -216,7 +216,7 @@ const MembersDirectory: React.FC = () => {
                     )}
 
                     {filterStatus !== 'all' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-4">
                             {filteredMembers.map((member) => (
                                 <MemberCard key={member.id} member={member} />
                             ))}

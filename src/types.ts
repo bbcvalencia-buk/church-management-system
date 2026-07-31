@@ -239,6 +239,7 @@ export interface GoodnewsSeries {
 }
 
 export interface GoodnewsSession {
+    members?: any;
     id: string;
     series_id: string;
     session_number: number;
