@@ -69,7 +69,7 @@ const FamilyProfile: React.FC = () => {
                         <div className="w-full h-full rounded-[24px] overflow-hidden bg-gradient-to-br from-indigo-50 to-purple-50 border-4 border-white shadow-lg flex items-center justify-center text-[var(--color-primary)]">
                             {members.length > 1 ? <Users size={56} /> : <User size={56} />}
                         </div>
-                        <div className="absolute -bottom-2 -right-2 bg-[var(--color-primary)] text-[var(--color-text-main)] p-2 rounded-none shadow-lg border-2 border-white" title="Household">
+                        <div className="absolute -bottom-2 -right-2 bg-[var(--color-primary)] text-white p-2 rounded-none shadow-lg border-2 border-white" title="Household">
                             <Home size={18} />
                         </div>
                     </div>

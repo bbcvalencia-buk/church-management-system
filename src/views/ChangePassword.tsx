@@ -96,7 +96,7 @@ const ChangePassword: React.FC = () => {
                         <button
                             type="submit"
                             disabled={!isReady || loading}
-                            className="px-6 py-2.5 rounded-none bg-[var(--color-primary)] text-[var(--color-text-main)] text-sm font-bold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-6 py-2.5 rounded-none bg-[var(--color-primary)] text-white text-sm font-bold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? "Saving..." : "Update Password"}
                         </button>

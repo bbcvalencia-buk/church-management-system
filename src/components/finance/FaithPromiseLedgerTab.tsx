@@ -214,7 +214,7 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                         <Printer size={16} /> Print All
                     </button>
                     {isChurchAdmin && new Date().getMonth() === 0 && (
-                        <button onClick={handleRollover} className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-text-main)] rounded-none text-sm font-bold hover:bg-[var(--color-primary-dark)] flex items-center gap-2 shadow-sm transition-colors">
+                        <button onClick={handleRollover} className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-none text-sm font-bold hover:bg-[var(--color-primary-dark)] flex items-center gap-2 shadow-sm transition-colors">
                             Year Rollover
                         </button>
                     )}

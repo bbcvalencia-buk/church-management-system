@@ -195,7 +195,7 @@ const SystemSettings: React.FC = () => {
                                                 type="button"
                                                 onClick={() => fileInputRef.current?.click()}
                                                 disabled={logoUploading}
-                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-text-main)] text-sm font-medium rounded-none hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-none hover:bg-opacity-90 transition-colors disabled:opacity-50"
                                             >
                                                 {logoUploading ? (
                                                     <Loader2 size={16} className="animate-spin" />

@@ -637,7 +637,7 @@ const ServiceForm: React.FC = () => {
                     <button
                         onClick={handleSubmit}
                         disabled={saving}
-                        className="bg-[var(--color-text-main)] text-[var(--color-bg)] px-5 py-2.5 rounded-lg font-bold uppercase tracking-wider text-xs shadow-md hover:bg-black transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white px-5 py-2.5 rounded-lg font-mono uppercase tracking-widest text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                         <Save size={16} /> {saving ? 'Saving...' : 'Save Record'}
                     </button>

@@ -102,7 +102,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                 <button
                     type="button"
                     onClick={addVisitor}
-                    className="bg-[var(--color-primary)] text-[var(--color-text-main)] hover:bg-[var(--color-surface-hover)] px-4 py-2.5 rounded-none flex items-center gap-2 transition-colors font-bold text-sm shadow-sm"
+                    className="bg-[var(--color-primary)] text-white hover:bg-[var(--color-surface-hover)] px-4 py-2.5 rounded-none flex items-center gap-2 transition-colors font-bold text-sm shadow-sm"
                 >
                     <Plus size={16} /> Add Visitor Card
                 </button>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Mail, Printer, Edit3, MessageSquare, Star, User } from "lucide-react";
+import { Mail, Printer, Edit3, MessageSquare, User } from "lucide-react";
 import FamilyLinks from "./FamilyLinks";
 
 interface ProfileHeaderProps {
@@ -22,75 +22,84 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     setShowEditRequestModal,
 }) => {
     return (
-        <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-8 pb-0 overflow-hidden relative">
-            <div className="flex flex-col md:flex-row gap-8 items-start mb-6">
+        <div className="bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] p-6 md:p-8 space-y-6">
+            <div className="flex flex-col md:flex-row gap-6 items-start">
                 {/* Avatar */}
-                <div className="relative shrink-0 w-[120px] h-[120px]">
-                    <div className="w-full h-full rounded-[16px] overflow-hidden bg-gray-50 flex items-center justify-center">
+                <div className="relative shrink-0 w-24 h-24 md:w-28 md:h-28">
+                    <div className="w-full h-full rounded-lg overflow-hidden bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center">
                         {previewUrl ? (
                             <img src={previewUrl} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
-                            <User size={48} className="text-gray-400" />
+                            <User size={40} className="text-[var(--color-text-muted)]" />
                         )}
                     </div>
-                    {member.is_regular_member && (
-                        <div className="absolute -bottom-2 -right-2 bg-amber-400 text-[var(--color-text-main)] p-1.5 rounded-none ring-4 ring-white" title="Regular Member">
-                            <Star size={14} className="fill-white text-[var(--color-text-main)]" />
-                        </div>
-                    )}
                 </div>
 
                 {/* Info Block */}
                 <div className="flex-1 w-full space-y-4">
                     <div className="flex flex-col xl:flex-row xl:justify-between xl:items-start gap-4">
                         <div>
-                            <h1 className="text-[28px] font-extrabold text-[#111827] tracking-tight leading-none mb-3">
+                            <h1 className="text-3xl font-light text-[var(--color-text-main)] tracking-tight leading-none mb-3" style={{ fontFamily: 'var(--font-display, inherit)' }}>
                                 {member.first_name} {member.surname}
                             </h1>
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 mb-4">
-                                <span className={`px-2.5 py-1 rounded-none font-bold text-[10px] uppercase tracking-wider ${member.membership_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                            <div className="flex flex-wrap items-center gap-2 mb-3">
+                                <span className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-widest ${member.membership_status === 'active' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-[var(--color-text-muted)]'}`}>
                                     {member.membership_status} {member.is_regular_member ? 'Member' : 'Visitor'}
                                 </span>
                                 {member.member_number && (
-                                    <span className="bg-indigo-600 text-[var(--color-text-main)] px-3 py-1 rounded-none font-bold text-[12px] tracking-wider shadow-sm">
+                                    <span className="bg-[var(--color-primary-light)] text-[var(--color-primary)] px-2.5 py-1 rounded font-mono font-bold text-[10px] tracking-widest border border-[var(--color-primary-light)]">
                                         {member.member_number}
                                     </span>
                                 )}
-                                {member.is_regular_member && (
-                                    <span className="text-gray-500 text-sm flex items-center gap-1">
-                                        <span className="opacity-60">ID:</span> <span className="font-bold">#{member.id_number}</span>
+                                {member.is_regular_member && member.id_number && (
+                                    <span className="text-[10px] font-mono text-[var(--color-text-muted)] uppercase tracking-widest ml-1">
+                                        ID: <span className="font-bold text-[var(--color-text-main)]">#{member.id_number}</span>
                                     </span>
                                 )}
                             </div>
-                            <p className="text-gray-500 italic leading-relaxed text-sm max-w-2xl">
-                                "A faithful individual actively participating in our fellowship. Encouraged by their faithfulness in small group."
-                            </p>
+                            {member.notes && (
+                                <p className="text-[var(--color-text-muted)] italic leading-relaxed text-xs max-w-2xl">
+                                    "{member.notes}"
+                                </p>
+                            )}
 
                             <FamilyLinks family={family} />
                         </div>
-                        <div className="flex flex-wrap gap-3">
-                            <button onClick={() => window.location.href = `mailto:${member.email || ''}`} className="px-4 py-2 bg-white border border-gray-200 rounded-none text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors shadow-sm">
-                                <Mail size={16} className="text-gray-500" /> Email
-                            </button>
+
+                        <div className="flex flex-wrap gap-2">
+                            {member.email && (
+                                <button 
+                                    onClick={() => window.location.href = `mailto:${member.email}`} 
+                                    className="px-3.5 py-2 border border-[var(--color-border)] rounded-lg text-xs font-mono uppercase tracking-widest text-[var(--color-text-main)] hover:bg-[var(--color-surface-hover)] flex items-center gap-1.5 transition-colors"
+                                >
+                                    <Mail size={14} /> Email
+                                </button>
+                            )}
                             {canManageProfiles && id && (
-                                <button onClick={() => window.open(`/members/${id}/print-id`, '_blank')} className="px-4 py-2 bg-white border border-gray-200 rounded-none text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors shadow-sm">
-                                    <Printer size={16} className="text-gray-500" /> Label
+                                <button 
+                                    onClick={() => window.open(`/members/${id}/print-id`, '_blank')} 
+                                    className="px-3.5 py-2 border border-[var(--color-border)] rounded-lg text-xs font-mono uppercase tracking-widest text-[var(--color-text-main)] hover:bg-[var(--color-surface-hover)] flex items-center gap-1.5 transition-colors"
+                                >
+                                    <Printer size={14} /> Print ID
                                 </button>
                             )}
                             {canManageProfiles ? (
-                                <button onClick={() => setIsViewing(false)} className="px-5 py-2 bg-[#4f46e5] text-[var(--color-text-main)] rounded-none text-sm font-bold hover:bg-[#4338ca] flex items-center gap-2 transition-colors shadow-sm">
-                                    <Edit3 size={16} /> Edit Profile
+                                <button 
+                                    onClick={() => setIsViewing(false)} 
+                                    className="px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white rounded-lg text-xs font-mono uppercase tracking-widest flex items-center gap-1.5 transition-colors"
+                                >
+                                    <Edit3 size={14} /> Edit Profile
                                 </button>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                    <span className="px-5 py-2 bg-gray-100 text-gray-500 rounded-none text-sm font-bold border border-gray-200">
+                                    <span className="px-3 py-1.5 border border-[var(--color-border)] text-[var(--color-text-muted)] rounded-lg text-xs font-mono uppercase tracking-widest">
                                         Read Only
                                     </span>
                                     <button
                                         onClick={() => setShowEditRequestModal(true)}
-                                        className="px-5 py-2 bg-amber-100 text-amber-800 rounded-none text-sm font-bold border border-amber-200 hover:bg-amber-200 transition-colors flex items-center gap-2"
+                                        className="px-3.5 py-2 bg-amber-50 text-amber-800 rounded-lg text-xs font-mono uppercase tracking-widest border border-amber-200 hover:bg-amber-100 transition-colors flex items-center gap-1.5"
                                     >
-                                        <MessageSquare size={16} />
+                                        <MessageSquare size={14} />
                                         Request Edit
                                     </button>
                                 </div>

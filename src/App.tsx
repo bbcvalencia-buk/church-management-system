@@ -257,7 +257,7 @@ const AccessDenied: React.FC = () => {
       </p>
       <button
         onClick={() => navigate('/')}
-        className="mt-6 px-4 py-2 rounded-none bg-[var(--color-primary)] text-[var(--color-text-main)] hover:opacity-90"
+        className="mt-6 px-4 py-2 rounded-none bg-[var(--color-primary)] text-white hover:opacity-90"
       >
         Return to Dashboard
       </button>

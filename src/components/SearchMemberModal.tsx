@@ -115,7 +115,7 @@ export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         <button
                             onClick={onClose}
-                            className="w-full bg-[var(--color-primary)] text-[var(--color-text-main)] font-bold py-2.5 rounded-none hover:bg-opacity-90 transition-opacity"
+                            className="w-full bg-[var(--color-primary)] text-white font-bold py-2.5 rounded-none hover:bg-opacity-90 transition-opacity"
                         >
                             Done Selecting
                         </button>

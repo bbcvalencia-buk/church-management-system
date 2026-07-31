@@ -213,9 +213,9 @@ const Activities: React.FC = () => {
                 </h1>
                 <button
                     onClick={() => handleOpenModal()}
-                    className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] px-4 py-2 rounded-none flex items-center gap-2 transition-colors font-bold"
+                    className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors font-mono uppercase tracking-widest text-xs font-bold"
                 >
-                    <Plus size={18} /> Add Activity
+                    <Plus size={16} /> Add Activity
                 </button>
             </div>
 

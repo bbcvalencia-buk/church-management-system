@@ -291,7 +291,7 @@ const Layout: React.FC = () => {
                     {member?.profile_picture_url ? (
                         <img src={member.profile_picture_url} alt="Profile" className="w-8 h-8 rounded-none object-cover ring-2 ring-white" />
                     ) : (
-                        <div className="w-8 h-8 rounded-none bg-[var(--color-primary)] text-[var(--color-text-main)] flex items-center justify-center text-xs font-bold uppercase ring-2 ring-white">
+                        <div className="w-8 h-8 rounded-none bg-[var(--color-primary)] text-white flex items-center justify-center text-xs font-bold uppercase ring-2 ring-white">
                             {member?.first_name ? member.first_name[0] : (user?.email?.[0] || 'U')}
                         </div>
                     )}

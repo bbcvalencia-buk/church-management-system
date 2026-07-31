@@ -13,88 +13,90 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, setViewAct
     return (
         <div
             onClick={() => setViewActivity(activity)}
-            className="bg-white border border-gray-200 rounded-none shadow-sm p-6 space-y-4 hover:border-[var(--color-primary)]/50 hover:shadow-md transition-all group relative cursor-pointer"
+            className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-6 space-y-4 hover:border-[var(--color-primary)] transition-all group relative cursor-pointer"
         >
             <button
                 onClick={(e) => {
                     e.stopPropagation();
                     setConfirmDelete({ isOpen: true, id: activity.id });
                 }}
-                className="absolute top-4 right-4 text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1"
+                className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1"
+                title="Delete"
             >
                 <Trash2 size={16} />
             </button>
 
             <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-none flex items-center justify-center 
-                    ${activity.activity_type === 'soul_winning' ? 'bg-red-50 text-red-500' :
-                        activity.activity_type === 'bible_study' ? 'bg-gray-50 text-[var(--color-primary)]' :
-                            activity.activity_type === 'visitation' ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)]' :
-                                'bg-[var(--color-primary-light)] text-[var(--color-primary)]'}`}
-                >
+                <div className="text-[var(--color-primary)]">
                     {activity.activity_type === 'visitation' ? <UserCheck size={20} /> :
                         activity.activity_type === 'bible_study' ? <BookOpen size={20} /> :
                             activity.activity_type === 'outreach' ? <Megaphone size={20} /> :
                                 <Activity size={20} />}
                 </div>
                 <div>
-                    <h3 className="font-bold text-gray-900">{getTypeLabel(activity.activity_type)}</h3>
-                    <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                    <h3 className="font-bold text-[var(--color-text-main)] text-base">{getTypeLabel(activity.activity_type)}</h3>
+                    <div className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-[var(--color-text-muted)] mt-0.5">
                         <Calendar size={12} />
                         {new Date(activity.activity_date).toLocaleDateString()}
                     </div>
                 </div>
             </div>
 
-            <div className="space-y-2 text-sm">
+            <div className="space-y-1.5 text-xs">
                 {activity.area && (
-                    <p className="text-[var(--color-text-muted)]">Area: <span className="text-gray-900 font-medium">{activity.area}</span></p>
+                    <p className="text-[var(--color-text-muted)]">AREA: <span className="text-[var(--color-text-main)] font-semibold">{activity.area}</span></p>
                 )}
                 {activity.activity_type === 'visitation' && activity.activity_data?.visited_name && (
-                    <p className="text-[var(--color-text-muted)]">Visited: <span className="text-gray-900 font-medium">{activity.activity_data.visited_name}</span></p>
+                    <p className="text-[var(--color-text-muted)]">VISITED: <span className="text-[var(--color-text-main)] font-semibold">{activity.activity_data.visited_name}</span></p>
                 )}
                 {activity.activity_type === 'bible_study' && (activity.activity_data?.student_name || activity.activity_data?.book) && (
                     <p className="text-[var(--color-text-muted)]">
-                        Study: <span className="text-gray-900 font-medium">
+                        STUDY: <span className="text-[var(--color-text-main)] font-semibold">
                             {activity.activity_data?.student_name || 'Unknown'} - {activity.activity_data?.book || 'No Book'}
                             {activity.activity_data?.session_number ? ` (${activity.activity_data.session_number})` : ''}
                         </span>
                     </p>
                 )}
                 {activity.activity_type === 'outreach' && activity.activity_data?.event_name && (
-                    <p className="text-[var(--color-text-muted)]">Event: <span className="text-gray-900 font-medium">{activity.activity_data.event_name}</span></p>
+                    <p className="text-[var(--color-text-muted)]">EVENT: <span className="text-[var(--color-text-main)] font-semibold">{activity.activity_data.event_name}</span></p>
                 )}
                 {activity.activity_type === 'bible_study' && activity.bible_study_type === 'family' && activity.family_name && (
-                    <p className="text-[var(--color-text-muted)]">Family: <span className="text-gray-900 font-medium">{activity.family_name}</span></p>
+                    <p className="text-[var(--color-text-muted)]">FAMILY: <span className="text-[var(--color-text-main)] font-semibold">{activity.family_name}</span></p>
                 )}
                 {activity.activity_type === 'bible_study' && activity.activity_data?.format && activity.activity_data.format.length > 0 && (
-                    <p className="text-[var(--color-text-muted)]">Format: <span className="text-gray-900 font-medium">{activity.activity_data.format.join(', ')}</span></p>
+                    <p className="text-[var(--color-text-muted)]">FORMAT: <span className="text-[var(--color-text-main)] font-semibold">{activity.activity_data.format.join(', ')}</span></p>
                 )}
                 {activity.activity_type === 'outreach' && activity.mission_church_name && (
-                    <p className="text-[var(--color-text-muted)]">Mission: <span className="text-gray-900 font-medium">{activity.mission_church_name}</span></p>
+                    <p className="text-[var(--color-text-muted)]">MISSION: <span className="text-[var(--color-text-main)] font-semibold">{activity.mission_church_name}</span></p>
                 )}
                 {(activity.activity_type === 'soul_winning' || activity.activity_type === 'outreach') && activity.tracts_distributed > 0 && (
-                    <p className="text-[var(--color-text-muted)]">Tracts: <span className="text-gray-900 font-medium">{activity.tracts_distributed}</span></p>
+                    <p className="text-[var(--color-text-muted)]">TRACTS: <span className="text-[var(--color-text-main)] font-semibold">{activity.tracts_distributed}</span></p>
                 )}
             </div>
 
-            <div className="pt-4 border-t border-gray-100 grid grid-cols-2 gap-4">
-                <div className="text-center p-2 rounded bg-gray-50">
-                    <p className="text-xs text-[var(--color-text-muted)] uppercase font-bold mb-1">Attendance</p>
-                    <p className="text-lg font-bold flex items-center justify-center gap-2">
-                        <Users size={16} className="text-[var(--color-primary)]" />
+            {/* Flat Stat Line — No nested bg-gray-50 boxes! */}
+            <div className="pt-3 border-t border-[var(--color-border)] flex items-center justify-between">
+                <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-light text-[var(--color-text-main)] leading-none" style={{ fontFamily: "var(--font-display, inherit)" }}>
                         {activity.total_attendance}
-                    </p>
+                    </span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-text-muted)] flex items-center gap-1">
+                        <Users size={12} /> ATTENDANCE
+                    </span>
                 </div>
-                <div className="text-center p-2 rounded bg-gray-50">
-                    <p className="text-xs text-[var(--color-text-muted)] uppercase font-bold mb-1">Souls Saved</p>
-                    <p className="text-lg font-bold flex items-center justify-center gap-2">
-                        <Heart size={16} className="text-red-500" />
+                <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-light text-red-600 leading-none" style={{ fontFamily: "var(--font-display, inherit)" }}>
                         {activity.souls_saved}
-                    </p>
+                    </span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-text-muted)] flex items-center gap-1">
+                        <Heart size={12} className="text-red-500" /> SAVED
+                    </span>
                 </div>
             </div>
-            <p className="text-[10px] text-[var(--color-primary)]/70 mt-1 uppercase font-bold text-right group-hover:text-[var(--color-text-main)] transition-colors">Click to view details</p>
+            
+            <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-primary)] text-right group-hover:underline transition-all pt-1">
+                View Details →
+            </p>
         </div>
     );
 };

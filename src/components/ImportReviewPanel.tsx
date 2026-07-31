@@ -164,7 +164,7 @@ export const ImportReviewPanel: React.FC = () => {
                                     <button
                                         onClick={() => { setResolvingConflict(conflict); setSearchModalOpen(true); }}
                                         disabled={resolvingId === conflict.id}
-                                        className="w-full bg-[var(--color-primary)] text-[var(--color-text-main)] text-sm font-medium py-2 px-3 rounded-none hover:bg-opacity-90 flex items-center justify-center gap-2"
+                                        className="w-full bg-[var(--color-primary)] text-white text-sm font-medium py-2 px-3 rounded-none hover:bg-opacity-90 flex items-center justify-center gap-2"
                                     >
                                         <Search size={14} /> Match Member
                                     </button>

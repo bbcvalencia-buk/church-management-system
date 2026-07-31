@@ -398,7 +398,7 @@ const MinistryDirectory: React.FC = () => {
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={`px-5 py-2.5 rounded-none text-[13px] font-bold whitespace-nowrap transition-colors ${selectedCategory === cat.id
-                ? 'bg-[var(--color-primary)] text-[var(--color-text-main)]'
+                ? 'bg-[var(--color-primary)] text-white'
                 : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                 }`}
             >

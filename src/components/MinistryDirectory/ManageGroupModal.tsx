@@ -71,7 +71,7 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
           <button
             onClick={handleUpdateGroupMeta}
             disabled={savingGroupMeta || !groupDraftName.trim()}
-            className="w-full py-3 bg-[var(--color-primary)] text-[var(--color-text-main)] rounded-none shadow-md text-sm font-bold hover:bg-[var(--color-primary-dark)] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-[var(--color-primary)] text-white rounded-none shadow-md text-sm font-bold hover:bg-[var(--color-primary-dark)] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {savingGroupMeta ? 'Saving Ministry Details...' : 'Save Ministry Name & Schedule'}
           </button>

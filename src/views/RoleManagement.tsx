@@ -259,16 +259,16 @@ const RoleManagement: React.FC = () => {
                 </div>
 
                 {/* User's own role badge */}
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-none shadow-sm border border-gray-100">
-                    <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Your Access:</span>
+                <div className="flex items-center gap-2 py-1.5 px-3 border border-[var(--color-border)] rounded-lg bg-[var(--color-surface)]">
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-text-muted)]">Your Access:</span>
                     {roles.length > 0 ? (
                         roles.map(r => (
-                            <span key={r} className={`text-[10px] font-bold px-2 py-0.5 rounded-none border uppercase tracking-wide ${ROLE_BADGE_COLORS[r] || 'bg-gray-50 text-[var(--color-text-main)] border-[var(--color-primary-light)]'}`}>
+                            <span key={r} className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-[var(--color-primary-light)] text-[var(--color-primary)] font-bold">
                                 {r.replace(/_/g, ' ')}
                             </span>
                         ))
                     ) : (
-                        <span className="text-xs text-gray-400 italic">Standard Access</span>
+                        <span className="text-xs text-[var(--color-text-muted)] italic">Standard Access</span>
                     )}
                 </div>
             </div>
@@ -482,7 +482,7 @@ const RoleManagement: React.FC = () => {
                                                 `}
                                             >
                                                 <div className={`w-6 h-6 rounded-none flex items-center justify-center flex-shrink-0 transition-colors mt-0.5
-                                                    ${isActive ? 'bg-[var(--color-primary)] text-[var(--color-text-main)]' : 'bg-gray-100 text-gray-300 group-hover:bg-gray-200'}
+                                                    ${isActive ? 'bg-[var(--color-primary)] text-white' : 'bg-gray-100 text-gray-300 group-hover:bg-gray-200'}
                                                 `}>
                                                     {isActive && <Check size={14} strokeWidth={3} />}
                                                 </div>

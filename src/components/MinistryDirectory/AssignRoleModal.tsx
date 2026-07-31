@@ -160,7 +160,7 @@ const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
           <button
             onClick={handleSave}
             disabled={submitting || selectedMembers.length === 0 || selectedMembers.some(m => !m.custom_role)}
-            className="px-6 py-2.5 bg-[var(--color-primary)] text-[var(--color-text-main)] rounded-none shadow-md text-sm font-bold hover:bg-[var(--color-primary-dark)] flex items-center gap-2 transition-transform disabled:opacity-50 hover:-translate-y-0.5"
+            className="px-6 py-2.5 bg-[var(--color-primary)] text-white rounded-none shadow-md text-sm font-bold hover:bg-[var(--color-primary-dark)] flex items-center gap-2 transition-transform disabled:opacity-50 hover:-translate-y-0.5"
           >
             <Save size={16} /> {submitting ? 'Saving...' : 'Confirm Assignment'}
           </button>
