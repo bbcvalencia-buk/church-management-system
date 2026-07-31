@@ -56,6 +56,7 @@ const ServiceList: React.FC = () => {
     const [expandedServiceId, setExpandedServiceId] = useState<string | null>(null);
     const [assignments, setAssignments] = useState<Record<string, ServiceAssignment[]>>({});
     const [loadingAssignments, setLoadingAssignments] = useState<Record<string, boolean>>({});
+    const [showServicesList, setShowServicesList] = useState(false);
 
     useEffect(() => {
         fetchServices();
@@ -185,12 +186,26 @@ const ServiceList: React.FC = () => {
 
             {/* List */}
             <div className="space-y-4">
-                {loading ? (
-                    <div className="text-center py-12 text-[var(--color-text-muted)]">Loading services...</div>
-                ) : filteredServices.length === 0 ? (
-                    <div className="text-center py-12 text-[var(--color-text-muted)]">No service records found.</div>
-                ) : (
-                    filteredServices.map(service => {
+                <button
+                    onClick={() => setShowServicesList(!showServicesList)}
+                    className="w-full flex items-center justify-between p-4 bg-white border border-[var(--color-border)] rounded-xl shadow-sm hover:bg-gray-50 transition-colors"
+                >
+                    <span className="font-bold text-[var(--color-text-main)]">
+                        {showServicesList ? "Hide Services List" : "View Services List"}
+                    </span>
+                    <span className="text-[var(--color-text-muted)] text-sm">
+                        {filteredServices.length} records found
+                    </span>
+                </button>
+
+                {showServicesList && (
+                    <div className="space-y-4">
+                        {loading ? (
+                            <div className="text-center py-12 text-[var(--color-text-muted)]">Loading services...</div>
+                        ) : filteredServices.length === 0 ? (
+                            <div className="text-center py-12 text-[var(--color-text-muted)]">No service records found.</div>
+                        ) : (
+                            filteredServices.map(service => {
                         const isExpanded = expandedServiceId === service.id;
                         const serviceAssignments = assignments[service.id] || [];
 
@@ -354,6 +369,8 @@ const ServiceList: React.FC = () => {
                             </div>
                         )
                     })
+                )}
+                    </div>
                 )}
             </div>
 

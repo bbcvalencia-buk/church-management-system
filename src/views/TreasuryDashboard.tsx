@@ -148,6 +148,7 @@ const TreasuryDashboard: React.FC = () => {
     const [quickAddMember, setQuickAddMember] = useState<{ id: string, name: string } | null>(null);
     const [showPledgeForm, setShowPledgeForm] = useState(false);
     const [showImport, setShowImport] = useState(false);
+    const [showTransactionHistory, setShowTransactionHistory] = useState(false);
     const initializedFiltersRef = useRef(false);
     const dashboardRef = useRef<HTMLDivElement>(null);
 
@@ -672,8 +673,22 @@ const TreasuryDashboard: React.FC = () => {
                     onQuickAdd={(memberId, memberName) => setQuickAddMember({ id: memberId, name: memberName })}
                 />
             ) : (
-                <div className={`card-panel overflow-hidden bg-white rounded-2xl shadow-sm border border-[var(--color-border)] ${activeTab === 'deleted' ? 'border-red-200 shadow-red-500/10' : ''}`}>
-                    <div className="overflow-x-auto">
+                <div className="space-y-4">
+                    <button
+                        onClick={() => setShowTransactionHistory(!showTransactionHistory)}
+                        className="w-full flex items-center justify-between p-4 bg-white border border-[var(--color-border)] rounded-xl shadow-sm hover:bg-gray-50 transition-colors"
+                    >
+                        <span className="font-bold text-[var(--color-text-main)]">
+                            {showTransactionHistory ? "Hide Transaction History" : "View Full Transaction History"}
+                        </span>
+                        <span className="text-[var(--color-text-muted)] text-sm">
+                            {aggregatedData.length} records found
+                        </span>
+                    </button>
+                    
+                    {showTransactionHistory && (
+                        <div className={`card-panel overflow-hidden bg-white rounded-2xl shadow-sm border border-[var(--color-border)] ${activeTab === 'deleted' ? 'border-red-200 shadow-red-500/10' : ''}`}>
+                            <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className={`border-b border-[var(--color-border)] text-xs font-bold uppercase tracking-wider ${activeTab === 'deleted' ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-[var(--color-text-muted)]'}`}>
@@ -756,6 +771,8 @@ const TreasuryDashboard: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
+                </div>
+                )}
                 </div>
             )}
 

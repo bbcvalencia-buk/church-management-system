@@ -6,7 +6,7 @@ import type { FinancialRecord, Member, SystemSettings } from "@/types";
 import { Printer, ArrowLeft, Download, Loader2 } from "lucide-react";
 // @ts-ignore
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
+import * as htmlToImage from "html-to-image";
 
 interface RecordWithMember extends FinancialRecord {
     members: Member | null;
@@ -390,8 +390,8 @@ const FinancialReportPrint: React.FC = () => {
         if (!reportRef.current || reportData.length === 0) return;
         setGeneratingPng(true);
         try {
-            const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true });
-            const dataUrl = canvas.toDataURL('image/png');
+            // using html-to-image to bypass html2canvas oklch parsing errors
+            const dataUrl = await htmlToImage.toPng(reportRef.current, { pixelRatio: 2, skipFonts: false });
             const link = document.createElement('a');
             link.download = `Financial_Report_${year}.png`;
             link.href = dataUrl;
