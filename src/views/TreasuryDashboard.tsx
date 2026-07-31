@@ -36,35 +36,12 @@ interface FinancialRecordWithMember extends FinancialRecord {
     members?: Pick<Member, 'first_name' | 'surname'> | null;
 }
 
-interface AggregatedTransaction {
-    key: string;
-    member_id: string;
-    date: string;
-    member_name: string;
-    tithe: number;
-    faith_promise: number;
-    love_gift: number;
-    pledge: number;
-    pledge_purpose?: string;
-    total: number;
-    is_deleted?: boolean;
-}
-
-interface EditTransactionForm {
-    tithe_amount: number | '';
-    faith_promise_amount: number | '';
-    love_gift_amount: number | '';
-    pledge_amount: number | '';
-    pledge_purpose: string;
-}
-
-const EMPTY_EDIT_FORM: EditTransactionForm = {
-    tithe_amount: '',
-    faith_promise_amount: '',
-    love_gift_amount: '',
-    pledge_amount: '',
-    pledge_purpose: ''
-};
+import { TreasuryActionHeader } from "@/components/Treasury/TreasuryActionHeader";
+import { TreasurySummaryCards } from "@/components/Treasury/TreasurySummaryCards";
+import { TransactionTable } from "@/components/Treasury/TransactionTable";
+import { EditTransactionModal } from "@/components/Treasury/EditTransactionModal";
+import type { AggregatedTransaction, EditTransactionForm } from "@/components/Treasury/types";
+import { EMPTY_EDIT_FORM } from "@/components/Treasury/types";
 
 const normalizeIsoDate = (value: string | null | undefined): string => {
     if (!value) return '';
@@ -488,94 +465,18 @@ const TreasuryDashboard: React.FC = () => {
                 </div>
             )}
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-[var(--color-text-main)]">
-                        Treasury Dashboard
-                    </h1>
-                    <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                        Manage and audit financial entries.
-                    </p>
-                </div>
-                <div className="flex gap-2">
-                    {isChurchAdmin && selectedMonth !== 'all' && (
-                        <button
-                            onClick={handleTogglePeriodLock}
-                            className={`border px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold ${isCurrentPeriodLocked
-                                ? 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
-                                : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200'
-                                }`}
-                        >
-                            {isCurrentPeriodLocked ? <Unlock size={18} /> : <Lock size={18} />}
-                            <span>{isCurrentPeriodLocked ? 'Unlock Period' : 'Lock Period'}</span>
-                        </button>
-                    )}
+            <TreasuryActionHeader
+                isChurchAdmin={isChurchAdmin}
+                canManageTreasury={canManageTreasury}
+                activeTab={activeTab}
+                selectedMonth={selectedMonth}
+                isCurrentPeriodLocked={isCurrentPeriodLocked}
+                handleTogglePeriodLock={handleTogglePeriodLock}
+                setShowImport={setShowImport}
+                setShowPledgeForm={setShowPledgeForm}
+            />
 
-                    <Link
-                        to="/finance/reports"
-                        className="bg-white border border-[var(--color-border)] hover:bg-gray-50 text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
-                        <Printer size={18} />
-                        <span>Reports</span>
-                    </Link>
-                    {activeTab === 'faith_promise' ? (
-                        <>
-                            {canManageTreasury && (
-                                <button
-                                    onClick={() => setShowImport(true)}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold"
-                                >
-                                    <Upload size={18} />
-                                    <span>Import</span>
-                                </button>
-                            )}
-                            {canManageTreasury && (
-                                <button
-                                    onClick={() => setShowPledgeForm(true)}
-                                    className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20 font-bold"
-                                >
-                                    <Plus size={18} />
-                                    <span>New Pledge</span>
-                                </button>
-                            )}
-                        </>
-                    ) : canManageTreasury ? (
-                        <Link
-                            to="/finance/new"
-                            className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20"
-                        >
-                            <Plus size={18} />
-                            <span>New Entry</span>
-                        </Link>
-                    ) : null
-                    }
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bento-grid">
-                <div className="card-panel p-6 relative overflow-hidden group bg-gradient-to-br from-blue-50 to-white border border-blue-100 shadow-sm rounded-2xl">
-                    <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <DollarSign size={64} className="text-blue-500" />
-                    </div>
-                    <p className="text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Total Tithes</p>
-                    <h3 className="text-4xl font-extrabold text-[var(--color-text-main)] mt-2 tracking-tight">{formatCurrency(totals.tithe)}</h3>
-                </div>
-
-                <div className="card-panel p-6 relative overflow-hidden group bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 shadow-sm rounded-2xl">
-                    <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <CreditCard size={64} className="text-green-500" />
-                    </div>
-                    <p className="text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Faith Promise</p>
-                    <h3 className="text-4xl font-extrabold text-[var(--color-text-main)] mt-2 tracking-tight">{formatCurrency(totals.faith_promise)}</h3>
-                </div>
-
-                <div className="card-panel p-6 relative overflow-hidden group bg-gradient-to-br from-pink-50 to-white border border-pink-100 shadow-sm rounded-2xl">
-                    <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <PieChart size={64} className="text-pink-500" />
-                    </div>
-                    <p className="text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Offerings & Pledges</p>
-                    <h3 className="text-4xl font-extrabold text-[var(--color-text-main)] mt-2 tracking-tight">{formatCurrency(totals.love_gift)}</h3>
-                </div>
-            </div>
+            <TreasurySummaryCards totals={totals} formatCurrency={formatCurrency} />
 
             <div className="card-panel p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white rounded-2xl shadow-sm border border-[var(--color-border)]">
                 <div className="flex gap-4">
@@ -673,107 +574,18 @@ const TreasuryDashboard: React.FC = () => {
                     onQuickAdd={(memberId, memberName) => setQuickAddMember({ id: memberId, name: memberName })}
                 />
             ) : (
-                <div className="space-y-4">
-                    <button
-                        onClick={() => setShowTransactionHistory(!showTransactionHistory)}
-                        className="w-full flex items-center justify-between p-4 bg-white border border-[var(--color-border)] rounded-xl shadow-sm hover:bg-gray-50 transition-colors"
-                    >
-                        <span className="font-bold text-[var(--color-text-main)]">
-                            {showTransactionHistory ? "Hide Transaction History" : "View Full Transaction History"}
-                        </span>
-                        <span className="text-[var(--color-text-muted)] text-sm">
-                            {aggregatedData.length} records found
-                        </span>
-                    </button>
-                    
-                    {showTransactionHistory && (
-                        <div className={`card-panel overflow-hidden bg-white rounded-2xl shadow-sm border border-[var(--color-border)] ${activeTab === 'deleted' ? 'border-red-200 shadow-red-500/10' : ''}`}>
-                            <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className={`border-b border-[var(--color-border)] text-xs font-bold uppercase tracking-wider ${activeTab === 'deleted' ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-[var(--color-text-muted)]'}`}>
-                                    <th className="p-4">Date</th>
-                                    <th className="p-4">Member</th>
-                                    <th className="p-4 text-right">Tithe</th>
-                                    <th className="p-4 text-right">Faith Promise</th>
-                                    <th className="p-4 text-right">Love Gift</th>
-                                    <th className="p-4 text-right">Pledge</th>
-                                    <th className="p-4 text-right">Total</th>
-                                    <th className="p-4 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[var(--color-border)]">
-                                {loading ? (
-                                    Array.from({ length: 5 }).map((_, i) => (
-                                        <tr key={i} className="animate-pulse bg-white">
-                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-32"></div></td>
-                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
-                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
-                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
-                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
-                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-16 ml-auto"></div></td>
-                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded w-12 mx-auto"></div></td>
-                                        </tr>
-                                    ))
-                                ) : aggregatedData.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={8} className={`p-8 text-center font-medium ${activeTab === 'deleted' ? 'text-red-400' : 'text-gray-400'}`}>
-                                            No {activeTab} records found for the selected period.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    aggregatedData.map((row) => (
-                                        <tr key={row.key} className={`text-sm group transition-colors ${activeTab === 'deleted' ? 'hover:bg-red-50/50' : 'hover:bg-gray-50'}`}>
-                                            <td className="p-4 font-mono text-gray-500">{row.date}</td>
-                                            <td className="p-4 font-medium text-gray-800 flex items-center gap-2">
-                                                {row.member_name}
-                                                {activeTab === 'deleted' && <span className="bg-red-100 text-red-700 text-[10px] px-2 py-0.5 rounded-full uppercase font-bold">Deleted</span>}
-                                            </td>
-                                            <td className="p-4 text-right font-mono text-gray-700">{row.tithe > 0 ? formatCurrency(row.tithe) : '-'}</td>
-                                            <td className="p-4 text-right font-mono text-gray-700">{row.faith_promise > 0 ? formatCurrency(row.faith_promise) : '-'}</td>
-                                            <td className="p-4 text-right font-mono text-gray-700">{row.love_gift > 0 ? formatCurrency(row.love_gift) : '-'}</td>
-                                            <td className="p-4 text-right font-mono text-gray-700">{row.pledge > 0 ? formatCurrency(row.pledge) : '-'}</td>
-                                            <td className="p-4 text-right font-bold text-black">{formatCurrency(row.total)}</td>
-                                            <td className="p-4 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {activeTab === 'active' ? (
-                                                    canManageTreasury ? (
-                                                        <>
-                                                            <button
-                                                                onClick={() => openEditModal(row)}
-                                                                className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded"
-                                                                title="Edit"
-                                                            >
-                                                                <Edit size={14} />
-                                                            </button>
-                                                            <button
-                                                                onClick={() => prepareDelete(row)}
-                                                                className="p-1.5 text-red-500 hover:bg-red-500/20 rounded"
-                                                                title="Delete"
-                                                            >
-                                                                <Trash2 size={14} />
-                                                            </button>
-                                                        </>
-                                                    ) : null
-                                                ) : canManageTreasury ? (
-                                                    <button
-                                                        onClick={() => handleRestoreTransaction(row)}
-                                                        className="p-1.5 text-green-600 hover:bg-green-500/20 rounded font-bold uppercase text-[10px] tracking-wider flex items-center gap-1"
-                                                        title="Restore"
-                                                    >
-                                                        <RefreshCcw size={12} /> Restore
-                                                    </button>
-                                                ) : null}
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                )}
-                </div>
+                <TransactionTable
+                    aggregatedData={aggregatedData}
+                    loading={loading}
+                    activeTab={activeTab}
+                    canManageTreasury={canManageTreasury}
+                    showTransactionHistory={showTransactionHistory}
+                    setShowTransactionHistory={setShowTransactionHistory}
+                    formatCurrency={formatCurrency}
+                    openEditModal={openEditModal}
+                    prepareDelete={prepareDelete}
+                    handleRestoreTransaction={handleRestoreTransaction}
+                />
             )}
 
             {quickAddMember && (
@@ -834,99 +646,14 @@ const TreasuryDashboard: React.FC = () => {
             />
 
             {editingRow && (
-                <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="w-full max-w-2xl bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
-                        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900">Edit Transaction History</h3>
-                                <p className="text-xs text-gray-500 mt-1">{editingRow.member_name} | {editingRow.date}</p>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={closeEditModal}
-                                className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
-                            >
-                                <X size={16} />
-                            </button>
-                        </div>
-
-                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-xs font-bold text-blue-600 uppercase tracking-wide">Tithe</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={editForm.tithe_amount}
-                                    onChange={(e) => setEditForm({ ...editForm, tithe_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                    className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-green-600 uppercase tracking-wide">Faith Promise</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={editForm.faith_promise_amount}
-                                    onChange={(e) => setEditForm({ ...editForm, faith_promise_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                    className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-pink-600 uppercase tracking-wide">Love Gift</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={editForm.love_gift_amount}
-                                    onChange={(e) => setEditForm({ ...editForm, love_gift_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                    className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-bold text-yellow-600 uppercase tracking-wide">Pledge</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={editForm.pledge_amount}
-                                    onChange={(e) => setEditForm({ ...editForm, pledge_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                    className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="text-xs font-bold text-yellow-700 uppercase tracking-wide">Pledge Purpose</label>
-                                <input
-                                    type="text"
-                                    value={editForm.pledge_purpose}
-                                    onChange={(e) => setEditForm({ ...editForm, pledge_purpose: e.target.value })}
-                                    placeholder="Purpose (if pledge is used)"
-                                    className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={closeEditModal}
-                                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={prepareUpdate}
-                                disabled={updating}
-                                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-                            >
-                                <Save size={14} />
-                                {updating ? 'Saving...' : 'Save Changes'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <EditTransactionModal
+                    editingRow={editingRow}
+                    editForm={editForm}
+                    setEditForm={setEditForm}
+                    closeEditModal={closeEditModal}
+                    prepareUpdate={prepareUpdate}
+                    updating={updating}
+                />
             )}
         </div>
     );
