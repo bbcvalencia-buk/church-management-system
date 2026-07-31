@@ -452,7 +452,7 @@ const TreasuryDashboard: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 p-4 md:p-8 bg-[var(--color-bg)] rounded-3xl" ref={dashboardRef}>
+        <div className="space-y-6 py-4" ref={dashboardRef}>
             {isCurrentPeriodLocked && selectedMonth !== 'all' && (
                 <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg shadow-sm flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -478,86 +478,88 @@ const TreasuryDashboard: React.FC = () => {
 
             <TreasurySummaryCards totals={totals} formatCurrency={formatCurrency} />
 
-            <div className="card-panel p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white rounded-none shadow-sm border border-[var(--color-border)]">
-                <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-4 border-y border-black mt-8">
+                <div className="flex gap-8">
                     <button
-                        className={`font-bold text-lg pb-1 transition-colors ${activeTab === 'active' ? 'text-black border-b-2 border-black' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`text-xs font-mono uppercase tracking-widest transition-colors ${activeTab === 'active' ? 'text-black font-bold' : 'text-gray-400 hover:text-black'}`}
                         onClick={() => setActiveTab('active')}
                     >
                         Transaction History
                     </button>
                     {isChurchAdmin && (
                         <button
-                            className={`font-bold text-lg pb-1 transition-colors flex items-center gap-2 ${activeTab === 'deleted' ? 'text-red-600 border-b-2 border-red-600' : 'text-gray-400 hover:text-gray-600'}`}
+                            className={`text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2 ${activeTab === 'deleted' ? 'text-red-600 font-bold' : 'text-gray-400 hover:text-red-600'}`}
                             onClick={() => setActiveTab('deleted')}
                         >
-                            <Trash2 size={18} /> Deleted Records
+                            Deleted Records
                         </button>
                     )}
                     <button
-                        className={`font-bold text-lg pb-1 transition-colors flex items-center gap-2 ${activeTab === 'faith_promise' ? 'text-[var(--color-text-main)] border-b-2 border-[var(--color-border)]' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`text-xs font-mono uppercase tracking-widest transition-colors flex items-center gap-2 ${activeTab === 'faith_promise' ? 'text-black font-bold' : 'text-gray-400 hover:text-black'}`}
                         onClick={() => setActiveTab('faith_promise')}
                     >
-                        <Heart size={18} /> Faith Promise Ledger
+                        Faith Promise Ledger
                     </button>
                 </div>
 
                 {activeTab !== 'faith_promise' && (
-                    <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center bg-[var(--color-bg)] rounded-none p-1 border border-[var(--color-border)]">
-                            <span className="text-xs font-medium text-[var(--color-text-muted)] px-2">Year</span>
+                    <div className="flex flex-wrap items-center gap-6">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Year</span>
                             <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                                className="bg-transparent border-none text-sm text-[var(--color-text-main)] focus:ring-0 cursor-pointer"
+                                className="bg-transparent border-none text-xs font-mono text-black focus:ring-0 cursor-pointer p-0"
                             >
                                 {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
                             </select>
                         </div>
 
-                        <div className="flex items-center bg-[var(--color-bg)] rounded-none p-1 border border-[var(--color-border)]">
-                            <span className="text-xs font-medium text-[var(--color-text-muted)] px-2">Month</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Month</span>
                             <select
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(e.target.value)}
-                                className="bg-transparent border-none text-sm text-[var(--color-text-main)] focus:ring-0 cursor-pointer"
+                                className="bg-transparent border-none text-xs font-mono text-black focus:ring-0 cursor-pointer p-0"
                             >
                                 <option value="all">All Months</option>
                                 {Array.from({ length: 12 }, (_, i) => (
-                                    <option key={i} value={i.toString()}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
+                                    <option key={i} value={i.toString()}>{new Date(0, i).toLocaleString('default', { month: 'long' }).toUpperCase()}</option>
                                 ))}
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-2 bg-[var(--color-bg)] rounded-none p-1 border border-[var(--color-border)]">
-                            <Calendar size={14} className="text-[var(--color-text-muted)] ml-2" />
-                            <input
-                                type="date"
-                                value={selectedSunday}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setSelectedSunday(value);
-                                    if (value) setSelectedYear(parseInt(value.substring(0, 4), 10));
-                                }}
-                                className="bg-transparent border-none text-sm text-[var(--color-text-main)] focus:ring-0"
-                            />
-                            {selectedSunday && (
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedSunday('')}
-                                    className="text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700"
-                                >
-                                    Clear
-                                </button>
-                            )}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Date</span>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="date"
+                                    value={selectedSunday}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        setSelectedSunday(value);
+                                        if (value) setSelectedYear(parseInt(value.substring(0, 4), 10));
+                                    }}
+                                    className="bg-transparent border-none text-xs font-mono text-black focus:ring-0 p-0"
+                                />
+                                {selectedSunday && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedSunday('')}
+                                        className="text-[9px] font-mono uppercase border border-gray-300 px-1 hover:border-black text-gray-600 transition-colors"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="flex items-center bg-[var(--color-bg)] rounded-none p-1 border border-[var(--color-border)]">
-                            <span className="text-xs font-medium text-[var(--color-text-muted)] px-2">Sort</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Sort</span>
                             <select
                                 value={sortDirection}
                                 onChange={(e) => setSortDirection(e.target.value as 'asc' | 'desc')}
-                                className="bg-transparent border-none text-sm text-[var(--color-text-main)] focus:ring-0 cursor-pointer"
+                                className="bg-transparent border-none text-xs font-mono text-black focus:ring-0 cursor-pointer p-0"
                             >
                                 <option value="desc">Latest First</option>
                                 <option value="asc">Oldest First</option>

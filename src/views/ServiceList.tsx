@@ -19,7 +19,8 @@ import {
     Shield,
     Music,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Edit
 } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -153,26 +154,26 @@ const ServiceList: React.FC = () => {
             </div>
 
             {/* Filters */}
-            <div className="card-panel p-4 flex flex-col md:flex-row gap-4 items-center bg-white">
+            <div className="py-4 border-b border-black flex flex-col md:flex-row gap-6 items-center">
                 <div className="relative flex-1 w-full">
                     <Search
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 text-black"
                         size={18}
                     />
                     <input
                         type="text"
-                        placeholder="Search sermon titles..."
+                        placeholder="SEARCH SERMON TITLES..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-main)] placeholder-gray-400 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-lg py-2 transition-all"
+                        className="w-full pl-8 bg-transparent border-none text-black placeholder-gray-400 focus:ring-0 text-xs font-mono uppercase tracking-widest py-2 transition-all"
                     />
                 </div>
                 <div className="flex items-center gap-2 w-full md:w-auto">
-                    <Filter size={18} className="text-[var(--color-text-muted)]" />
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Type</span>
                     <select
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
-                        className="bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-lg py-2 px-3 transition-all"
+                        className="bg-transparent border-none text-xs font-mono uppercase tracking-widest text-black focus:ring-0 cursor-pointer p-0"
                     >
                         <option value="all">All Services</option>
                         <option value="sunday_morning">Sunday Morning</option>
@@ -185,193 +186,169 @@ const ServiceList: React.FC = () => {
             </div>
 
             {/* List */}
-            <div className="space-y-4">
-                <button
-                    onClick={() => setShowServicesList(!showServicesList)}
-                    className="w-full flex items-center justify-between p-4 bg-white border border-[var(--color-border)] rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-                >
-                    <span className="font-bold text-[var(--color-text-main)]">
-                        {showServicesList ? "Hide Services List" : "View Services List"}
-                    </span>
-                    <span className="text-[var(--color-text-muted)] text-sm">
-                        {filteredServices.length} records found
-                    </span>
-                </button>
+            <div className="mt-8">
+                <div className="mb-6 text-[11px] font-mono uppercase tracking-widest text-gray-400">
+                    {filteredServices.length} records found
+                </div>
 
-                {showServicesList && (
-                    <div className="space-y-4">
-                        {loading ? (
-                            <div className="text-center py-12 text-[var(--color-text-muted)]">Loading services...</div>
-                        ) : filteredServices.length === 0 ? (
-                            <div className="text-center py-12 text-[var(--color-text-muted)]">No service records found.</div>
-                        ) : (
-                            filteredServices.map(service => {
-                        const isExpanded = expandedServiceId === service.id;
-                        const serviceAssignments = assignments[service.id] || [];
+                <div className="relative border-l-2 border-gray-100 ml-3 pl-8 space-y-12 py-4">
+                    {loading ? (
+                        <div className="text-center py-12 text-gray-400 font-mono text-xs uppercase tracking-widest">Loading services...</div>
+                    ) : filteredServices.length === 0 ? (
+                        <div className="text-center py-12 text-gray-400 font-mono text-xs uppercase tracking-widest">No service records found.</div>
+                    ) : (
+                        filteredServices.map(service => {
+                            const isExpanded = expandedServiceId === service.id;
+                            const serviceAssignments = assignments[service.id] || [];
+                            const dateObj = new Date(service.service_date);
 
-                        return (
-                            <div key={service.id} className="card-panel p-0 overflow-hidden group hover:shadow-md transition-all relative bg-white">
-                                <div className="p-4 md:p-6 pb-2">
-                                    {canManageServices && (
-                                        <button
-                                            onClick={() => setConfirmDelete({
-                                                isOpen: true,
-                                                id: service.id,
-                                                title: service.sermon_title || "Untitled Service"
-                                            })}
-                                            className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-2 bg-gray-100/50 hover:bg-red-50 rounded-lg z-10"
-                                            title="Delete"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    )}
-
-                                    <div className="flex flex-col md:flex-row gap-6">
-                                        {/* Date Block */}
-                                        <div className="flex-shrink-0 flex flex-row md:flex-col items-center justify-center bg-gray-50 border border-blue-100 rounded-lg p-3 w-full md:w-24 gap-3 md:gap-0">
-                                            <div className="text-xs uppercase font-bold text-[var(--color-primary)]">
-                                                {new Date(service.service_date).toLocaleString('default', { month: 'short' }).toUpperCase()}
+                            return (
+                                <div key={service.id} className="relative group">
+                                    {/* Timeline dot */}
+                                    <div className="absolute -left-[41px] top-1 w-4 h-4 rounded-full bg-white border-2 border-gray-200 group-hover:border-[var(--color-primary)] transition-colors z-10" />
+                                    
+                                    <div className="flex flex-col lg:flex-row gap-6">
+                                        {/* Date Info */}
+                                        <div className="flex-shrink-0 w-32 pt-0.5">
+                                            <div className="text-3xl font-light text-black tracking-tighter leading-none" style={{ fontFamily: 'var(--font-display, inherit)' }}>
+                                                {dateObj.getDate()}
                                             </div>
-                                            <div className="text-2xl md:text-3xl font-bold text-[var(--color-text-main)] leading-none">
-                                                {new Date(service.service_date).getDate()}
+                                            <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mt-1">
+                                                {dateObj.toLocaleString('default', { month: 'short' })} {dateObj.getFullYear()}
                                             </div>
-                                            <div className="text-xs text-[var(--color-text-muted)]">
-                                                {new Date(service.service_date).getFullYear()}
-                                            </div>
+                                            {service.service_time && (
+                                                <div className="text-[10px] font-mono text-gray-400 mt-1 flex items-center gap-1">
+                                                    <Clock size={10} /> {service.service_time}
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Content */}
-                                        <div className="flex-1 space-y-2">
-                                            <div className="flex items-center gap-3">
-                                                <span className={`
-                                                    px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide
-                                                    ${'bg-[var(--color-primary)] text-[var(--color-bg)]'}
-                                                `}>
-                                                    {formatServiceType(service.service_type)}
-                                                </span>
-                                                {service.service_time && (
-                                                    <span className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
-                                                        <Clock size={12} /> {service.service_time}
+                                        <div className="flex-1 space-y-3">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <span className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-primary)] mb-2 block">
+                                                        {formatServiceType(service.service_type)}
                                                     </span>
-                                                )}
+                                                    <h3 className="text-xl text-black font-medium leading-tight">
+                                                        {service.sermon_title || "No Title Recorded"}
+                                                    </h3>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    {canManageServices && (
+                                                        <>
+                                                            <Link
+                                                                to={`/services/${service.id}`}
+                                                                className="p-1.5 text-gray-400 hover:text-black transition-colors"
+                                                                title="Edit Record"
+                                                            >
+                                                                <Edit size={16} />
+                                                            </Link>
+                                                            <button
+                                                                onClick={() => setConfirmDelete({
+                                                                    isOpen: true,
+                                                                    id: service.id,
+                                                                    title: service.sermon_title || "Untitled Service"
+                                                                })}
+                                                                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            <h3 className="text-lg font-bold text-[var(--color-text-main)]">
-                                                {service.sermon_title || "No Title Recorded"}
-                                            </h3>
-
                                             {service.sermon_notes && (
-                                                <p className="text-sm text-[var(--color-text-muted)] line-clamp-2">
+                                                <p className="text-sm text-gray-600 leading-relaxed max-w-3xl">
                                                     {service.sermon_notes}
                                                 </p>
                                             )}
 
-                                            {/* Stats Row */}
-                                            <div className="flex flex-wrap gap-4 pt-2 text-sm">
-                                                <div className="flex items-center gap-1.5 text-[var(--color-text-main)]" title="Total Attendance">
-                                                    <Users size={16} />
-                                                    <span className="font-bold">{service.total_attendance}</span>
-                                                    <span className="opacity-70 text-xs hidden sm:inline text-[var(--color-text-muted)]">Attended</span>
+                                            {/* Stats */}
+                                            <div className="flex flex-wrap gap-x-6 gap-y-2 pt-2">
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className="text-lg font-medium text-black">{service.total_attendance}</span>
+                                                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Total</span>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 text-green-600" title="Members Present">
-                                                    <Users size={16} className="opacity-70" />
-                                                    <span className="font-bold">{service.members_present}</span>
-                                                    <span className="opacity-70 text-xs hidden sm:inline text-[var(--color-text-muted)]">Members</span>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className="text-lg font-medium text-gray-700">{service.members_present}</span>
+                                                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Members</span>
                                                 </div>
                                                 {service.visitors_present > 0 && (
-                                                    <div className="flex items-center gap-1.5 text-yellow-600" title="Visitors">
-                                                        <Users size={16} className="opacity-70" />
-                                                        <span className="font-bold">{service.visitors_present}</span>
-                                                        <span className="opacity-70 text-xs hidden sm:inline text-[var(--color-text-muted)]">Visitors</span>
+                                                    <div className="flex items-baseline gap-1.5">
+                                                        <span className="text-lg font-medium text-gray-700">{service.visitors_present}</span>
+                                                        <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Visitors</span>
                                                     </div>
                                                 )}
                                                 {(service.souls_saved > 0 || service.visitors_saved > 0) && (
-                                                    <div className="flex items-center gap-1.5 text-red-600 ml-auto" title="Souls Saved">
-                                                        <Heart size={16} fill="currentColor" className="opacity-80" />
-                                                        <span className="font-bold">{service.souls_saved}</span>
-                                                        <span className="opacity-70 text-xs hidden sm:inline text-[var(--color-text-muted)]">Saved</span>
+                                                    <div className="flex items-baseline gap-1.5">
+                                                        <span className="text-lg font-medium text-red-600">{service.souls_saved}</span>
+                                                        <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Saved</span>
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
 
-                                        <div className="flex md:flex-col justify-end gap-2 shrink-0">
-                                            {canManageServices && (
-                                                <Link
-                                                    to={`/services/${service.id}`}
-                                                    className="btn btn-ghost px-4 py-2 text-sm whitespace-nowrap text-[var(--color-text-main)] hover:bg-gray-50"
+                                            {/* Roster Toggle */}
+                                            <div className="pt-2">
+                                                <button
+                                                    onClick={() => toggleServiceExpansion(service.id)}
+                                                    className="text-[11px] font-mono uppercase tracking-widest text-[var(--color-primary)] hover:text-black transition-colors flex items-center gap-1"
                                                 >
-                                                    Edit Record
-                                                </Link>
+                                                    {isExpanded ? '− Hide Roster' : '+ View Roster'}
+                                                </button>
+                                            </div>
+
+                                            {/* Expanded Roster View */}
+                                            {isExpanded && (
+                                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                                    {loadingAssignments[service.id] ? (
+                                                        <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Loading roster...</div>
+                                                    ) : serviceAssignments.length > 0 ? (
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                            {serviceAssignments.map((a, idx) => {
+                                                                const Icon = ROLE_ICONS[a.role] || UserCircle;
+                                                                return (
+                                                                    <div key={`${a.id}-${idx}`} className="flex items-center gap-3">
+                                                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-50 shrink-0">
+                                                                            {a.member?.profile_picture_url ? (
+                                                                                <img src={a.member.profile_picture_url} alt="" className="w-full h-full object-cover grayscale" />
+                                                                            ) : (
+                                                                                <div className="w-full h-full flex items-center justify-center text-gray-300"> <Users size={12} /> </div>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <Link to={`/members/${a.member_id}`} className="text-sm font-medium text-black hover:text-[var(--color-primary)] truncate block">
+                                                                                {a.member?.first_name} {a.member?.surname}
+                                                                            </Link>
+                                                                            <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 flex items-center gap-1 mt-0.5">
+                                                                                <Icon size={10} /> {a.role.replace('_', ' ')}
+                                                                            </p>
+                                                                            {a.notes && (
+                                                                                <p className="text-[11px] text-gray-500 italic truncate mt-0.5">"{a.notes}"</p>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-[11px] font-mono uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                                                            No roles assigned.
+                                                            {canManageServices && <Link to={`/services/${service.id}`} className="text-[var(--color-primary)] hover:text-black">Assign roles</Link>}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             )}
-                                            <button
-                                                onClick={() => toggleServiceExpansion(service.id)}
-                                                className={`flex items-center justify-center gap-1 px-4 py-2 rounded-lg text-sm font-bold transition-all border ${isExpanded
-                                                    ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] border-[var(--color-border)]'
-                                                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                                                    }`}
-                                            >
-                                                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                                {isExpanded ? 'Hide Roster' : 'View Roster'}
-                                            </button>
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Expanded Roster View */}
-                                {isExpanded && (
-                                    <div className="border-t border-gray-100 bg-gray-50/50 p-6 animate-in slide-in-from-top duration-300">
-                                        <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4 flex items-center gap-2">
-                                            <UserCircle size={14} className="text-blue-500" />
-                                            Service Roster / Participation
-                                        </h4>
-
-                                        {loadingAssignments[service.id] ? (
-                                            <div className="flex items-center justify-center py-4">
-                                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
-                                            </div>
-                                        ) : serviceAssignments.length > 0 ? (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                                {serviceAssignments.map((a, idx) => {
-                                                    const Icon = ROLE_ICONS[a.role] || UserCircle;
-                                                    return (
-                                                        <div key={`${a.id}-${idx}`} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[var(--color-border)] shadow-sm transition-all hover:border-[var(--color-primary)] group">
-                                                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-[var(--color-border)]">
-                                                                {a.member?.profile_picture_url ? (
-                                                                    <img src={a.member.profile_picture_url} alt="" className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <div className="w-full h-full flex items-center justify-center text-gray-300"> <Users size={16} /> </div>
-                                                                )}
-                                                            </div>
-                                                            <div className="min-w-0 flex-1">
-                                                                <p className="text-[10px] font-black uppercase text-[var(--color-text-main)] tracking-tighter truncate flex items-center gap-1">
-                                                                    <Icon size={10} /> {a.role.replace('_', ' ')}
-                                                                </p>
-                                                                <Link to={`/members/${a.member_id}`} className="text-[13px] font-bold text-gray-900 group-hover:text-blue-700 truncate block">
-                                                                    {a.member?.first_name} {a.member?.surname}
-                                                                </Link>
-                                                                {a.notes && (
-                                                                    <p className="text-[11px] text-gray-400 italic truncate" title={a.notes}>"{a.notes}"</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-6 bg-white border border-[var(--color-border)] rounded-lg">
-                                                <p className="text-sm text-gray-400 font-medium">No service roles assigned for this date.</p>
-                                                {canManageServices && <Link to={`/services/${service.id}`} className="text-xs text-blue-500 font-bold hover:underline mt-1 inline-block">Click here to assign roles</Link>}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    })
-                )}
-                    </div>
-                )}
+                            )
+                        })
+                    )}
+                </div>
             </div>
 
             <ConfirmModal
