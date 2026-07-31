@@ -36,7 +36,7 @@ const ServiceRolesPanel: React.FC<Props> = ({ assignments, onAssign, onRemove, o
                                 {(isMulti || roleAssignments.length === 0) && (
                                     <button
                                         onClick={() => onAssign(role)}
-                                        className="text-[11px] font-bold text-[var(--color-text-main)] hover:text-blue-700 flex items-center gap-1 px-2 py-1 bg-gray-50 rounded-none transition-colors"
+                                        className="text-[11px] font-bold text-[var(--color-text-main)] hover:text-blue-700 flex items-center gap-1 px-2 py-1 bg-gray-50 rounded-lg transition-colors"
                                     >
                                         <Plus size={12} /> Assign {isMulti ? 'More' : ''}
                                     </button>
@@ -45,10 +45,10 @@ const ServiceRolesPanel: React.FC<Props> = ({ assignments, onAssign, onRemove, o
 
                             <div className="space-y-2">
                                 {roleAssignments.map((a, idx) => (
-                                    <div key={`${a.member_id}-${idx}`} className="flex flex-col gap-2 p-3 bg-gray-50 rounded-none border border-gray-100 group">
+                                    <div key={`${a.member_id}-${idx}`} className="flex flex-col gap-2 p-3 bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] group">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-none overflow-hidden bg-gray-200 border border-white shadow-sm">
+                                                <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-200 border border-[var(--color-border)] shadow-sm">
                                                     {a.member?.profile_picture_url ? (
                                                         <img src={a.member.profile_picture_url} alt="" className="w-full h-full object-cover" />
                                                     ) : (
@@ -63,7 +63,7 @@ const ServiceRolesPanel: React.FC<Props> = ({ assignments, onAssign, onRemove, o
                                             </div>
                                             <button
                                                 onClick={() => onRemove(a.member_id!, role)}
-                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-none transition-all opacity-0 group-hover:opacity-100"
+                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                             >
                                                 <IconX size={14} />
                                             </button>
@@ -73,7 +73,7 @@ const ServiceRolesPanel: React.FC<Props> = ({ assignments, onAssign, onRemove, o
                                             placeholder="Notes/Assignments (e.g. Lead, Alto, etc.)"
                                             value={a.notes || ''}
                                             onChange={(e) => onUpdateNotes(a.member_id!, role, e.target.value)}
-                                            className="text-xs bg-white border border-gray-100 rounded-none px-2 py-1.5 focus:border-blue-200 outline-none placeholder:text-gray-300"
+                                            className="text-xs bg-white border border-[var(--color-border)] rounded-lg px-2 py-1.5 focus:border-[var(--color-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
                                         />
                                     </div>
                                 ))}

@@ -23,7 +23,7 @@ const ServiceStatsPanel: React.FC<Props> = ({ service, isPrimaryService, newVisi
                 </h3>
 
                 <div className="space-y-4">
-                    <div className="p-4 bg-[var(--color-primary)]/10 rounded-none border border-[var(--color-primary)]/20 text-center">
+                    <div className="p-4 bg-[var(--color-primary)]/10 rounded-lg border border-[var(--color-primary)]/20 text-center">
                         <p className="text-[0.7rem] uppercase tracking-[0.1em] text-[var(--color-text-muted)] font-semibold mb-1">Total Attendance</p>
                         <p className="text-4xl font-bold text-[var(--color-primary-dark)] tracking-tight tabular-nums">{service.total_attendance}</p>
                     </div>
@@ -37,14 +37,14 @@ const ServiceStatsPanel: React.FC<Props> = ({ service, isPrimaryService, newVisi
                             <button
                                 type="button"
                                 onClick={onMarkAllPresent}
-                                className="w-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-300 py-2.5 rounded-none text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
+                                className="w-full bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 hover:border-green-300 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
                             >
                                 <UserCheck size={18} className="shrink-0" /> <span>Mark All Present</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={onOpenAttendance}
-                                className="w-full bg-gray-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 py-2.5 rounded-none text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
+                                className="w-full bg-gray-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
                             >
                                 <Users size={18} className="shrink-0" /> <span>Manage Attendance Report</span>
                             </button>

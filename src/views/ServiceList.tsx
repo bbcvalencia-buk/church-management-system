@@ -135,7 +135,7 @@ const ServiceList: React.FC = () => {
                 <div className="flex gap-3">
                     <Link
                         to="/announcements"
-                        className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-sm font-medium"
+                        className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-medium"
                     >
                         <Calendar size={18} className="text-gray-500" />
                         <span className="hidden sm:inline">Announcements</span>
@@ -143,7 +143,7 @@ const ServiceList: React.FC = () => {
                     {canManageServices && (
                         <Link
                             to="/services/new"
-                            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-lg  font-medium"
+                            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg  font-medium"
                         >
                             <Plus size={18} />
                             <span>Log Service</span>
@@ -164,7 +164,7 @@ const ServiceList: React.FC = () => {
                         placeholder="Search sermon titles..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-main)] placeholder-gray-400 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-none py-2 transition-all"
+                        className="w-full pl-10 bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-main)] placeholder-gray-400 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-lg py-2 transition-all"
                     />
                 </div>
                 <div className="flex items-center gap-2 w-full md:w-auto">
@@ -172,7 +172,7 @@ const ServiceList: React.FC = () => {
                     <select
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value)}
-                        className="bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-none py-2 px-3 transition-all"
+                        className="bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-lg py-2 px-3 transition-all"
                     >
                         <option value="all">All Services</option>
                         <option value="sunday_morning">Sunday Morning</option>
@@ -188,7 +188,7 @@ const ServiceList: React.FC = () => {
             <div className="space-y-4">
                 <button
                     onClick={() => setShowServicesList(!showServicesList)}
-                    className="w-full flex items-center justify-between p-4 bg-white border border-[var(--color-border)] rounded-none shadow-sm hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-between p-4 bg-white border border-[var(--color-border)] rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
                 >
                     <span className="font-bold text-[var(--color-text-main)]">
                         {showServicesList ? "Hide Services List" : "View Services List"}
@@ -219,7 +219,7 @@ const ServiceList: React.FC = () => {
                                                 id: service.id,
                                                 title: service.sermon_title || "Untitled Service"
                                             })}
-                                            className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-2 bg-gray-100/50 hover:bg-red-50 rounded-none z-10"
+                                            className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-2 bg-gray-100/50 hover:bg-red-50 rounded-lg z-10"
                                             title="Delete"
                                         >
                                             <Trash2 size={16} />
@@ -228,7 +228,7 @@ const ServiceList: React.FC = () => {
 
                                     <div className="flex flex-col md:flex-row gap-6">
                                         {/* Date Block */}
-                                        <div className="flex-shrink-0 flex flex-row md:flex-col items-center justify-center bg-gray-50 border border-blue-100 rounded-none p-3 w-full md:w-24 gap-3 md:gap-0">
+                                        <div className="flex-shrink-0 flex flex-row md:flex-col items-center justify-center bg-gray-50 border border-blue-100 rounded-lg p-3 w-full md:w-24 gap-3 md:gap-0">
                                             <div className="text-xs uppercase font-bold text-[var(--color-primary)]">
                                                 {new Date(service.service_date).toLocaleString('default', { month: 'short' }).toUpperCase()}
                                             </div>
@@ -245,7 +245,7 @@ const ServiceList: React.FC = () => {
                                             <div className="flex items-center gap-3">
                                                 <span className={`
                                                     px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide
-                                                    ${service.service_type.includes('sunday') ? 'bg-gray-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'}
+                                                    ${'bg-[var(--color-primary)] text-[var(--color-bg)]'}
                                                 `}>
                                                     {formatServiceType(service.service_type)}
                                                 </span>
@@ -306,7 +306,7 @@ const ServiceList: React.FC = () => {
                                             )}
                                             <button
                                                 onClick={() => toggleServiceExpansion(service.id)}
-                                                className={`flex items-center justify-center gap-1 px-4 py-2 rounded-none text-sm font-bold transition-all border ${isExpanded
+                                                className={`flex items-center justify-center gap-1 px-4 py-2 rounded-lg text-sm font-bold transition-all border ${isExpanded
                                                     ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] border-[var(--color-border)]'
                                                     : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
                                                     }`}
@@ -328,15 +328,15 @@ const ServiceList: React.FC = () => {
 
                                         {loadingAssignments[service.id] ? (
                                             <div className="flex items-center justify-center py-4">
-                                                <div className="animate-spin rounded-none h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
                                             </div>
                                         ) : serviceAssignments.length > 0 ? (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                                 {serviceAssignments.map((a, idx) => {
                                                     const Icon = ROLE_ICONS[a.role] || UserCircle;
                                                     return (
-                                                        <div key={`${a.id}-${idx}`} className="flex items-center gap-3 p-3 bg-white rounded-none border border-gray-100 shadow-sm transition-all hover:border-blue-200 group">
-                                                            <div className="w-10 h-10 rounded-none overflow-hidden bg-gray-100 shrink-0 border-2 border-white shadow-sm ring-1 ring-gray-100">
+                                                        <div key={`${a.id}-${idx}`} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-[var(--color-border)] shadow-sm transition-all hover:border-[var(--color-primary)] group">
+                                                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-[var(--color-border)]">
                                                                 {a.member?.profile_picture_url ? (
                                                                     <img src={a.member.profile_picture_url} alt="" className="w-full h-full object-cover" />
                                                                 ) : (
@@ -359,7 +359,7 @@ const ServiceList: React.FC = () => {
                                                 })}
                                             </div>
                                         ) : (
-                                            <div className="text-center py-6 bg-white border border-dashed border-gray-200 rounded-none">
+                                            <div className="text-center py-6 bg-white border border-[var(--color-border)] rounded-lg">
                                                 <p className="text-sm text-gray-400 font-medium">No service roles assigned for this date.</p>
                                                 {canManageServices && <Link to={`/services/${service.id}`} className="text-xs text-blue-500 font-bold hover:underline mt-1 inline-block">Click here to assign roles</Link>}
                                             </div>
