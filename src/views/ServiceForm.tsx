@@ -617,10 +617,10 @@ const ServiceForm: React.FC = () => {
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 className="text-[1.95rem] leading-tight font-semibold tracking-tight text-[var(--color-text-main)]">
+                        <h1 className="text-3xl font-serif tracking-tight text-[#2C2420]">
                             {isEditMode ? "Edit Service Record" : "Log New Service"}
                         </h1>
-                        <p className="text-sm leading-5 text-[var(--color-text-muted)]">
+                        <p className="text-sm font-bold uppercase tracking-widest text-[#7A7068] mt-1">
                             {new Date().toDateString()}
                         </p>
                     </div>
@@ -629,7 +629,7 @@ const ServiceForm: React.FC = () => {
                     {isEditMode && (
                         <button
                             onClick={() => setShowConfirmDelete(true)}
-                            className="btn btn-ghost text-red-500 hover:text-red-700 hover:bg-red-50 border-red-200"
+                            className="bg-white border border-[#E5E0D8] text-red-600 px-5 py-2.5 rounded-none font-bold uppercase tracking-wider text-xs shadow-sm hover:bg-red-50 hover:border-red-200 transition-colors flex items-center gap-2"
                         >
                             <Trash2 size={16} /> Delete
                         </button>
@@ -637,29 +637,29 @@ const ServiceForm: React.FC = () => {
                     <button
                         onClick={handleSubmit}
                         disabled={saving}
-                        className="btn btn-primary disabled:opacity-50"
+                        className="bg-[#2C2420] text-white px-5 py-2.5 rounded-none font-bold uppercase tracking-wider text-xs shadow-md hover:bg-black transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
-                        <Save size={18} /> {saving ? 'Saving...' : 'Save Record'}
+                        <Save size={16} /> {saving ? 'Saving...' : 'Save Record'}
                     </button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans">
                 {/* Left Column: Details */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Basic Info */}
-                    <div className="card-panel p-6 space-y-4 bg-white">
-                        <h3 className="text-[1.22rem] leading-6 font-semibold tracking-tight flex items-center gap-2 mb-4 text-[var(--color-text-main)]">
-                            <Calendar className="text-[var(--color-primary)]" size={20} />
+                    <div className="bg-[#FDFBF7] border border-[#E5E0D8] rounded-none p-6 space-y-5">
+                        <h3 className="text-lg font-serif text-[#2C2420] flex items-center gap-2 border-b border-[#E5E0D8] pb-3">
+                            <Calendar className="text-[#7A7068]" size={18} />
                             Service Details
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div className="space-y-2">
-                                <label className="form-label">Service Type</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-[#7A7068] block">Service Type</label>
                                 <select
                                     value={service.service_type}
                                     onChange={(e) => update('service_type', e.target.value)}
-                                    className="form-control"
+                                    className="w-full bg-white border border-[#E5E0D8] text-[#2C2420] rounded-none py-2.5 px-3 focus:ring-2 focus:ring-[#2C2420]/10 focus:border-[#2C2420] outline-none shadow-sm transition-all"
                                 >
                                     <option value="sunday_morning">Sunday Morning</option>
                                     <option value="sunday_afternoon">Sunday Afternoon</option>
@@ -669,20 +669,20 @@ const ServiceForm: React.FC = () => {
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <label className="form-label">Date & Time</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-[#7A7068] block">Date & Time</label>
                                 <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_8.5rem] gap-2">
                                     <input
                                         type="date"
                                         value={service.service_date}
                                         onChange={(e) => update('service_date', e.target.value)}
-                                        className="form-control min-w-0"
+                                        className="w-full bg-white border border-[#E5E0D8] text-[#2C2420] rounded-none py-2.5 px-3 focus:ring-2 focus:ring-[#2C2420]/10 focus:border-[#2C2420] outline-none shadow-sm transition-all min-w-0"
                                         required
                                     />
                                     <input
                                         type="time"
                                         value={service.service_time?.substring(0, 5)} // Handle HH:MM:SS from DB
                                         onChange={(e) => update('service_time', e.target.value)}
-                                        className="form-control min-w-0"
+                                        className="w-full bg-white border border-[#E5E0D8] text-[#2C2420] rounded-none py-2.5 px-3 focus:ring-2 focus:ring-[#2C2420]/10 focus:border-[#2C2420] outline-none shadow-sm transition-all min-w-0"
                                     />
                                 </div>
                                 {serviceDateWarning && (
@@ -702,29 +702,29 @@ const ServiceForm: React.FC = () => {
                     />
 
                     {/* Sermon */}
-                    <div className="card-panel p-6 space-y-4 bg-white">
-                        <h3 className="text-[1.22rem] leading-6 font-semibold tracking-tight flex items-center gap-2 mb-4 text-[var(--color-text-main)]">
-                            <BookOpen className="text-[var(--color-primary)]" size={20} />
+                    <div className="bg-[#FDFBF7] border border-[#E5E0D8] rounded-none p-6 space-y-5">
+                        <h3 className="text-lg font-serif text-[#2C2420] flex items-center gap-2 border-b border-[#E5E0D8] pb-3">
+                            <BookOpen className="text-[#7A7068]" size={18} />
                             Message / Word
                         </h3>
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <div className="space-y-2">
-                                <label className="form-label">Sermon Title</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-[#7A7068] block">Sermon Title</label>
                                 <input
                                     type="text"
                                     value={service.sermon_title || ''}
                                     onChange={(e) => update('sermon_title', e.target.value)}
                                     placeholder="e.g. Walking by Faith"
-                                    className="form-control"
+                                    className="w-full bg-white border border-[#E5E0D8] text-[#2C2420] rounded-none py-2.5 px-3 focus:ring-2 focus:ring-[#2C2420]/10 focus:border-[#2C2420] outline-none shadow-sm transition-all placeholder-[#A0988F]"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <label className="form-label">Notes / Key Verses</label>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-[#7A7068] block">Notes / Key Verses</label>
                                 <textarea
                                     value={service.sermon_notes || ''}
                                     onChange={(e) => update('sermon_notes', e.target.value)}
                                     placeholder="e.g. Hebrews 11:1..."
-                                    className="form-control form-textarea"
+                                    className="w-full bg-white border border-[#E5E0D8] text-[#2C2420] rounded-none py-2.5 px-3 focus:ring-2 focus:ring-[#2C2420]/10 focus:border-[#2C2420] outline-none shadow-sm transition-all min-h-[120px] placeholder-[#A0988F]"
                                 />
                             </div>
                         </div>
@@ -744,7 +744,7 @@ const ServiceForm: React.FC = () => {
                 {/* New Visitors Panel */}
                 {isPrimaryService && (
                     <div className="lg:col-span-3">
-                        <div className="card-panel p-6 bg-white">
+                        <div className="bg-[#FDFBF7] border border-[#E5E0D8] rounded-none p-6">
                             <QuickVisitorRegistration
                                 visitors={newVisitors}
                                 onChange={setNewVisitors}
