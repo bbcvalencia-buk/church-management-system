@@ -129,7 +129,7 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleOpenModal(session)}
-                                                                    className="px-3 py-1.5 bg-gray-50 text-[var(--color-text-main)] hover:bg-blue-100 hover:text-blue-700 rounded-none text-xs font-bold transition-colors flex items-center gap-1.5 border border-blue-200"
+                                                                    className="px-3 py-1.5 bg-gray-50 text-[var(--color-text-main)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] rounded-none text-xs font-bold transition-colors flex items-center gap-1.5 border border-[var(--color-primary-light)]"
                                                                     title="Edit Report"
                                                                 >
                                                                     <Edit2 size={14} /> Edit
@@ -243,7 +243,7 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                                                         {isManaged ? (
                                                                             <button
                                                                                 onClick={() => handleOpenModal(session)}
-                                                                                className="px-3 py-1.5 bg-gray-50 text-[var(--color-text-main)] hover:bg-blue-100 hover:text-blue-700 rounded-none text-xs font-bold transition-colors flex items-center gap-1.5 border border-blue-200"
+                                                                                className="px-3 py-1.5 bg-gray-50 text-[var(--color-text-main)] hover:bg-[var(--color-primary-light)] hover:text-[var(--color-primary)] rounded-none text-xs font-bold transition-colors flex items-center gap-1.5 border border-[var(--color-primary-light)]"
                                                                                 title="Edit Report"
                                                                             >
                                                                                 <Edit2 size={14} /> Edit

@@ -27,8 +27,8 @@ const ServiceRolesPanel: React.FC<Props> = ({ assignments, onAssign, onRemove, o
                         <div key={role} className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <label className="text-xs font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
-                                    {role === 'pastor' && <Shield size={14} className="text-blue-500" />}
-                                    {role === 'preacher' && <BookOpen size={14} className="text-purple-500" />}
+                                    {role === 'pastor' && <Shield size={14} className="text-[var(--color-primary)]" />}
+                                    {role === 'preacher' && <BookOpen size={14} className="text-[var(--color-primary)]" />}
                                     {role === 'choir' && <Music size={14} className="text-indigo-500" />}
                                     {role === 'songleader' && <Mic size={14} className="text-pink-500" />}
                                     {ROLE_LABELS[role]}
@@ -36,7 +36,7 @@ const ServiceRolesPanel: React.FC<Props> = ({ assignments, onAssign, onRemove, o
                                 {(isMulti || roleAssignments.length === 0) && (
                                     <button
                                         onClick={() => onAssign(role)}
-                                        className="text-[11px] font-bold text-[var(--color-text-main)] hover:text-blue-700 flex items-center gap-1 px-2 py-1 bg-gray-50 rounded-lg transition-colors"
+                                        className="text-[11px] font-bold text-[var(--color-text-main)] hover:text-[var(--color-primary)] flex items-center gap-1 px-2 py-1 bg-gray-50 rounded-lg transition-colors"
                                     >
                                         <Plus size={12} /> Assign {isMulti ? 'More' : ''}
                                     </button>

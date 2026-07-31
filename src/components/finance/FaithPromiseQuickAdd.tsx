@@ -82,7 +82,7 @@ const FaithPromiseQuickAdd: React.FC<Props> = ({ memberId, memberName, year, onC
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
                             max={new Date().toISOString().split('T')[0]} // Not allowing future
-                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                         />
                     </div>
 
@@ -98,7 +98,7 @@ const FaithPromiseQuickAdd: React.FC<Props> = ({ memberId, memberName, year, onC
                                 placeholder="0.00"
                                 value={amount}
                                 onChange={(e) => setAmount(parseFloat(e.target.value) || '')}
-                                className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 font-mono text-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 font-mono text-lg focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                             />
                         </div>
                     </div>

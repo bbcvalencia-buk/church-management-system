@@ -67,7 +67,7 @@ export const TreasuryActionHeader: React.FC<TreasuryActionHeaderProps> = ({
                         {canManageTreasury && (
                             <button
                                 onClick={() => setShowPledgeForm(true)}
-                                className="bg-[var(--color-primary)] hover:bg-violet-600 text-[var(--color-text-main)] px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20 font-bold"
+                                className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors font-bold"
                             >
                                 <Plus size={18} />
                                 <span>New Pledge</span>
@@ -77,7 +77,7 @@ export const TreasuryActionHeader: React.FC<TreasuryActionHeaderProps> = ({
                 ) : canManageTreasury ? (
                     <Link
                         to="/finance/new"
-                        className="bg-[var(--color-primary)] hover:bg-violet-600 text-[var(--color-text-main)] px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20"
+                        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
                     >
                         <Plus size={18} />
                         <span>New Entry</span>

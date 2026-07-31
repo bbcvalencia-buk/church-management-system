@@ -225,14 +225,14 @@ const MyFinancialRecords: React.FC = () => {
                             <tr key={row.date} className="border-b border-gray-100 last:border-b-0">
                                 <td className="px-2 py-1 text-slate-700 font-semibold">{row.day}</td>
                                 <td className="px-2 py-1 text-right">{formatAmount(row.tithe)}</td>
-                                <td className="px-2 py-1 text-right text-blue-700">{formatAmount(row.fp)}</td>
+                                <td className="px-2 py-1 text-right text-[var(--color-primary)]">{formatAmount(row.fp)}</td>
                                 <td className="px-2 py-1 text-right">{formatAmount(row.loveGift)}</td>
                             </tr>
                         ))}
                         <tr className="bg-slate-50 border-t border-slate-200 font-bold text-slate-800">
                             <td className="px-2 py-1">TOTAL</td>
                             <td className="px-2 py-1 text-right">{formatAmount(month.totals.tithe)}</td>
-                            <td className="px-2 py-1 text-right text-blue-700">{formatAmount(month.totals.fp)}</td>
+                            <td className="px-2 py-1 text-right text-[var(--color-primary)]">{formatAmount(month.totals.fp)}</td>
                             <td className="px-2 py-1 text-right">{formatAmount(month.totals.loveGift)}</td>
                         </tr>
                     </tbody>
@@ -293,8 +293,8 @@ const MyFinancialRecords: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className="px-6 py-4 bg-gray-500/10 border-t border-blue-500/20">
-                    <p className="text-sm text-blue-800">
+                <div className="px-6 py-4 bg-gray-500/10 border-t border-[var(--color-primary)]/20">
+                    <p className="text-sm text-[var(--color-primary)]">
                         Note: The records below are for {selectedYear} only and do not include last year. If you notice errors, please contact the admin.
                     </p>
                 </div>
@@ -319,7 +319,7 @@ const MyFinancialRecords: React.FC = () => {
                     </div>
                     <div className="text-right">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">FP / Sunday (Annual / 52)</p>
-                        <p className="text-[32px] font-black text-blue-700">P{formatAmount(fpPerSunday52, false)}</p>
+                        <p className="text-[32px] font-black text-[var(--color-primary)]">P{formatAmount(fpPerSunday52, false)}</p>
                     </div>
                 </div>
 
@@ -333,7 +333,7 @@ const MyFinancialRecords: React.FC = () => {
                         <p className="text-sm font-black uppercase text-slate-900">Financial Summary</p>
                         <div className="mt-2 space-y-1 text-sm">
                             <p>Total Tithes: <span className="font-bold">P{formatAmount(totals.tithe, false)}</span></p>
-                            <p>Total Faith Promise Given: <span className="font-bold text-blue-700">P{formatAmount(totals.faith_promise, false)}</span></p>
+                            <p>Total Faith Promise Given: <span className="font-bold text-[var(--color-primary)]">P{formatAmount(totals.faith_promise, false)}</span></p>
                             <p>Total Love Gifts: <span className="font-bold">P{formatAmount(totals.love_gift, false)}</span></p>
                             <p>Total Recorded: <span className="font-bold">P{formatAmount(totals.total, false)}</span></p>
                         </div>
@@ -360,9 +360,9 @@ const MyFinancialRecords: React.FC = () => {
                     <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Love Gift</p>
                     <p className="text-lg font-black text-gray-900 mt-2">{formatCurrency(totals.love_gift)}</p>
                 </div>
-                <div className="bg-gray-50 border border-blue-100 rounded-none p-4">
+                <div className="bg-gray-50 border border-[var(--color-primary-light)] rounded-none p-4">
                     <p className="text-[11px] font-bold text-[var(--color-text-main)] uppercase tracking-widest">Total</p>
-                    <p className="text-lg font-black text-blue-700 mt-2">{formatCurrency(totals.total)}</p>
+                    <p className="text-lg font-black text-[var(--color-primary)] mt-2">{formatCurrency(totals.total)}</p>
                 </div>
             </div>
         </div>

@@ -91,7 +91,7 @@ export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({
                                     <button
                                         key={member.id}
                                         onClick={() => onSelect(member.id)}
-                                        className={`w-full text-left p-3 rounded-none border transition-colors flex items-center justify-between ${isSelected ? 'border-[var(--color-primary)] bg-gray-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-[var(--color-primary)] hover:bg-gray-50 dark:hover:bg-blue-900/20'}`}
+                                        className={`w-full text-left p-3 rounded-none border transition-colors flex items-center justify-between ${isSelected ? 'border-[var(--color-primary)] bg-gray-50 dark:bg-[var(--color-primary)]/20' : 'border-gray-200 dark:border-gray-700 hover:border-[var(--color-primary)] hover:bg-gray-50 dark:hover:bg-[var(--color-primary)]/20'}`}
                                     >
                                         <div>
                                             <div className="font-medium text-gray-900 dark:text-[var(--color-text-main)] flex items-center gap-2">

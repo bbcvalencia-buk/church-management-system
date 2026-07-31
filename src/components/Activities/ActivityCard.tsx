@@ -28,9 +28,9 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, setViewAct
             <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-none flex items-center justify-center 
                     ${activity.activity_type === 'soul_winning' ? 'bg-red-50 text-red-500' :
-                        activity.activity_type === 'bible_study' ? 'bg-gray-50 text-blue-500' :
-                            activity.activity_type === 'visitation' ? 'bg-purple-50 text-purple-500' :
-                                'bg-purple-50 text-purple-500'}`}
+                        activity.activity_type === 'bible_study' ? 'bg-gray-50 text-[var(--color-primary)]' :
+                            activity.activity_type === 'visitation' ? 'bg-[var(--color-primary-light)] text-[var(--color-primary)]' :
+                                'bg-[var(--color-primary-light)] text-[var(--color-primary)]'}`}
                 >
                     {activity.activity_type === 'visitation' ? <UserCheck size={20} /> :
                         activity.activity_type === 'bible_study' ? <BookOpen size={20} /> :
@@ -82,7 +82,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, setViewAct
                 <div className="text-center p-2 rounded bg-gray-50">
                     <p className="text-xs text-[var(--color-text-muted)] uppercase font-bold mb-1">Attendance</p>
                     <p className="text-lg font-bold flex items-center justify-center gap-2">
-                        <Users size={16} className="text-blue-500" />
+                        <Users size={16} className="text-[var(--color-primary)]" />
                         {activity.total_attendance}
                     </p>
                 </div>
@@ -94,7 +94,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, setViewAct
                     </p>
                 </div>
             </div>
-            <p className="text-[10px] text-blue-400/70 mt-1 uppercase font-bold text-right group-hover:text-[var(--color-text-main)] transition-colors">Click to view details</p>
+            <p className="text-[10px] text-[var(--color-primary)]/70 mt-1 uppercase font-bold text-right group-hover:text-[var(--color-text-main)] transition-colors">Click to view details</p>
         </div>
     );
 };

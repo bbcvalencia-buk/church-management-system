@@ -63,7 +63,7 @@ const ActivityHistory: React.FC<ActivityHistoryProps> = ({
                                                     <p className="text-[11px] font-bold text-[var(--color-text-main)] uppercase tracking-tighter mt-0.5">{a.service?.service_type?.replace(/_/g, ' ')}</p>
                                                 </td>
                                                 <td className="px-6 py-5">
-                                                    <span className="inline-flex items-center px-3 py-1 rounded-none bg-blue-100 text-blue-700 font-black uppercase text-[10px] tracking-tight">{a.role.replace(/_/g, ' ')}</span>
+                                                    <span className="inline-flex items-center px-3 py-1 rounded-none bg-[var(--color-primary-light)] text-[var(--color-primary)] font-black uppercase text-[10px] tracking-tight">{a.role.replace(/_/g, ' ')}</span>
                                                 </td>
                                                 <td className="px-6 py-5 text-right">
                                                     <p className="text-sm text-gray-500 italic font-medium">{a.notes ? `"${a.notes}"` : '—'}</p>
@@ -99,9 +99,9 @@ const ActivityHistory: React.FC<ActivityHistoryProps> = ({
                                     <p className="text-[10px] font-black text-green-600 uppercase tracking-widest mb-1">Total Sessions Participated</p>
                                     <p className="text-2xl font-black text-green-700">{goodnewsAssignments.length}<span className="text-xs ml-1 opacity-60">sessions</span></p>
                                 </div>
-                                <div className="bg-gray-50/50 border border-blue-100/50 p-4 rounded-none transition-all hover:bg-gray-50">
+                                <div className="bg-gray-50/50 border border-[var(--color-primary-light)] p-4 rounded-none transition-all hover:bg-gray-50">
                                     <p className="text-[10px] font-black text-[var(--color-text-main)] uppercase tracking-widest mb-1">Unique Series Reached</p>
-                                    <p className="text-2xl font-black text-blue-700">{new Set(goodnewsAssignments.map(a => a.session?.series_id)).size}<span className="text-xs ml-1 opacity-60">series</span></p>
+                                    <p className="text-2xl font-black text-[var(--color-primary)]">{new Set(goodnewsAssignments.map(a => a.session?.series_id)).size}<span className="text-xs ml-1 opacity-60">series</span></p>
                                 </div>
                             </div>
 
@@ -159,19 +159,19 @@ const ActivityHistory: React.FC<ActivityHistoryProps> = ({
                             </div>
                             <p className="text-3xl font-black text-green-700">{attendanceInsights.sundayMorningNet}</p>
                         </div>
-                        <div className="p-4 rounded-none bg-gray-50/50 border border-blue-100 flex items-center justify-between">
+                        <div className="p-4 rounded-none bg-gray-50/50 border border-[var(--color-primary-light)] flex items-center justify-between">
                             <div>
                                 <p className="text-[10px] font-black text-[var(--color-text-main)] uppercase tracking-widest mb-1">Sunday Afternoon</p>
-                                <p className="text-xs text-blue-700/60 font-bold">Total Services</p>
+                                <p className="text-xs text-[var(--color-primary)]/60 font-bold">Total Services</p>
                             </div>
-                            <p className="text-3xl font-black text-blue-700">{attendanceInsights.sundayAfternoon}</p>
+                            <p className="text-3xl font-black text-[var(--color-primary)]">{attendanceInsights.sundayAfternoon}</p>
                         </div>
-                        <div className="p-4 rounded-none bg-purple-50/50 border border-purple-100 flex items-center justify-between">
+                        <div className="p-4 rounded-none bg-[var(--color-primary-light)]/50 border border-[var(--color-primary-light)] flex items-center justify-between">
                             <div>
-                                <p className="text-[10px] font-black text-purple-600 uppercase tracking-widest mb-1">Wednesday Prayer</p>
-                                <p className="text-xs text-purple-700/60 font-bold">Midweek Service</p>
+                                <p className="text-[10px] font-black text-[var(--color-primary)] uppercase tracking-widest mb-1">Wednesday Prayer</p>
+                                <p className="text-xs text-[var(--color-primary)]/60 font-bold">Midweek Service</p>
                             </div>
-                            <p className="text-3xl font-black text-purple-700">{attendanceInsights.wednesdayPrayer}</p>
+                            <p className="text-3xl font-black text-[var(--color-primary)]">{attendanceInsights.wednesdayPrayer}</p>
                         </div>
                         <div className="pt-4 border-t border-gray-100">
                             <div className="flex items-center justify-between px-2">
@@ -199,7 +199,7 @@ const ActivityHistory: React.FC<ActivityHistoryProps> = ({
 
                 {canManageProfiles && !hasSystemAccess && member.email && (
                     <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 p-6">
-                        <h4 className="text-sm font-black text-blue-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <h4 className="text-sm font-black text-[var(--color-primary)] uppercase tracking-widest mb-4 flex items-center gap-2">
                             <Lock size={16} /> System Access
                         </h4>
                         <p className="text-xs text-gray-600 mb-4 leading-relaxed">
@@ -208,7 +208,7 @@ const ActivityHistory: React.FC<ActivityHistoryProps> = ({
                         <button
                             onClick={handleSendInvite}
                             disabled={sendingInvite}
-                            className="w-full flex justify-center items-center py-2.5 px-4 border border-blue-200 rounded-none text-sm font-bold text-blue-700 bg-gray-50 hover:bg-blue-100 transition-colors disabled:opacity-50"
+                            className="w-full flex justify-center items-center py-2.5 px-4 border border-[var(--color-primary-light)] rounded-none text-sm font-bold text-[var(--color-primary)] bg-gray-50 hover:bg-[var(--color-primary-light)] transition-colors disabled:opacity-50"
                         >
                             {sendingInvite ? 'Sending...' : 'Send App Invite'}
                         </button>

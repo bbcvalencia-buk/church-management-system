@@ -35,11 +35,11 @@ import type { ChurchEvent } from "../types";
 
 
 const EVENT_TYPES = [
-    { value: 'fellowship', label: 'Fellowship', icon: Users, color: 'bg-gray-500/10 text-blue-500' },
+    { value: 'fellowship', label: 'Fellowship', icon: Users, color: 'bg-gray-500/10 text-[var(--color-primary)]' },
     { value: 'bible_quiz', label: 'Bible Quiz', icon: Award, color: 'bg-amber-500/10 text-amber-500' },
     { value: 'camp', label: 'Camp', icon: Tent, color: 'bg-emerald-500/10 text-emerald-500' },
     { value: 'anniversary', label: 'Anniversary', icon: PartyPopper, color: 'bg-rose-500/10 text-rose-500' },
-    { value: 'special_program', label: 'Special Program', icon: Star, color: 'bg-purple-500/10 text-purple-500' },
+    { value: 'special_program', label: 'Special Program', icon: Star, color: 'bg-[var(--color-primary-light)]0/10 text-[var(--color-primary)]' },
     { value: 'thanksgiving', label: 'Thanksgiving', icon: Heart, color: 'bg-orange-500/10 text-orange-500' },
     { value: 'other', label: 'Other', icon: Calendar, color: 'bg-gray-500/10 text-gray-500' },
 ];
@@ -268,7 +268,7 @@ const ChurchEvents: React.FC = () => {
                     onClick={() => setFilterType('all')}
                     className={`px-5 py-2.5 rounded-none font-bold text-sm transition-all whitespace-nowrap shadow-sm border ${filterType === 'all'
                         ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] border-[var(--color-border)]'
-                        : 'bg-white text-gray-500 border-gray-100 hover:border-blue-200'
+                        : 'bg-white text-gray-500 border-gray-100 hover:border-[var(--color-primary-light)]'
                         }`}
                 >
                     All Events
@@ -279,7 +279,7 @@ const ChurchEvents: React.FC = () => {
                         onClick={() => setFilterType(t.value)}
                         className={`px-5 py-2.5 rounded-none font-bold text-sm transition-all whitespace-nowrap shadow-sm border flex items-center gap-2 ${filterType === t.value
                             ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] border-[var(--color-border)]'
-                            : 'bg-white text-gray-500 border-gray-100 hover:border-blue-200'
+                            : 'bg-white text-gray-500 border-gray-100 hover:border-[var(--color-primary-light)]'
                             }`}
                     >
                         <t.icon size={16} />
@@ -310,7 +310,7 @@ const ChurchEvents: React.FC = () => {
                             <div
                                 key={event.id}
                                 onClick={() => handleOpenModal(event)}
-                                className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:border-blue-500/50 hover:shadow-xl hover: transition-all group cursor-pointer animate-in zoom-in-95"
+                                className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:border-[var(--color-primary)] hover:shadow-xl hover: transition-all group cursor-pointer animate-in zoom-in-95"
                             >
                                 <div className="flex justify-between items-start mb-6">
                                     <div className={`w-12 h-12 rounded-none flex items-center justify-center ${getTypeColor(event.event_type)} shadow-sm`}>
@@ -348,7 +348,7 @@ const ChurchEvents: React.FC = () => {
                                     <span className={`px-3 py-1 rounded-none text-[10px] font-black uppercase tracking-widest ${getTypeColor(event.event_type)}`}>
                                         {event.event_type.replace('_', ' ')}
                                     </span>
-                                    <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500 transition-all group-hover:translate-x-1" />
+                                    <ChevronRight size={18} className="text-gray-300 group-hover:text-[var(--color-primary)] transition-all group-hover:translate-x-1" />
                                 </div>
                             </div>
                         );
@@ -389,7 +389,7 @@ const ChurchEvents: React.FC = () => {
                                                     type="text"
                                                     value={form.event_name}
                                                     onChange={(e) => setForm({ ...form, event_name: e.target.value })}
-                                                    className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-base font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                    className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-base font-bold text-gray-900 focus:ring-4 focus:ring-[var(--color-primary)]/10 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                                     placeholder="e.g., Youth Summer Fellowship"
                                                 />
                                             </div>
@@ -401,7 +401,7 @@ const ChurchEvents: React.FC = () => {
                                                         type="text"
                                                         value={form.event_theme || ''}
                                                         onChange={(e) => setForm({ ...form, event_theme: e.target.value })}
-                                                        className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-base font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                        className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-base font-bold text-gray-900 focus:ring-4 focus:ring-[var(--color-primary)]/10 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                                         placeholder='e.g., "Faithful in All Seasons"'
                                                     />
                                                 </div>
@@ -413,7 +413,7 @@ const ChurchEvents: React.FC = () => {
                                                     <select
                                                         value={form.event_type}
                                                         onChange={(e) => setForm({ ...form, event_type: e.target.value as any })}
-                                                        className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm appearance-none"
+                                                        className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-[var(--color-primary)]/10 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm appearance-none"
                                                     >
                                                         {EVENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                                                     </select>
@@ -424,7 +424,7 @@ const ChurchEvents: React.FC = () => {
                                                         type="date"
                                                         value={form.event_date}
                                                         onChange={(e) => setForm({ ...form, event_date: e.target.value })}
-                                                        className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                        className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-[var(--color-primary)]/10 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                                     />
                                                 </div>
                                             </div>
@@ -435,7 +435,7 @@ const ChurchEvents: React.FC = () => {
                                                     type="text"
                                                     value={form.location}
                                                     onChange={(e) => setForm({ ...form, location: e.target.value })}
-                                                    className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                    className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-[var(--color-primary)]/10 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                                     placeholder="e.g., Church Main Hall"
                                                 />
                                             </div>
@@ -462,7 +462,7 @@ const ChurchEvents: React.FC = () => {
                                                     rows={4}
                                                     value={form.notes}
                                                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                                                    className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm resize-none"
+                                                    className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-[var(--color-primary)]/10 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm resize-none"
                                                     placeholder="Outline of the program, speakers, etc."
                                                 />
                                             </div>
@@ -487,7 +487,7 @@ const ChurchEvents: React.FC = () => {
                                                     </button>
                                                 </div>
                                             ))}
-                                            <label className="aspect-video rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 hover:border-blue-400 cursor-pointer transition-all group overflow-hidden relative">
+                                            <label className="aspect-video rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 hover:border-[var(--color-primary)] cursor-pointer transition-all group overflow-hidden relative">
                                                 {uploading ? (
                                                     <Loader2 className="animate-spin text-[var(--color-text-main)]" size={32} />
                                                 ) : (
@@ -522,7 +522,7 @@ const ChurchEvents: React.FC = () => {
                                                     min="0"
                                                     value={form.total_attendance}
                                                     onChange={(e) => setForm({ ...form, total_attendance: parseInt(e.target.value) || 0 })}
-                                                    className="w-full bg-gray-50 border border-gray-200 rounded-none px-4 py-2.5 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded-none px-4 py-2.5 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                                                     placeholder="Enter if higher than member count"
                                                 />
                                             </div>

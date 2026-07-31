@@ -55,7 +55,7 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
               type="text"
               value={groupDraftName}
               onChange={(e) => setGroupDraftName(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none font-semibold text-sm"
             />
           </div>
           <div className="space-y-1.5">
@@ -65,13 +65,13 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
               value={groupDraftSchedule}
               onChange={(e) => setGroupDraftSchedule(e.target.value)}
               placeholder="e.g. Sunday 8:30"
-              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none font-semibold text-sm"
             />
           </div>
           <button
             onClick={handleUpdateGroupMeta}
             disabled={savingGroupMeta || !groupDraftName.trim()}
-            className="w-full py-3 bg-[#2563eb] text-[var(--color-text-main)] rounded-none shadow-md text-sm font-bold hover:bg-[#1d4ed8] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-[var(--color-primary)] text-[var(--color-text-main)] rounded-none shadow-md text-sm font-bold hover:bg-[var(--color-primary-dark)] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {savingGroupMeta ? 'Saving Ministry Details...' : 'Save Ministry Name & Schedule'}
           </button>
@@ -147,7 +147,7 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
                 >
                   <Star size={16} className={m.full_pos?.is_ministry_head ? 'fill-current' : ''} />
                 </button>
-                <button onClick={() => { setManageGroup(null); handleOpenModal(null, m.full_pos); }} className="p-2 text-[var(--color-text-main)] bg-gray-50 hover:bg-blue-100 rounded-none transition-colors">
+                <button onClick={() => { setManageGroup(null); handleOpenModal(null, m.full_pos); }} className="p-2 text-[var(--color-text-main)] bg-gray-50 hover:bg-[var(--color-primary-light)] rounded-none transition-colors">
                   <Shield size={16} />
                 </button>
                 <button onClick={() => { setManageGroup(null); setConfirmRemove({ isOpen: true, assignment: m.full_pos }); }} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-none transition-colors">
@@ -161,7 +161,7 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
           )}
         </div>
 
-        <button onClick={() => { setManageGroup(null); handleOpenModal(manageGroup.name); }} className="w-full mt-6 py-3.5 border-2 border-dashed border-gray-200 rounded-none text-[var(--color-text-main)] font-bold hover:bg-gray-50/50 hover:border-blue-300 transition-all flex items-center justify-center gap-2">
+        <button onClick={() => { setManageGroup(null); handleOpenModal(manageGroup.name); }} className="w-full mt-6 py-3.5 border-2 border-dashed border-gray-200 rounded-none text-[var(--color-text-main)] font-bold hover:bg-gray-50/50 hover:border-[var(--color-primary)] transition-all flex items-center justify-center gap-2">
           <Plus size={16} strokeWidth={2.5} /> Add Member to Group
         </button>
       </div>

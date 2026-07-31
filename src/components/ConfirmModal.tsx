@@ -58,7 +58,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                             onClick={onConfirm}
                             className={`flex-1 px-4 py-2.5 rounded-none font-bold text-[var(--color-text-main)] shadow-lg transition-all active:scale-95 ${isDanger
                                 ? 'bg-red-600 hover:bg-red-500 shadow-red-500/20'
-                                : 'bg-[var(--color-primary)] hover:bg-violet-600 shadow-purple-500/20'
+                                : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)]'
                                 }`}
                         >
                             {confirmText}

@@ -31,7 +31,7 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
         </button>
 
         {/* Header / Hero */}
-        <div className="pt-8 pb-6 px-6 bg-gradient-to-b from-blue-50/50 to-white flex flex-col items-center border-b border-gray-100">
+        <div className="pt-8 pb-6 px-6 bg-gradient-to-b from-[var(--color-primary-light)]/50 to-white flex flex-col items-center border-b border-gray-100">
           <div className="relative mb-4">
             {viewingMember.profile_picture_url ? (
               <img
@@ -40,8 +40,8 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-none object-cover shadow-lg border-4 border-white"
               />
             ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-none bg-blue-100 flex items-center justify-center border-4 border-white shadow-lg">
-                <User size={40} className="text-blue-500" />
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-none bg-[var(--color-primary-light)] flex items-center justify-center border-4 border-white shadow-lg">
+                <User size={40} className="text-[var(--color-primary)]" />
               </div>
             )}
             {viewingMember.full_pos?.is_ministry_head && (
@@ -61,7 +61,7 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
               </span>
             )}
             {viewingMember.specific_role && (
-              <span className="bg-gray-50 text-blue-700 border border-blue-100/50 px-2.5 py-1 rounded-none text-[11px] font-black tracking-widest uppercase shadow-sm">
+              <span className="bg-gray-50 text-[var(--color-primary)] border border-[var(--color-primary-light)] px-2.5 py-1 rounded-none text-[11px] font-black tracking-widest uppercase shadow-sm">
                 {viewingMember.full_pos?.is_ministry_head ? `HEAD - ${viewingMember.specific_role}` : viewingMember.specific_role}
               </span>
             )}
@@ -115,7 +115,7 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
                 <div className="flex-1 space-y-3">
                   {memberServiceHistory.length > 0 ? (
                     memberServiceHistory.map(history => (
-                      <div key={history.id} className="relative pl-3 border-l-2 border-blue-100">
+                      <div key={history.id} className="relative pl-3 border-l-2 border-[var(--color-primary-light)]">
                         <p className="text-xs font-bold text-gray-900 capitalize leading-tight">
                           {history.role.replace('_', ' ')}
                           {history.notes && <span className="text-gray-400 font-normal"> - {history.notes}</span>}

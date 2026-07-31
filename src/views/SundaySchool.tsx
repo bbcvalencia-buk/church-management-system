@@ -858,7 +858,7 @@ const SundaySchool: React.FC = () => {
                                             type="date"
                                             value={newSession.session_date}
                                             onChange={(e) => setNewSession({ ...newSession, session_date: e.target.value })}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                     <div>
@@ -867,7 +867,7 @@ const SundaySchool: React.FC = () => {
                                             <select
                                                 value={newSession.department}
                                                 onChange={(e) => setNewSession({ ...newSession, department: e.target.value as any })}
-                                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm font-sans"
+                                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm font-sans"
                                             >
                                                 {availableDepartments.map((dept) => (
                                                     <option key={dept.id} value={dept.id}>
@@ -893,7 +893,7 @@ const SundaySchool: React.FC = () => {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="bg-gray-50 border border-blue-200 text-blue-800 rounded-none p-4 text-sm font-medium">
+                                    <div className="bg-gray-50 border border-[var(--color-primary-light)] text-[var(--color-primary)] rounded-none p-4 text-sm font-medium">
                                         <p>You are viewing this as an <strong>Administrator</strong>.</p>
                                     </div>
                                 )}
@@ -913,7 +913,7 @@ const SundaySchool: React.FC = () => {
                                         <label className="inline-flex items-center gap-2 text-xs text-gray-700 font-bold bg-gray-50 border border-gray-100 px-3 py-2.5 rounded-none cursor-pointer hover:bg-gray-100 transition-colors w-full">
                                             <input
                                                 type="checkbox"
-                                                className="w-4 h-4 rounded border-gray-300 text-[var(--color-text-main)] focus:ring-blue-500 focus:ring-2"
+                                                className="w-4 h-4 rounded border-gray-300 text-[var(--color-text-main)] focus:ring-[var(--color-primary)] focus:ring-2"
                                                 checked={searchAllRegistry}
                                                 onChange={(e) => setSearchAllRegistry(e.target.checked)}
                                             />
@@ -949,7 +949,7 @@ const SundaySchool: React.FC = () => {
                                                 min="0"
                                                 value={newSession.visitors_present}
                                                 onChange={(e) => setNewSession({ ...newSession, visitors_present: parseInt(e.target.value) || 0 })}
-                                                className="w-full border border-gray-200 rounded-none p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                className="w-full border border-gray-200 rounded-none p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                             />
                                             <p className="text-[10px] text-gray-500 mt-1 font-semibold">
                                                 Visitor cards encoded: {newVisitors.length}
@@ -957,7 +957,7 @@ const SundaySchool: React.FC = () => {
                                         </div>
                                         <div className="flex flex-col">
                                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 text-center">Total</label>
-                                            <div className="w-full bg-gray-50 text-gray-900 font-bold text-xl rounded-none p-3 flex items-center justify-center border border-blue-100 shadow-sm h-[54px]">
+                                            <div className="w-full bg-gray-50 text-gray-900 font-bold text-xl rounded-none p-3 flex items-center justify-center border border-[var(--color-primary-light)] shadow-sm h-[54px]">
                                                 {selectedRegularCountInModal + visitorsCountInModal}
                                             </div>
                                         </div>
@@ -967,7 +967,7 @@ const SundaySchool: React.FC = () => {
                                     {supportsVisitorCards && (
                                         <div className="space-y-2 pt-6">
                                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Visitor Card Image</label>
-                                            <div className="bg-gray-50 border border-gray-200 rounded-none p-4 flex gap-4 items-center transition-colors hover:border-blue-300">
+                                            <div className="bg-gray-50 border border-gray-200 rounded-none p-4 flex gap-4 items-center transition-colors hover:border-[var(--color-primary)]">
                                                 <ImageUpload
                                                     value={newSession.visitor_card_url || ''}
                                                     onChange={(url) => setNewSession({ ...newSession, visitor_card_url: url })}
@@ -991,7 +991,7 @@ const SundaySchool: React.FC = () => {
                                                 min="0"
                                                 value={newSession.souls_saved ?? 0}
                                                 onChange={(e) => setNewSession({ ...newSession, souls_saved: parseInt(e.target.value) || 0 })}
-                                                className="w-full border border-gray-200 rounded-none p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                className="w-full border border-gray-200 rounded-none p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                             />
                                         </div>
                                     </div>
@@ -1035,7 +1035,7 @@ const SundaySchool: React.FC = () => {
                                                                         [memberId]: val
                                                                     }));
                                                                 }}
-                                                                className="w-16 border border-gray-200 rounded-none px-2 py-1.5 text-center text-sm font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                                                className="w-16 border border-gray-200 rounded-none px-2 py-1.5 text-center text-sm font-bold bg-white text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                                                             />
                                                         </div>
                                                     );

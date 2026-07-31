@@ -40,7 +40,7 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="text"
                             value={editingStudent.first_name}
                             onChange={(e) => onChange({ ...editingStudent, first_name: e.target.value })}
-                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none"
                         />
                     </div>
                     <div>
@@ -49,7 +49,7 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="text"
                             value={editingStudent.surname}
                             onChange={(e) => onChange({ ...editingStudent, surname: e.target.value })}
-                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none"
                         />
                     </div>
                     <div>
@@ -58,7 +58,7 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="text"
                             value={editingStudent.phone_number}
                             onChange={(e) => onChange({ ...editingStudent, phone_number: e.target.value })}
-                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none"
                         />
                     </div>
                     <div>
@@ -67,7 +67,7 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="date"
                             value={editingStudent.date_of_birth || ""}
                             onChange={(e) => onChange({ ...editingStudent, date_of_birth: e.target.value })}
-                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none"
                         />
                     </div>
                     <div className="sm:col-span-2">
@@ -76,7 +76,7 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="text"
                             value={editingStudent.home_address}
                             onChange={(e) => onChange({ ...editingStudent, home_address: e.target.value })}
-                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none"
                         />
                     </div>
                 </div>

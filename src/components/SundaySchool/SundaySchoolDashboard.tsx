@@ -32,7 +32,7 @@ const SundaySchoolDashboard: React.FC<SundaySchoolDashboardProps> = ({
                 </div>
                 <div>
                     <p className="text-sm font-bold tracking-widest text-gray-400 uppercase flex items-center gap-2 mb-3">
-                        <Users size={16} className="text-blue-500" /> Latest Sunday Attendance
+                        <Users size={16} className="text-[var(--color-primary)]" /> Latest Sunday Attendance
                     </p>
                     <p className="text-7xl md:text-8xl font-black text-gray-900 tracking-tighter" style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
                         {totalAttendanceToday}
@@ -71,7 +71,7 @@ const SundaySchoolDashboard: React.FC<SundaySchoolDashboardProps> = ({
                 </div>
                 <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-200 flex flex-col justify-center">
                     <p className="text-xs uppercase tracking-widest font-bold text-gray-400 flex items-center gap-2 mb-2">
-                        <UserPlus size={14} className="text-purple-500" /> Visitors
+                        <UserPlus size={14} className="text-[var(--color-primary)]" /> Visitors
                     </p>
                     <p className="text-5xl font-black text-gray-900 tracking-tight" style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
                         {thisMonthVisitors}

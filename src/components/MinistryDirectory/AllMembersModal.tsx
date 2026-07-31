@@ -40,7 +40,7 @@ const AllMembersModal: React.FC<AllMembersModalProps> = ({
             value={allMembersSearch}
             onChange={(e) => setAllMembersSearch(e.target.value)}
             placeholder="Search member name..."
-            className="w-full bg-white border border-gray-200 rounded-none py-2.5 pl-10 pr-3 text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+            className="w-full bg-white border border-gray-200 rounded-none py-2.5 pl-10 pr-3 text-sm font-medium text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none"
           />
         </div>
 
@@ -72,7 +72,7 @@ const AllMembersModal: React.FC<AllMembersModalProps> = ({
           )}
         </div>
 
-        <Link to="/members" onClick={onClose} className="w-full mt-5 py-3.5 border border-blue-200 rounded-none text-blue-700 font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+        <Link to="/members" onClick={onClose} className="w-full mt-5 py-3.5 border border-[var(--color-primary-light)] rounded-none text-[var(--color-primary)] font-bold hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
           <Users size={16} /> Open Full Members Directory
         </Link>
       </div>

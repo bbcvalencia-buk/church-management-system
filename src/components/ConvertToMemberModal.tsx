@@ -103,8 +103,8 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
 
                 <div className="p-6 overflow-y-auto w-full">
                     {/* Data to be carried over summary */}
-                    <div className="bg-gray-50/50 border border-blue-100 rounded-none p-4 mb-6">
-                        <h4 className="text-xs font-bold text-blue-800 uppercase tracking-widest mb-3">Data to be Migrated</h4>
+                    <div className="bg-gray-50/50 border border-[var(--color-primary-light)] rounded-none p-4 mb-6">
+                        <h4 className="text-xs font-bold text-[var(--color-primary)] uppercase tracking-widest mb-3">Data to be Migrated</h4>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
                                 <span className="text-gray-500 block text-[10px] uppercase font-bold tracking-wider">Name</span>
@@ -136,7 +136,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Target Member Number</label>
                             <input
                                 type="text"
-                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none uppercase font-mono"
+                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none uppercase font-mono"
                                 value={memberNumber}
                                 onChange={(e) => setMemberNumber(e.target.value)}
                                 placeholder="BBC-YYYY-001"
@@ -147,7 +147,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Membership Status Type</label>
                             <select
-                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none"
+                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none"
                                 value={statusType}
                                 onChange={(e) => setStatusType(e.target.value)}
                             >
@@ -165,7 +165,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                                     required
                                     value={dateJoined}
                                     onChange={(e) => setDateJoined(e.target.value)}
-                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none"
+                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none"
                                 />
                             </div>
                             <div>
@@ -174,7 +174,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                                     type="date"
                                     value={baptismDate}
                                     onChange={(e) => setBaptismDate(e.target.value)}
-                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none"
+                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-500 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none"
                                 />
                             </div>
                         </div>

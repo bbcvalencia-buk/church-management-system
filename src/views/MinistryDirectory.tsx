@@ -384,7 +384,7 @@ const MinistryDirectory: React.FC = () => {
           </button>
           <button
             onClick={() => handleOpenModal()}
-            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-[var(--color-text-main)] px-5 py-2.5 rounded-none text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
+            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] px-5 py-2.5 rounded-none text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
           >
             <Plus size={16} strokeWidth={2.5} /> Establish New Group
           </button>
@@ -398,7 +398,7 @@ const MinistryDirectory: React.FC = () => {
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={`px-5 py-2.5 rounded-none text-[13px] font-bold whitespace-nowrap transition-colors ${selectedCategory === cat.id
-                ? 'bg-[#2563eb] text-[var(--color-text-main)]'
+                ? 'bg-[var(--color-primary)] text-[var(--color-text-main)]'
                 : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                 }`}
             >

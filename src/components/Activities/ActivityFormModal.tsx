@@ -60,7 +60,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                             <select
                                 value={form.activity_type}
                                 onChange={(e) => setForm({ ...form, activity_type: e.target.value })}
-                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                             >
                                 <option value="soul_winning">Soul Winning</option>
                                 <option value="bible_study">Bible Study</option>
@@ -74,17 +74,17 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                 type="date"
                                 value={form.activity_date}
                                 onChange={(e) => setForm({ ...form, activity_date: e.target.value })}
-                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                             />
                         </div>
                     </div>
 
                     {form.activity_type === 'bible_study' && (
-                        <div className="space-y-6 bg-gray-50/30 p-4 rounded-none border border-blue-100">
+                        <div className="space-y-6 bg-gray-50/30 p-4 rounded-none border border-[var(--color-primary-light)]">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                                        <User size={14} className="text-blue-500" /> Student / Contact
+                                        <User size={14} className="text-[var(--color-primary)]" /> Student / Contact
                                     </label>
                                     <div className="space-y-2">
                                         <select
@@ -100,7 +100,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                     }
                                                 });
                                             }}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         >
                                             <option value="">-- Select Member --</option>
                                             {members.map(m => (
@@ -119,13 +119,13 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                     student_member_id: '' // Clear if typing manually
                                                 }
                                             })}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                                        <BookOpen size={14} className="text-blue-500" /> Study Details
+                                        <BookOpen size={14} className="text-[var(--color-primary)]" /> Study Details
                                     </label>
                                     <div className="space-y-2">
                                         <input
@@ -136,7 +136,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                 ...form,
                                                 activity_data: { ...(form.activity_data || {}), book: e.target.value }
                                             })}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         />
                                         <input
                                             type="text"
@@ -146,7 +146,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                 ...form,
                                                 activity_data: { ...(form.activity_data || {}), session_number: e.target.value }
                                             })}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         />
 
                                     </div>
@@ -173,7 +173,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                 }}
                                                 className={`px-3 py-1.5 rounded-none text-xs font-bold transition-all ${form.activity_data?.format?.includes(fmt)
                                                     ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] shadow-md'
-                                                    : 'bg-white text-gray-500 border border-gray-200 hover:border-blue-300'
+                                                    : 'bg-white text-gray-500 border border-gray-200 hover:border-[var(--color-primary)]'
                                                     }`}
                                             >
                                                 {fmt}
@@ -192,7 +192,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                 ...form,
                                                 activity_data: { ...(form.activity_data || {}), family_name: e.target.value }
                                             })}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 )}
@@ -201,11 +201,11 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                     )}
 
                     {form.activity_type === 'visitation' && (
-                        <div className="space-y-6 bg-purple-50/30 p-4 rounded-none border border-purple-100">
+                        <div className="space-y-6 bg-[var(--color-primary-light)]/30 p-4 rounded-none border border-[var(--color-primary-light)]">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                                        <UserCheck size={14} className="text-purple-500" /> Who was visited?
+                                        <UserCheck size={14} className="text-[var(--color-primary)]" /> Who was visited?
                                     </label>
                                     <div className="space-y-2">
                                         <select
@@ -222,7 +222,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                     }
                                                 });
                                             }}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         >
                                             <option value="">-- Member --</option>
                                             {members.map(m => (
@@ -243,7 +243,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                     }
                                                 });
                                             }}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         >
                                             <option value="">-- Or Visitor --</option>
                                             {visitors.map(v => (
@@ -263,13 +263,13 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                     visited_visitor_id: ''
                                                 }
                                             })}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                                        <Repeat size={14} className="text-purple-500" /> Visitation Reason
+                                        <Repeat size={14} className="text-[var(--color-primary)]" /> Visitation Reason
                                     </label>
                                     <div className="space-y-4">
                                         <select
@@ -278,7 +278,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                 ...form,
                                                 activity_data: { ...(form.activity_data || {}), reason: e.target.value }
                                             })}
-                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                         >
                                             <option value="follow-up">Follow-up</option>
                                             <option value="hospital-visit">Hospital Visit</option>
@@ -294,7 +294,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                                     ...form,
                                                     activity_data: { ...(form.activity_data || {}), first_visit: e.target.checked }
                                                 })}
-                                                className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
+                                                className="w-4 h-4 text-[var(--color-primary)] bg-gray-100 border-gray-300 rounded focus:ring-purple-500"
                                             />
                                             <label htmlFor="first_visit" className="text-sm font-medium text-gray-700 select-none">First time visiting church?</label>
                                         </div>
@@ -374,7 +374,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                     placeholder="e.g. Laguitas Mission"
                                     value={form.mission_church_name || ''}
                                     onChange={(e) => setForm({ ...form, mission_church_name: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                 />
                             </div>
                         </div>
@@ -387,7 +387,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                             placeholder="e.g. Purok 5, Bagontaas"
                             value={form.area || ''}
                             onChange={(e) => setForm({ ...form, area: e.target.value })}
-                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                         />
                     </div>
 
@@ -401,7 +401,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                     min="0"
                                     value={form.tracts_distributed || ''}
                                     onChange={(e) => setForm({ ...form, tracts_distributed: parseInt(e.target.value) || 0 })}
-                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-center text-xl font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-center text-xl font-bold text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                 />
                             </div>
                         ) : (
@@ -419,7 +419,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                     min="0"
                                     value={form.souls_saved || ''}
                                     onChange={(e) => setForm({ ...form, souls_saved: parseInt(e.target.value) || 0 })}
-                                    className="w-full bg-white border border-gray-200 rounded-none pl-10 p-3 text-xl font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                    className="w-full bg-white border border-gray-200 rounded-none pl-10 p-3 text-xl font-bold text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                                 />
                             </div>
                         </div>
@@ -431,7 +431,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                 min="0"
                                 value={form.non_member_attendance || ''}
                                 onChange={(e) => setForm({ ...form, non_member_attendance: parseInt(e.target.value) || 0 })}
-                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-center text-xl font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-center text-xl font-bold text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                             />
                         </div>
                     </div>
@@ -447,7 +447,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                 placeholder="https://facebook.com/..."
                                 value={form.facebook_post_link || ''}
                                 onChange={(e) => setForm({ ...form, facebook_post_link: e.target.value })}
-                                className="w-full bg-white border border-gray-200 rounded-none pl-10 p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                className="w-full bg-white border border-gray-200 rounded-none pl-10 p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                             />
                         </div>
                     </div>
@@ -455,7 +455,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                     {/* Attachment Section */}
                     <div className="space-y-4 pt-6 border-t border-gray-100">
                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Attachment / Sketch</label>
-                        <div className="border-2 border-dashed border-gray-300 rounded-none p-8 text-center hover:bg-gray-50 hover:border-blue-400 transition-colors cursor-pointer relative overflow-hidden group">
+                        <div className="border-2 border-dashed border-gray-300 rounded-none p-8 text-center hover:bg-gray-50 hover:border-[var(--color-primary)] transition-colors cursor-pointer relative overflow-hidden group">
                             <input
                                 type="file"
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
@@ -464,7 +464,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                 }}
                             />
                             <div className="relative z-10 flex flex-col items-center">
-                                <div className="p-3 bg-gray-50 text-blue-500 rounded-none mb-3 group-hover:scale-110 transition-transform">
+                                <div className="p-3 bg-gray-50 text-[var(--color-primary)] rounded-none mb-3 group-hover:scale-110 transition-transform">
                                     <Upload size={24} />
                                 </div>
                                 <p className="text-sm font-medium text-gray-900 mb-1">
@@ -478,7 +478,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({
                                     href={form.attachment_url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="absolute top-4 right-4 p-2 bg-blue-100 rounded-none hover:bg-blue-200 text-blue-700 transition-colors z-30"
+                                    className="absolute top-4 right-4 p-2 bg-[var(--color-primary-light)] rounded-none hover:bg-[var(--color-primary-light)] text-[var(--color-primary)] transition-colors z-30"
                                     title="View Attachment"
                                     onClick={(e) => e.stopPropagation()}
                                 >

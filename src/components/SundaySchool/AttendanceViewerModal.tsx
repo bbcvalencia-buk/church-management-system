@@ -151,7 +151,7 @@ const AttendanceViewerModal: React.FC<Props> = ({
                                                 )}
                                             </div>
                                             <div className="text-center">
-                                                <span className="inline-flex items-center gap-0.5 bg-gray-50 text-blue-700 px-2 py-0.5 rounded-none text-[10px] font-bold">
+                                                <span className="inline-flex items-center gap-0.5 bg-gray-50 text-[var(--color-primary)] px-2 py-0.5 rounded-none text-[10px] font-bold">
                                                     <Hash size={9} />
                                                     {dayCounts[member.id] || 0}
                                                 </span>

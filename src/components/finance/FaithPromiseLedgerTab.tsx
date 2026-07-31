@@ -131,7 +131,7 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
         <div className="space-y-6 animate-fade-in">
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                <div className="card-panel p-4 bg-white border-l-4 border-blue-500">
+                <div className="card-panel p-4 bg-white border-l-4 border-[var(--color-primary)]">
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Pledged</p>
                     <p className="text-lg font-black mt-1">{formatCurrency(stats.totalPledged)}</p>
                 </div>
@@ -143,9 +143,9 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Remaining</p>
                     <p className="text-lg font-black mt-1 text-amber-700">{formatCurrency(stats.totalRemaining)}</p>
                 </div>
-                <div className="card-panel p-4 bg-white border-l-4 border-purple-500">
+                <div className="card-panel p-4 bg-white border-l-4 border-[var(--color-primary)]">
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Fulfillment %</p>
-                    <p className="text-lg font-black mt-1 text-purple-700">{stats.pct.toFixed(1)}%</p>
+                    <p className="text-lg font-black mt-1 text-[var(--color-primary)]">{stats.pct.toFixed(1)}%</p>
                 </div>
                 <div className="card-panel p-4 bg-white border-l-4 border-slate-500">
                     <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Members Pledged</p>
@@ -171,7 +171,7 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                             placeholder="Search name or ID..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-gray-200 rounded-none text-sm w-64 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            className="pl-9 pr-4 py-2 border border-gray-200 rounded-none text-sm w-64 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)]"
                         />
                     </div>
 
@@ -214,7 +214,7 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                         <Printer size={16} /> Print All
                     </button>
                     {isChurchAdmin && new Date().getMonth() === 0 && (
-                        <button onClick={handleRollover} className="px-4 py-2 bg-purple-600 text-[var(--color-text-main)] rounded-none text-sm font-bold hover:bg-purple-700 flex items-center gap-2 shadow-sm transition-colors">
+                        <button onClick={handleRollover} className="px-4 py-2 bg-[var(--color-primary)] text-[var(--color-text-main)] rounded-none text-sm font-bold hover:bg-[var(--color-primary-dark)] flex items-center gap-2 shadow-sm transition-colors">
                             Year Rollover
                         </button>
                     )}
@@ -252,7 +252,7 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                                                 <div className="text-xs text-gray-500 tracking-wider">{row.member_number || 'NO-ID'}</div>
                                             </td>
                                             <td className="p-4 text-right font-mono font-medium">{formatCurrency(row.committed_amount)}</td>
-                                            <td className="p-4 text-right font-mono font-medium text-blue-700">{formatCurrency(row.total_paid)}</td>
+                                            <td className="p-4 text-right font-mono font-medium text-[var(--color-primary)]">{formatCurrency(row.total_paid)}</td>
                                             <td className="p-4 text-right font-mono font-medium text-slate-500">{formatCurrency(row.remaining_balance)}</td>
                                             <td className="p-4 text-right">
                                                 <div className="font-mono text-xs">{formatCurrency(row.expected_paid_by_now)} / {formatCurrency(row.total_paid)}</div>
@@ -271,7 +271,7 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                                                 <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => onQuickAdd(row.member_id, `${row.first_name} ${row.surname}`)}
-                                                        className="px-3 py-1.5 bg-gray-50 text-blue-700 hover:bg-blue-100 rounded text-xs font-bold flex items-center gap-1 transition-colors"
+                                                        className="px-3 py-1.5 bg-gray-50 text-[var(--color-primary)] hover:bg-[var(--color-primary-light)] rounded text-xs font-bold flex items-center gap-1 transition-colors"
                                                         title="Quick Add Payment"
                                                     >
                                                         <Plus size={14} /> Add Payment

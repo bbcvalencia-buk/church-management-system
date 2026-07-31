@@ -108,7 +108,7 @@ const FaithPromisePledgeForm: React.FC<Props> = ({ onClose, onSuccess }) => {
                             required
                             value={memberId}
                             onChange={e => setMemberId(e.target.value)}
-                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                         >
                             <option value="">-- Select Member --</option>
                             {members.map(m => (
@@ -127,7 +127,7 @@ const FaithPromisePledgeForm: React.FC<Props> = ({ onClose, onSuccess }) => {
                                 required
                                 value={year}
                                 onChange={(e) => setYear(parseInt(e.target.value) || new Date().getFullYear())}
-                                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                             />
                         </div>
                         <div>
@@ -137,7 +137,7 @@ const FaithPromisePledgeForm: React.FC<Props> = ({ onClose, onSuccess }) => {
                                 required
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                             />
                         </div>
                     </div>
@@ -154,7 +154,7 @@ const FaithPromisePledgeForm: React.FC<Props> = ({ onClose, onSuccess }) => {
                                 placeholder="0.00"
                                 value={amount}
                                 onChange={(e) => setAmount(parseFloat(e.target.value) || '')}
-                                className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 font-mono text-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 font-mono text-lg focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                             />
                         </div>
                         {amount && (

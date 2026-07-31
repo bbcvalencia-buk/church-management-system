@@ -60,9 +60,9 @@ const formatLabel = (value: string) =>
         .join(" ");
 
 const SOURCE_META: Record<AnnouncementSource, { label: string; icon: React.ElementType; color: string }> = {
-    service: { label: "Service", icon: Calendar, color: "bg-blue-100 text-[var(--color-text-main)]" },
+    service: { label: "Service", icon: Calendar, color: "bg-[var(--color-primary-light)] text-[var(--color-text-main)]" },
     sunday_school: { label: "Sunday School", icon: BookOpen, color: "bg-emerald-100 text-emerald-600" },
-    activity: { label: "Activity", icon: Activity, color: "bg-purple-100 text-purple-600" },
+    activity: { label: "Activity", icon: Activity, color: "bg-[var(--color-primary-light)] text-[var(--color-primary)]" },
     church_event: { label: "Church Event", icon: Calendar, color: "bg-orange-100 text-orange-600" },
     goodnews_class: { label: "Good News Class", icon: BookOpen, color: "bg-sky-100 text-sky-600" }
 };
@@ -425,7 +425,7 @@ const Announcements: React.FC = () => {
             {/* Header */}
             < div className="bg-white border border-gray-100 rounded-none p-6" >
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-none bg-blue-100 text-[var(--color-text-main)] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-none bg-[var(--color-primary-light)] text-[var(--color-text-main)] flex items-center justify-center">
                         <Bell size={20} />
                     </div>
                     <div>
@@ -483,10 +483,10 @@ const Announcements: React.FC = () => {
 
                                 <div className="space-y-3">
                                     {/* Total */}
-                                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-none p-4">
+                                    <div className="bg-gradient-to-br from-[var(--color-primary-light)] to-indigo-50 border border-[var(--color-primary-light)] rounded-none p-4">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <p className="text-[10px] uppercase tracking-wider font-bold text-blue-500">
+                                                <p className="text-[10px] uppercase tracking-wider font-bold text-[var(--color-primary)]">
                                                     Total Attendance
                                                 </p>
                                                 <p className="text-3xl font-black text-gray-900 mt-1">{sundaySummary.sundayMorningTotal}</p>
@@ -540,7 +540,7 @@ const Announcements: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-none p-4">
+                                    <div className="bg-gradient-to-br from-[var(--color-primary-light)] to-[var(--color-primary-light)] border border-[var(--color-primary-light)] rounded-none p-4">
                                         <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-500">
                                             Total Attendance
                                         </p>

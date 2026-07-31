@@ -91,7 +91,7 @@ export const MemberCard = ({ member }: MemberCardProps) => {
             {/* Badges */}
             <div className="flex flex-wrap gap-2 mt-auto pt-3 border-t border-dashed border-[var(--color-border)]">
                 {member.is_pastor && (
-                    <span className="bg-purple-50 text-purple-700 text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 border border-purple-100">
+                    <span className="bg-[var(--color-primary-light)] text-[var(--color-primary)] text-[10px] font-semibold px-2 py-1 rounded-lg flex items-center gap-1 border border-[var(--color-primary-light)]">
                         <Shield size={10} /> Pastor
                     </span>
                 )}
@@ -101,7 +101,7 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                     </span>
                 )}
                 {member.is_regular_member && (
-                    <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2 py-1 rounded-lg border border-blue-100">Regular Member</span>
+                    <span className="bg-[var(--color-primary-light)] text-[var(--color-primary)] text-[10px] font-semibold px-2 py-1 rounded-lg border border-[var(--color-primary-light)]">Regular Member</span>
                 )}
             </div>
 

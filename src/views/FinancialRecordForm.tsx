@@ -282,7 +282,7 @@ const FinancialRecordForm: React.FC = () => {
 
                     {/* Tithe */}
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-blue-400 flex items-center gap-2">
+                        <label className="text-sm font-bold text-[var(--color-primary)] flex items-center gap-2">
                             <Info size={14} /> Tithe Encl.
                         </label>
                         <div className="relative group">
@@ -294,7 +294,7 @@ const FinancialRecordForm: React.FC = () => {
                                 placeholder="0.00"
                                 value={form.tithe_amount}
                                 onChange={(e) => setForm({ ...form, tithe_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-none p-3 text-[var(--color-text-main)] font-mono focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-colors"
+                                className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-none p-3 text-[var(--color-text-main)] font-mono focus:border-[var(--color-primary)]/50 focus:ring-1 focus:ring-[var(--color-primary)]/50 transition-colors"
                             />
                         </div>
                     </div>
@@ -377,7 +377,7 @@ const FinancialRecordForm: React.FC = () => {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="bg-[var(--color-primary)] hover:bg-violet-600 text-[var(--color-text-main)] px-8 py-3 rounded-none font-medium transition-all shadow-lg shadow-purple-500/20 flex items-center gap-2 disabled:opacity-50 hover:scale-105 active:scale-95"
+                        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] px-8 py-3 rounded-none font-medium transition-all flex items-center gap-2 disabled:opacity-50 hover:scale-105 active:scale-95"
                     >
                         <Save size={18} />
                         {saving ? 'Saving...' : 'Save Record'}

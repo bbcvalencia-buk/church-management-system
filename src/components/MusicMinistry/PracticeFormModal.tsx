@@ -63,7 +63,7 @@ const PracticeFormModal: React.FC<Props> = ({
                                 <select
                                     value={form.practice_type}
                                     onChange={(e) => setForm({ ...form, practice_type: e.target.value })}
-                                    className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all appearance-none"
+                                    className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all appearance-none"
                                 >
                                     <option value="choir">Choir Practice</option>
                                     <option value="mini_ensemble">Mini Ensemble Practice</option>
@@ -79,7 +79,7 @@ const PracticeFormModal: React.FC<Props> = ({
                                 type="date"
                                 value={form.practice_date}
                                 onChange={(e) => setForm({ ...form, practice_date: e.target.value })}
-                                className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                             />
                         </div>
                         <div>
@@ -88,7 +88,7 @@ const PracticeFormModal: React.FC<Props> = ({
                                 type="time"
                                 value={normalizeTimeInputValue(form.practice_start_time, DEFAULT_PRACTICE_START_TIME)}
                                 onChange={(e) => setForm({ ...form, practice_start_time: e.target.value })}
-                                className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                             />
                         </div>
                         <div>
@@ -97,7 +97,7 @@ const PracticeFormModal: React.FC<Props> = ({
                                 type="time"
                                 value={normalizeTimeInputValue(form.practice_end_time, DEFAULT_PRACTICE_END_TIME)}
                                 onChange={(e) => setForm({ ...form, practice_end_time: e.target.value })}
-                                className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                             />
                         </div>
                         <div>
@@ -107,7 +107,7 @@ const PracticeFormModal: React.FC<Props> = ({
                                 min="0"
                                 value={form.non_member_attendance || ''}
                                 onChange={(e) => setForm({ ...form, non_member_attendance: parseInt(e.target.value) || 0 })}
-                                className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                className="w-full bg-white border border-gray-200 rounded-[8px] p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all"
                             />
                         </div>
                     </div>

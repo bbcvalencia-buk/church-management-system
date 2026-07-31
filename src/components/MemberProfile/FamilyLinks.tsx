@@ -18,12 +18,12 @@ const FamilyLinks: React.FC<FamilyLinksProps> = ({ family }) => {
                     const typeStr = (rel.relationship_type || '').replace(/_/g, ' ');
 
                     const content = (
-                        <div className="flex items-center gap-2 pr-3 pl-1 py-1 rounded-none border border-gray-200/80 bg-white hover:bg-gray-50 hover:border-blue-200 transition-colors shadow-sm cursor-pointer group">
-                            <div className="w-6 h-6 rounded-none bg-blue-100 flex items-center justify-center overflow-hidden shrink-0 border border-blue-50/50">
+                        <div className="flex items-center gap-2 pr-3 pl-1 py-1 rounded-none border border-gray-200/80 bg-white hover:bg-gray-50 hover:border-[var(--color-primary-light)] transition-colors shadow-sm cursor-pointer group">
+                            <div className="w-6 h-6 rounded-none bg-[var(--color-primary-light)] flex items-center justify-center overflow-hidden shrink-0 border border-[var(--color-primary-light)]">
                                 {relMember && relMember.profile_picture_url ? (
                                     <img src={relMember.profile_picture_url} className="w-full h-full object-cover" alt="" />
                                 ) : (
-                                    <span className="text-[10px] font-bold text-blue-700">{initials}</span>
+                                    <span className="text-[10px] font-bold text-[var(--color-primary)]">{initials}</span>
                                 )}
                             </div>
                             <div className="flex flex-col leading-none justify-center">

@@ -49,7 +49,7 @@ class ErrorBoundary extends Component<Props, State> {
                         <div className="flex flex-col gap-3">
                             <button
                                 onClick={() => window.location.reload()}
-                                className="w-full bg-[#2563eb] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] py-3 rounded-none font-bold flex items-center justify-center gap-2 transition-all shadow-lg "
+                                className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] py-3 rounded-none font-bold flex items-center justify-center gap-2 transition-all shadow-lg "
                             >
                                 <RefreshCw size={18} />
                                 Reload Application

@@ -231,7 +231,7 @@ const StatCard = ({ title, value, icon: Icon, color, trend, link }: any) => {
         blue: 'bg-gray-50 text-[var(--color-text-main)]',
         pink: 'bg-transparent text-[var(--color-text-muted)]',
         emerald: 'bg-emerald-50 text-emerald-600',
-        violet: 'bg-violet-50 text-violet-600',
+        violet: 'bg-[var(--color-primary-light)] text-[var(--color-primary)]',
     };
 
     const activeColor = colorStyles[color as keyof typeof colorStyles] || colorStyles.blue;

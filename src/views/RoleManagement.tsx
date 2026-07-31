@@ -40,8 +40,8 @@ const ROLE_DESCRIPTIONS = {
 
 const ROLE_BADGE_COLORS: Record<string, string> = {
     [UserRole.CHURCH_ADMINISTRATOR]: 'bg-slate-800 text-[var(--color-text-main)] border-slate-700',
-    [UserRole.PASTOR]: 'bg-purple-100 text-purple-700 border-purple-200',
-    [UserRole.CHURCH_CLERK]: 'bg-blue-100 text-blue-700 border-blue-200',
+    [UserRole.PASTOR]: 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border-[var(--color-primary-light)]',
+    [UserRole.CHURCH_CLERK]: 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border-[var(--color-primary-light)]',
     [UserRole.TREASURER]: 'bg-green-100 text-green-700 border-green-200',
     [UserRole.RECORDING_SECRETARY]: 'bg-teal-100 text-teal-700 border-teal-200',
     [UserRole.MUSIC_MINISTER]: 'bg-orange-100 text-orange-700 border-orange-200',
@@ -50,7 +50,7 @@ const ROLE_BADGE_COLORS: Record<string, string> = {
     [UserRole.ACTIVITY_COORDINATOR]: 'bg-amber-100 text-amber-700 border-amber-200',
     [UserRole.SUNDAY_SCHOOL_TEACHER_BEGINNERS]: 'bg-rose-100 text-rose-700 border-rose-200',
     [UserRole.SUNDAY_SCHOOL_TEACHER_CHILDREN]: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-    [UserRole.SUNDAY_SCHOOL_TEACHER_ADULT]: 'bg-violet-100 text-violet-700 border-violet-200',
+    [UserRole.SUNDAY_SCHOOL_TEACHER_ADULT]: 'bg-[var(--color-primary-light)] text-[var(--color-primary)] border-[var(--color-primary-light)]',
     [UserRole.MEMBER]: 'bg-gray-100 text-gray-700 border-gray-200',
 };
 
@@ -263,7 +263,7 @@ const RoleManagement: React.FC = () => {
                     <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Your Access:</span>
                     {roles.length > 0 ? (
                         roles.map(r => (
-                            <span key={r} className={`text-[10px] font-bold px-2 py-0.5 rounded-none border uppercase tracking-wide ${ROLE_BADGE_COLORS[r] || 'bg-gray-50 text-[var(--color-text-main)] border-blue-100'}`}>
+                            <span key={r} className={`text-[10px] font-bold px-2 py-0.5 rounded-none border uppercase tracking-wide ${ROLE_BADGE_COLORS[r] || 'bg-gray-50 text-[var(--color-text-main)] border-[var(--color-primary-light)]'}`}>
                                 {r.replace(/_/g, ' ')}
                             </span>
                         ))
@@ -363,11 +363,11 @@ const RoleManagement: React.FC = () => {
                                                     ${isSelected ? 'bg-gray-50/60 border-l-4 border-[var(--color-primary)]' : 'border-l-4 border-transparent'}
                                                 `}
                                             >
-                                                <div className={`w-10 h-10 rounded-none overflow-hidden flex-shrink-0 border ${isSelected ? 'border-blue-200 shadow-sm' : 'border-gray-100'}`}>
+                                                <div className={`w-10 h-10 rounded-none overflow-hidden flex-shrink-0 border ${isSelected ? 'border-[var(--color-primary-light)] shadow-sm' : 'border-gray-100'}`}>
                                                     {member.profile_picture_url ? (
                                                         <img src={member.profile_picture_url} alt="" className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <div className={`w-full h-full flex items-center justify-center text-xs font-bold ${isSelected ? 'bg-blue-100 text-[var(--color-text-main)]' : 'bg-gray-100 text-gray-400'}`}>
+                                                        <div className={`w-full h-full flex items-center justify-center text-xs font-bold ${isSelected ? 'bg-[var(--color-primary-light)] text-[var(--color-text-main)]' : 'bg-gray-100 text-gray-400'}`}>
                                                             {member.first_name[0]}{member.surname[0]}
                                                         </div>
                                                     )}
@@ -385,7 +385,7 @@ const RoleManagement: React.FC = () => {
                                                             <span className="text-[10px] text-gray-400">No access</span>
                                                         )}
                                         {selectedMember?.id === member.id && selectedMemberScopeLabel ? (
-                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-[var(--color-primary-light)]">
                                                 {selectedMemberScopeLabel}
                                             </span>
                                         ) : null}
@@ -427,7 +427,7 @@ const RoleManagement: React.FC = () => {
                                             <User size={14} /> ID: {selectedMember.id}
                                         </p>
                                         {selectedMemberScopeLabel ? (
-                                            <div className="mt-2 inline-flex items-center gap-2 rounded-none border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                                            <div className="mt-2 inline-flex items-center gap-2 rounded-none border border-[var(--color-primary-light)] bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                                                 <Shield size={12} /> Sunday School: {selectedMemberScopeLabel}
                                             </div>
                                         ) : (

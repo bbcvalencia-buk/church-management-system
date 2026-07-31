@@ -25,8 +25,8 @@ interface MemberAttendancePickerProps {
 }
 
 const AVATAR_COLORS = [
-    "bg-blue-100 text-blue-700",
-    "bg-purple-100 text-purple-700",
+    "bg-[var(--color-primary-light)] text-[var(--color-primary)]",
+    "bg-[var(--color-primary-light)] text-[var(--color-primary)]",
     "bg-green-100 text-green-700",
     "bg-yellow-100 text-yellow-700",
     "bg-pink-100 text-pink-700",
@@ -150,7 +150,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                 <label className="inline-flex items-center gap-2 text-xs text-gray-600 font-semibold">
                     <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-[var(--color-text-main)] focus:ring-blue-500 focus:ring-2"
+                        className="w-4 h-4 rounded border-gray-300 text-[var(--color-text-main)] focus:ring-[var(--color-primary)] focus:ring-2"
                         checked={includeVisitors}
                         onChange={(e) => setIncludeVisitors(e.target.checked)}
                     />
@@ -167,7 +167,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                     placeholder="Search member..."
                     value={searchTerm}
                     onChange={(e) => onSearchTermChange(e.target.value)}
-                    className="w-full bg-white border border-gray-200 rounded-none pl-10 p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-200 rounded-none pl-10 p-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all shadow-sm"
                 />
             </div>
 
@@ -237,7 +237,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                                     </label>
                                 )}
 
-                                <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-none cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${isPresent ? 'bg-blue-100 shadow-sm text-blue-800 ring-1 ring-blue-200' : 'text-gray-500 hover:text-[var(--color-text-main)]'}`}>
+                                <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-none cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${isPresent ? 'bg-[var(--color-primary-light)] shadow-sm text-[var(--color-primary)] ring-1 ring-[var(--color-primary-light)]' : 'text-gray-500 hover:text-[var(--color-text-main)]'}`}>
                                     <input
                                         type="radio"
                                         name={`attendance_${member.id}`}
@@ -245,7 +245,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                                         checked={isPresent}
                                         onChange={() => toggleMember(member.id, true)}
                                     />
-                                    <span className={isPresent ? "text-blue-700 font-black" : ""}>Present</span>
+                                    <span className={isPresent ? "text-[var(--color-primary)] font-black" : ""}>Present</span>
                                 </label>
                             </div>
 
@@ -257,7 +257,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                                         e.stopPropagation();
                                         onEditMember(member);
                                     }}
-                                    className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-none border border-blue-200 text-[var(--color-text-main)] hover:bg-gray-50 transition-colors text-[10px] font-bold uppercase tracking-wide ml-auto sm:ml-0"
+                                    className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-none border border-[var(--color-primary-light)] text-[var(--color-text-main)] hover:bg-gray-50 transition-colors text-[10px] font-bold uppercase tracking-wide ml-auto sm:ml-0"
                                     title="Edit profile"
                                 >
                                     <Edit2 size={12} />

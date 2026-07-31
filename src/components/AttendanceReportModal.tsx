@@ -95,7 +95,7 @@ const AttendanceReportModal: React.FC<AttendanceReportModalProps> = ({
                         </div>
                         <div className="flex flex-col">
                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 text-center">Total</label>
-                            <div className="w-full bg-gray-50 text-gray-900 font-bold text-xl rounded-none p-3 flex items-center justify-center border border-blue-100 shadow-sm h-[54px]">
+                            <div className="w-full bg-gray-50 text-gray-900 font-bold text-xl rounded-none p-3 flex items-center justify-center border border-[var(--color-primary-light)] shadow-sm h-[54px]">
                                 {effectiveTotal}
                             </div>
                         </div>

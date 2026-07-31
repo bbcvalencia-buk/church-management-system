@@ -56,7 +56,7 @@ const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
             {selectedMembers.length > 0 && (
               <div className="flex flex-col gap-3 pb-3">
                 {selectedMembers.map(m => (
-                  <div key={m.id} className="bg-gray-50 border border-gray-100 rounded-none p-3 flex flex-col gap-2 relative group hover:border-blue-200 transition-colors">
+                  <div key={m.id} className="bg-gray-50 border border-gray-100 rounded-none p-3 flex flex-col gap-2 relative group hover:border-[var(--color-primary-light)] transition-colors">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-900 text-[13px] font-bold">
                         {m.first_name} {m.surname} {m.member_number && <span className="text-indigo-600 ml-2 font-mono text-[11px]">{m.member_number}</span>}
@@ -68,7 +68,7 @@ const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
                       placeholder="Specific Role (e.g. Flutist, Teacher, Soprano)"
                       value={m.custom_role || ''}
                       onChange={(e) => setSelectedMembers((sm: any[]) => sm.map((x: any) => x.id === m.id ? { ...x, custom_role: e.target.value } : x))}
-                      className="w-full bg-white border border-gray-200 rounded-none p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400"
+                      className="w-full bg-white border border-gray-200 rounded-none p-2.5 text-sm focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all placeholder:text-gray-400"
                     />
                   </div>
                 ))}
@@ -80,7 +80,7 @@ const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
               placeholder="Search to add members..."
               value={memberSearchTerm}
               onChange={(e) => setMemberSearchTerm(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none font-semibold text-sm"
             />
 
             {memberSearchTerm && (
@@ -99,7 +99,7 @@ const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
                       }}
                       className={`w-full text-left p-3 text-sm font-semibold border-b border-gray-50 last:border-0 transition-colors ${isSelected ? 'bg-gray-100 text-gray-400 cursor-default' : 'hover:bg-gray-50'}`}
                     >
-                      {m.first_name} {m.surname} {m.member_number && <span className="text-indigo-600 italic text-[11px] ml-1">({m.member_number})</span>} {isSelected && <span className="float-right text-blue-500">Added</span>}
+                      {m.first_name} {m.surname} {m.member_number && <span className="text-indigo-600 italic text-[11px] ml-1">({m.member_number})</span>} {isSelected && <span className="float-right text-[var(--color-primary)]">Added</span>}
                     </button>
                   );
                 })}
@@ -121,7 +121,7 @@ const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
               placeholder="e.g. Sunday School Children, Mini Ensemble"
               value={form.department}
               onChange={(e) => setForm({ ...form, department: e.target.value })}
-              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none font-semibold text-sm"
               required
             />
           </div>
@@ -130,7 +130,7 @@ const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
             <select
               value={form.position_category}
               onChange={(e) => setForm({ ...form, position_category: e.target.value })}
-              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none font-semibold text-sm"
             >
               {CATEGORIES.filter(c => c.id !== 'all').map(cat => (
                 <option key={cat.id} value={cat.id}>{cat.label}</option>
@@ -145,7 +145,7 @@ const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
               placeholder="e.g. Sundays at 9:00 AM, Meets in Sanctuary, Weekly Server"
               value={form.assignment_reason}
               onChange={(e) => setForm({ ...form, assignment_reason: e.target.value })}
-              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all outline-none font-semibold text-sm"
             />
           </div>
         </div>
@@ -160,7 +160,7 @@ const AssignRoleModal: React.FC<AssignRoleModalProps> = ({
           <button
             onClick={handleSave}
             disabled={submitting || selectedMembers.length === 0 || selectedMembers.some(m => !m.custom_role)}
-            className="px-6 py-2.5 bg-[#2563eb] text-[var(--color-text-main)] rounded-none shadow-md text-sm font-bold hover:bg-[#1d4ed8] flex items-center gap-2 transition-transform disabled:opacity-50 hover:-translate-y-0.5"
+            className="px-6 py-2.5 bg-[var(--color-primary)] text-[var(--color-text-main)] rounded-none shadow-md text-sm font-bold hover:bg-[var(--color-primary-dark)] flex items-center gap-2 transition-transform disabled:opacity-50 hover:-translate-y-0.5"
           >
             <Save size={16} /> {submitting ? 'Saving...' : 'Confirm Assignment'}
           </button>

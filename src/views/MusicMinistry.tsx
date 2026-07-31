@@ -616,7 +616,7 @@ const MusicMinistry: React.FC = () => {
                                 </div>
 
                                 <div className="mt-8 pt-6 border-t border-gray-100 flex justify-center">
-                                    <button className="text-sm font-bold text-[var(--color-text-main)] hover:text-blue-700 flex items-center gap-1 transition-colors">
+                                    <button className="text-sm font-bold text-[var(--color-text-main)] hover:text-[var(--color-primary)] flex items-center gap-1 transition-colors">
                                         View Full Event <ArrowRight size={16} />
                                     </button>
                                 </div>
@@ -674,7 +674,7 @@ const MusicMinistry: React.FC = () => {
                                         <span className="text-4xl font-black text-gray-900">{avgAttendancePercentage}%</span>
                                     </div>
                                 </div>
-                                <div className="w-10 h-10 rounded-[10px] bg-[#eff6ff] flex items-center justify-center text-blue-500">
+                                <div className="w-10 h-10 rounded-[10px] bg-[#eff6ff] flex items-center justify-center text-[var(--color-primary)]">
                                     <Users size={18} />
                                 </div>
                             </div>
@@ -712,7 +712,7 @@ const MusicMinistry: React.FC = () => {
                                         const isChoirLike = resolvePracticeTypeKey(session.practice_type) === 'choir';
                                         const typeConfig = isChoirLike
                                             ? { bg: 'bg-[#fdf2f8]', text: 'text-pink-500', icon: Music, label: formatPracticeTypeLabel(session.practice_type) }
-                                            : { bg: 'bg-[#eff6ff]', text: 'text-blue-500', icon: Users, label: formatPracticeTypeLabel(session.practice_type) };
+                                            : { bg: 'bg-[#eff6ff]', text: 'text-[var(--color-primary)]', icon: Users, label: formatPracticeTypeLabel(session.practice_type) };
 
                                         const sessionRosterCount = getRosterSizeForPracticeType(session.practice_type);
                                         const attendanceRatio = Math.min((session.members_present / (sessionRosterCount || 1)), 1);
@@ -757,7 +757,7 @@ const MusicMinistry: React.FC = () => {
                                                     </div>
                                                 </div>
 
-                                                <button className="bg-[#f8f9fa] border border-gray-200 text-[var(--color-text-main)] hover:bg-gray-50 hover:border-blue-200 px-4 py-2 rounded-[8px] text-[11px] font-bold uppercase tracking-wider transition-colors shrink-0">
+                                                <button className="bg-[#f8f9fa] border border-gray-200 text-[var(--color-text-main)] hover:bg-gray-50 hover:border-[var(--color-primary-light)] px-4 py-2 rounded-[8px] text-[11px] font-bold uppercase tracking-wider transition-colors shrink-0">
                                                     Edit Details
                                                 </button>
                                             </div>

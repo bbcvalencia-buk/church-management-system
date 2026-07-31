@@ -251,7 +251,7 @@ const MemberIDPrint: React.FC = () => {
                     <button
                         onClick={handleDownload}
                         disabled={generating}
-                        className="bg-purple-600 hover:bg-purple-700 text-[var(--color-text-main)] px-6 py-2 rounded-none font-medium transition-colors flex items-center gap-2 shadow-lg shadow-purple-500/20 disabled:opacity-50"
+                        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] px-6 py-2 rounded-none font-medium transition-colors flex items-center gap-2  disabled:opacity-50"
                     >
                         <Download size={18} /> {generating ? 'Generating PDF...' : 'Download PDF'}
                     </button>
@@ -280,10 +280,10 @@ const MemberIDPrint: React.FC = () => {
                     {/* Header Logo */}
                     <div className="mt-1 mb-3 flex flex-col items-center">
                         <div className="w-10 h-10 bg-white rounded-none flex items-center justify-center border-2 border-yellow-400 shadow-sm mb-1">
-                            <Shield className="text-blue-900" size={20} />
+                            <Shield className="text-[var(--color-primary)]" size={20} />
                         </div>
                         <h2 className="text-[9px] uppercase tracking-wider font-bold text-[var(--color-text-main)] leading-tight">Bible Baptist Church</h2>
-                        <p className="text-[7px] text-blue-200 uppercase tracking-widest mt-0.5">Valencia City</p>
+                        <p className="text-[7px] text-[var(--color-primary-light)] uppercase tracking-widest mt-0.5">Valencia City</p>
                     </div>
 
                     {/* Photo */}
@@ -304,7 +304,7 @@ const MemberIDPrint: React.FC = () => {
 
                     {/* Name */}
                     <div className="mb-auto w-full">
-                        <h1 className="text-sm font-bold text-blue-900 uppercase leading-tight break-words">
+                        <h1 className="text-sm font-bold text-[var(--color-primary)] uppercase leading-tight break-words">
                             {member.first_name} {member.surname}
                         </h1>
                         <div className="h-0.5 w-8 bg-yellow-400 mx-auto my-1.5 rounded-none"></div>

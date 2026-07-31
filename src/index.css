@@ -16,6 +16,8 @@
   --color-primary: oklch(0.45 0.15 260); /* Brand Blue */
   --color-primary-dark: oklch(0.35 0.15 260);
   --color-primary-glow: oklch(0.45 0.15 260 / 0.15);
+  --color-primary-light: oklch(0.92 0.04 260); /* Light tint — replaces bg-blue-50/100 */
+  --color-primary-medium: oklch(0.55 0.12 260); /* Medium — replaces text-blue-500/600 */
   --color-text-main: oklch(0.2 0.02 60);
   --color-text-muted: oklch(0.5 0.02 60);
   --color-text-light: oklch(0.98 0.01 60);

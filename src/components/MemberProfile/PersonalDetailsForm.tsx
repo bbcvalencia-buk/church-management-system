@@ -89,13 +89,13 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
                 <div className="bg-white rounded-[16px] shadow-sm border border-gray-100 p-6 flex flex-col h-auto">
                     <div className="flex justify-between items-start mb-6">
                         <h3 className="text-[16px] font-bold text-gray-900 flex items-center gap-2">
-                            <MapPin size={18} className="text-blue-500" /> Contact Details
+                            <MapPin size={18} className="text-[var(--color-primary)]" /> Contact Details
                         </h3>
                     </div>
                     <div className="space-y-6">
                         <div className="flex items-start gap-4">
                             <div className="w-8 h-8 rounded-none bg-gray-50 flex items-center justify-center shrink-0">
-                                <Home size={14} className="text-blue-500" />
+                                <Home size={14} className="text-[var(--color-primary)]" />
                             </div>
                             <div className="flex-1">
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Home Address</p>
@@ -103,8 +103,8 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
                             </div>
                         </div>
                         <div className="flex items-start gap-4">
-                            <div className="w-8 h-8 rounded-none bg-purple-50 flex items-center justify-center shrink-0">
-                                <Phone size={14} className="text-purple-500" />
+                            <div className="w-8 h-8 rounded-none bg-[var(--color-primary-light)] flex items-center justify-center shrink-0">
+                                <Phone size={14} className="text-[var(--color-primary)]" />
                             </div>
                             <div className="flex-1">
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Phone Number</p>
@@ -162,7 +162,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
                         </div>
                         <div className="bg-gray-50 rounded-none p-4">
                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Membership Status</p>
-                            <span className="bg-blue-100 text-blue-700 text-[11px] px-3 py-1.5 rounded-none font-bold">
+                            <span className="bg-[var(--color-primary-light)] text-[var(--color-primary)] text-[11px] px-3 py-1.5 rounded-none font-bold">
                                 {member.is_regular_member ? 'Regular Member' : 'New Member'}
                             </span>
                         </div>
@@ -183,7 +183,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
                     {positions.length > 0 ? (
                         <div className="space-y-4 mb-6">
                             {positions.map((pos, i) => (
-                                <div key={i} onClick={() => handleViewMinistryMates(pos.department)} className="group border border-gray-100 rounded-none p-5 flex flex-col gap-1 shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all">
+                                <div key={i} onClick={() => handleViewMinistryMates(pos.department)} className="group border border-gray-100 rounded-none p-5 flex flex-col gap-1 shadow-sm cursor-pointer hover:border-[var(--color-primary)] hover:shadow-md transition-all">
                                     <h4 className="font-bold text-[#111827] text-[15px] group-hover:text-[var(--color-text-main)] transition-colors">
                                         {pos.position_name || pos.position_title || 'Ministry Member'}
                                     </h4>
@@ -200,7 +200,7 @@ const PersonalDetailsForm: React.FC<PersonalDetailsFormProps> = ({
                         <p className="text-[12px] font-semibold text-gray-400 italic mb-6">No ministry involvements recorded yet.</p>
                     )}
 
-                    <Link to="/members" className="w-full py-2.5 border border-blue-200 rounded-none text-blue-700 text-sm font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                    <Link to="/members" className="w-full py-2.5 border border-[var(--color-primary-light)] rounded-none text-[var(--color-primary)] text-sm font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                         <Eye size={15} /> View All Members
                     </Link>
                 </div>

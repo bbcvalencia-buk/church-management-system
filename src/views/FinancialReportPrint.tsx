@@ -561,7 +561,7 @@ const FinancialReportPrint: React.FC = () => {
                             <tr key={row.date} className="border-b border-gray-100 last:border-b-0">
                                 <td className="px-2 py-1 text-slate-700 font-semibold">{row.day}</td>
                                 <td className="px-2 py-1 text-right">{formatAmount(row.tithe)}</td>
-                                <td className="px-2 py-1 text-right text-blue-700">{formatAmount(row.fpGiven)}</td>
+                                <td className="px-2 py-1 text-right text-[var(--color-primary)]">{formatAmount(row.fpGiven)}</td>
                                 {showLoveGift && <td className="px-2 py-1 text-right">{formatAmount(row.loveGift)}</td>}
                                 {showPledge && <td className="px-2 py-1 text-right">{formatAmount(row.pledge)}</td>}
                             </tr>
@@ -569,7 +569,7 @@ const FinancialReportPrint: React.FC = () => {
                         <tr className="bg-slate-50 border-t border-slate-200 font-bold text-slate-800">
                             <td className="px-2 py-1">TOTAL</td>
                             <td className="px-2 py-1 text-right">{formatAmount(month.totals.tithe)}</td>
-                            <td className="px-2 py-1 text-right text-blue-700">{formatAmount(month.totals.fpGiven)}</td>
+                            <td className="px-2 py-1 text-right text-[var(--color-primary)]">{formatAmount(month.totals.fpGiven)}</td>
                             {showLoveGift && <td className="px-2 py-1 text-right">{formatAmount(month.totals.loveGift)}</td>}
                             {showPledge && <td className="px-2 py-1 text-right">{formatAmount(month.totals.pledge)}</td>}
                         </tr>
@@ -709,7 +709,7 @@ const FinancialReportPrint: React.FC = () => {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">FP / Sunday (Annual / 52)</p>
-                                            <p className="text-[32px] font-black text-blue-700">P{formatAmount(statement.fpPerSunday52, false)}</p>
+                                            <p className="text-[32px] font-black text-[var(--color-primary)]">P{formatAmount(statement.fpPerSunday52, false)}</p>
                                         </div>
                                     </div>
 
@@ -723,7 +723,7 @@ const FinancialReportPrint: React.FC = () => {
                                             <p className="text-sm font-black uppercase text-slate-900">Financial Summary</p>
                                             <div className="mt-2 space-y-1 text-sm">
                                                 <p>Total Tithes: <span className="font-bold">P{formatAmount(statement.yearTithe, false)}</span></p>
-                                                <p>Total Faith Promise Given: <span className="font-bold text-blue-700">P{formatAmount(statement.fpGiven, false)}</span></p>
+                                                <p>Total Faith Promise Given: <span className="font-bold text-[var(--color-primary)]">P{formatAmount(statement.fpGiven, false)}</span></p>
                                                 {includeLoveGifts && <p>Total Love Gifts: <span className="font-bold">P{formatAmount(statement.yearLoveGift, false)}</span></p>}
                                                 {includePledges && <p>Total Pledges: <span className="font-bold">P{formatAmount(statement.yearPledge, false)}</span></p>}
                                                 <p>Total Others: <span className="font-bold">P{formatAmount(statement.yearOther, false)}</span></p>

@@ -87,7 +87,7 @@ const FaithPromiseForm: React.FC<FaithPromiseFormProps> = ({ data, onChange }) =
                             type="number"
                             value={formYear}
                             onChange={(e) => onChange('formYear', parseInt(e.target.value))}
-                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none shadow-sm"
+                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none shadow-sm"
                         />
                     </div>
                     <div>
@@ -97,13 +97,13 @@ const FaithPromiseForm: React.FC<FaithPromiseFormProps> = ({ data, onChange }) =
                             min="0"
                             value={formAmount || ''}
                             onChange={(e) => onChange('formAmount', parseFloat(e.target.value) || 0)}
-                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none shadow-sm pb-2.5"
+                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] transition-all outline-none shadow-sm pb-2.5"
                         />
                     </div>
                     <div className="flex items-end">
                         <button
                             onClick={handleSave}
-                            className="w-full bg-[#2563eb] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] rounded-none h-[46px] flex items-center justify-center gap-2 font-bold text-sm transition-all shadow-sm hover:-translate-y-0.5"
+                            className="w-full bg-[var(--color-primary)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] rounded-none h-[46px] flex items-center justify-center gap-2 font-bold text-sm transition-all shadow-sm hover:-translate-y-0.5"
                         >
                             <Save size={16} /> Save Commitment
                         </button>
@@ -130,7 +130,7 @@ const FaithPromiseForm: React.FC<FaithPromiseFormProps> = ({ data, onChange }) =
                                                 <span className="bg-green-50 text-green-600 text-[10px] uppercase font-bold px-2 py-0.5 rounded-none border border-green-100">Completed</span>
                                             )}
                                             {comm.isNew && (
-                                                <span className="bg-gray-50 text-[var(--color-text-main)] text-[10px] uppercase font-bold px-2 py-0.5 rounded-none border border-blue-100">Unsaved</span>
+                                                <span className="bg-gray-50 text-[var(--color-text-main)] text-[10px] uppercase font-bold px-2 py-0.5 rounded-none border border-[var(--color-primary-light)]">Unsaved</span>
                                             )}
                                         </div>
                                         <div className="text-2xl font-bold text-gray-900 leading-none">
@@ -144,7 +144,7 @@ const FaithPromiseForm: React.FC<FaithPromiseFormProps> = ({ data, onChange }) =
                                                 onChange('formAmount', comm.promised_amount);
                                                 onChange('editingId', comm.id || comm.localId);
                                             }}
-                                            className="text-[11px] font-bold text-blue-500 hover:text-blue-700 transition-colors uppercase tracking-widest"
+                                            className="text-[11px] font-bold text-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors uppercase tracking-widest"
                                         >
                                             Edit
                                         </button>
@@ -165,7 +165,7 @@ const FaithPromiseForm: React.FC<FaithPromiseFormProps> = ({ data, onChange }) =
                                     </div>
                                     <div className="h-[7px] bg-gray-100 rounded-none overflow-hidden">
                                         <div
-                                            className={`h-full rounded-none transition-all duration-500 ${given >= comm.promised_amount && comm.promised_amount > 0 ? 'bg-green-500' : 'bg-[#2563eb]'}`}
+                                            className={`h-full rounded-none transition-all duration-500 ${given >= comm.promised_amount && comm.promised_amount > 0 ? 'bg-green-500' : 'bg-[var(--color-primary)]'}`}
                                             style={{ width: `${progress}%` }}
                                         />
                                     </div>

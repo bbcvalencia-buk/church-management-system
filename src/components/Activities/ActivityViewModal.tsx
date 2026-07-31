@@ -84,7 +84,7 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                                     <div className="rounded-none border border-gray-100 bg-white p-6 flex flex-col items-center justify-center text-gray-400 relative overflow-hidden group">
                                         <div className="absolute inset-0 bg-gray-50/50 group-hover:bg-gray-50 transition-colors" />
                                         <div className="relative z-10 text-center">
-                                            <ImageIcon size={32} className="mx-auto mb-2 opacity-50 text-blue-300" />
+                                            <ImageIcon size={32} className="mx-auto mb-2 opacity-50 text-[var(--color-primary)]" />
                                             <p className="text-xs font-bold text-[var(--color-text-main)]/70">Add More Photos</p>
                                         </div>
                                     </div>
@@ -110,7 +110,7 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                     {/* Meta Info */}
                     <div className="flex flex-wrap gap-4 items-center text-sm font-medium border-y border-gray-100 py-4 pb-4">
                         <div className="flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-none shadow-sm border border-gray-50">
-                            <MapPin size={16} className="text-blue-500" /> Location: <span className="text-gray-900">{viewActivity.area || 'Unknown'}</span>
+                            <MapPin size={16} className="text-[var(--color-primary)]" /> Location: <span className="text-gray-900">{viewActivity.area || 'Unknown'}</span>
                         </div>
                         <div className="flex text-gray-400 px-4 py-2">
                             ID: <span className="ml-1 uppercase tracking-wider">{viewActivity.id.slice(0, 8)}</span>
@@ -177,7 +177,7 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                             </div>
                         </div>
                         <div className="bg-white p-6 rounded-none shadow-sm border border-gray-100 flex items-center gap-5">
-                            <div className="w-12 h-12 rounded-none bg-gray-50 flex items-center justify-center text-blue-500 shrink-0">
+                            <div className="w-12 h-12 rounded-none bg-gray-50 flex items-center justify-center text-[var(--color-primary)] shrink-0">
                                 <Users size={24} />
                             </div>
                             <div>

@@ -83,7 +83,7 @@ const SeriesDetails: React.FC<SeriesDetailsProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-[var(--color-surface-hover)] p-6 border border-[var(--color-border)]">
                 <div className="flex items-center gap-4 bg-[var(--color-surface)] p-4 shadow-sm border border-[var(--color-border)]">
-                    <div className="p-3 bg-blue-50/50"><Calendar className="text-[var(--color-primary)]" size={24} /></div>
+                    <div className="p-3 bg-[var(--color-primary-light)]/50"><Calendar className="text-[var(--color-primary)]" size={24} /></div>
                     <div>
                         <p className="text-[10px] font-bold text-[var(--color-text-muted)] uppercase tracking-widest">Total Sessions</p>
                         <p className="text-2xl font-black text-[var(--color-text-main)]">{sessions.length}</p>

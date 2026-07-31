@@ -66,10 +66,10 @@ const FamilyProfile: React.FC = () => {
                 <div className="flex flex-col md:flex-row gap-8 items-start mb-6">
                     {/* Representative Avatar / Family Icon */}
                     <div className="relative shrink-0 w-36 h-36">
-                        <div className="w-full h-full rounded-[24px] overflow-hidden bg-gradient-to-br from-indigo-50 to-purple-50 border-4 border-white shadow-lg flex items-center justify-center text-purple-600">
+                        <div className="w-full h-full rounded-[24px] overflow-hidden bg-gradient-to-br from-indigo-50 to-purple-50 border-4 border-white shadow-lg flex items-center justify-center text-[var(--color-primary)]">
                             {members.length > 1 ? <Users size={56} /> : <User size={56} />}
                         </div>
-                        <div className="absolute -bottom-2 -right-2 bg-purple-600 text-[var(--color-text-main)] p-2 rounded-none shadow-lg border-2 border-white" title="Household">
+                        <div className="absolute -bottom-2 -right-2 bg-[var(--color-primary)] text-[var(--color-text-main)] p-2 rounded-none shadow-lg border-2 border-white" title="Household">
                             <Home size={18} />
                         </div>
                     </div>

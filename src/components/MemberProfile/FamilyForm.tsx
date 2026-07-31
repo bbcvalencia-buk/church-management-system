@@ -98,7 +98,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                             onFocus={() => setShowDropdown(true)}
                             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                             placeholder="Type to search members..."
-                            className="w-full bg-white border border-gray-200 rounded-none py-2.5 pl-9 pr-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400 font-semibold"
+                            className="w-full bg-white border border-gray-200 rounded-none py-2.5 pl-9 pr-3 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all placeholder:text-gray-400 font-semibold"
                         />
                     </div>
                     {/* Autocomplete Dropdown */}
@@ -141,7 +141,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                     <select
                         value={relationType}
                         onChange={(e) => onChange('relationType', e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-none p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                        className="w-full bg-white border border-gray-200 rounded-none p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all font-semibold"
                     >
                         {Object.entries(RELATION_TYPES).map(([key, label]) => (
                             <option key={key} value={key}>{label}</option>
@@ -150,7 +150,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                 </div>
                 <button
                     onClick={addRelation}
-                    className="bg-[#2563eb] hover:bg-[#1d4ed8] text-[var(--color-text-main)] p-2.5 rounded-none flex items-center justify-center transition-colors shadow-sm"
+                    className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] p-2.5 rounded-none flex items-center justify-center transition-colors shadow-sm"
                     title="Add Relative"
                 >
                     <UserPlus size={20} />

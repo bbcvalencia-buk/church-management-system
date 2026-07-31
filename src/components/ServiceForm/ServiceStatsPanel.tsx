@@ -44,7 +44,7 @@ const ServiceStatsPanel: React.FC<Props> = ({ service, isPrimaryService, newVisi
                             <button
                                 type="button"
                                 onClick={onOpenAttendance}
-                                className="w-full bg-gray-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
+                                className="w-full bg-gray-50 text-[var(--color-primary)] border border-[var(--color-primary-light)] hover:bg-[var(--color-primary-light)] hover:border-[var(--color-primary)] py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2 px-3"
                             >
                                 <Users size={18} className="shrink-0" /> <span>Manage Attendance Report</span>
                             </button>

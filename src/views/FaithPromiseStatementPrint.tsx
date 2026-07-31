@@ -159,7 +159,7 @@ const FaithPromiseStatementPrint: React.FC = () => {
                     {/* Summary Box */}
                     <div className="border-t-2 border-slate-800 pt-4 flex justify-between items-center">
                         <div className="space-y-1">
-                            <p className="text-sm">Total Paid: <span className="font-bold text-blue-700">₱{formatAmount(l.total_paid)}</span></p>
+                            <p className="text-sm">Total Paid: <span className="font-bold text-[var(--color-primary)]">₱{formatAmount(l.total_paid)}</span></p>
                             <p className="text-sm">Status: <span className="font-bold">{l.status} ({l.fulfillment_pct.toFixed(1)}%)</span></p>
                         </div>
                         <div className="text-right">

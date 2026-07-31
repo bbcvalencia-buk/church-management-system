@@ -99,7 +99,7 @@ const PositionsForm: React.FC<PositionsFormProps> = ({ data, onChange }) => {
                             value={newPosition.position_name || ''}
                             onChange={(e) => updateDraft('position_name', e.target.value)}
                             placeholder="e.g. Choir Member, Sunday School Teacher"
-                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm"
+                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -108,7 +108,7 @@ const PositionsForm: React.FC<PositionsFormProps> = ({ data, onChange }) => {
                         <select
                             value={newPosition.position_category || 'sunday_school_adult'}
                             onChange={(e) => updateDraft('position_category', e.target.value as ChurchPosition['position_category'])}
-                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm"
+                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all text-sm"
                         >
                             {CATEGORY_OPTIONS.map(opt => (
                                 <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -123,7 +123,7 @@ const PositionsForm: React.FC<PositionsFormProps> = ({ data, onChange }) => {
                             value={newPosition.department || ''}
                             onChange={(e) => updateDraft('department', e.target.value)}
                             placeholder="e.g. Main Choir, Sunday School Adult"
-                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm"
+                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -134,7 +134,7 @@ const PositionsForm: React.FC<PositionsFormProps> = ({ data, onChange }) => {
                             value={newPosition.assignment_reason || ''}
                             onChange={(e) => updateDraft('assignment_reason', e.target.value)}
                             placeholder="e.g. Sunday 8:30"
-                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm"
+                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -144,7 +144,7 @@ const PositionsForm: React.FC<PositionsFormProps> = ({ data, onChange }) => {
                             type="date"
                             value={newPosition.start_date || new Date().toISOString().split('T')[0]}
                             onChange={(e) => updateDraft('start_date', e.target.value)}
-                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all text-sm"
+                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] outline-none transition-all text-sm"
                         />
                     </div>
 
@@ -164,7 +164,7 @@ const PositionsForm: React.FC<PositionsFormProps> = ({ data, onChange }) => {
                 <div className="flex justify-end mt-4">
                     <button
                         onClick={addPosition}
-                        className="bg-[#2563eb] hover:bg-[#1d4ed8] text-[var(--color-text-main)] px-4 py-2.5 rounded-none flex items-center gap-2 text-sm font-semibold transition-colors"
+                        className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-[var(--color-text-main)] px-4 py-2.5 rounded-none flex items-center gap-2 text-sm font-semibold transition-colors"
                     >
                         <Plus size={16} /> Add Position
                     </button>
