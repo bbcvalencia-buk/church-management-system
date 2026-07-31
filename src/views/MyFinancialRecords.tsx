@@ -213,7 +213,7 @@ const MyFinancialRecords: React.FC = () => {
                 </div>
                 <table className="w-full text-[11px] table-fixed border-collapse">
                     <thead>
-                        <tr className="bg-slate-800 text-white uppercase text-[10px]">
+                        <tr className="bg-slate-800 text-[var(--color-text-main)] uppercase text-[10px]">
                             <th className="text-left px-2 py-1 w-10">Day</th>
                             <th className="text-right px-2 py-1">Tithe</th>
                             <th className="text-right px-2 py-1">FP</th>
@@ -247,7 +247,7 @@ const MyFinancialRecords: React.FC = () => {
 
     if (!member?.id) {
         return (
-            <div className="bg-white border border-yellow-100 rounded-2xl p-6">
+            <div className="bg-white border border-yellow-100 rounded-none p-6">
                 <h1 className="text-xl font-bold text-yellow-700">No Linked Member Profile</h1>
                 <p className="text-sm text-gray-600 mt-2">
                     Your account is not linked to a member record yet, so personal financial records cannot be displayed.
@@ -261,12 +261,12 @@ const MyFinancialRecords: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="bg-white border border-[var(--color-border)] rounded-2xl overflow-hidden">
+            <div className="bg-white border border-[var(--color-border)] rounded-none overflow-hidden">
                 <div className="p-6 border-b border-[var(--color-border)] space-y-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-[var(--color-text-main)] flex items-center gap-2">
-                                <CreditCard size={22} className="text-blue-600" />
+                                <CreditCard size={22} className="text-[var(--color-text-main)]" />
                                 My Financial Records
                             </h1>
                             <p className="text-sm text-[var(--color-text-muted)] mt-1">
@@ -278,7 +278,7 @@ const MyFinancialRecords: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-widest">Fiscal Year</label>
-                            <div className="flex items-center gap-2 bg-white border border-[var(--color-border)] rounded-lg px-3 py-2">
+                            <div className="flex items-center gap-2 bg-white border border-[var(--color-border)] rounded-none px-3 py-2">
                                 <Calendar size={16} className="text-gray-500" />
                                 <select
                                     value={selectedYear}
@@ -293,14 +293,14 @@ const MyFinancialRecords: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <div className="px-6 py-4 bg-blue-500/10 border-t border-blue-500/20">
+                <div className="px-6 py-4 bg-gray-500/10 border-t border-blue-500/20">
                     <p className="text-sm text-blue-800">
                         Note: The records below are for {selectedYear} only and do not include last year. If you notice errors, please contact the admin.
                     </p>
                 </div>
             </div>
 
-            <div className="bg-white text-black shadow-2xl rounded-2xl p-8">
+            <div className="bg-white text-black shadow-2xl rounded-none p-8">
                 <div className="text-center">
                     <h1 className="text-[38px] font-black uppercase tracking-wide text-slate-900">{churchSettings.church_name}</h1>
                     {churchSettings.church_address && (
@@ -340,7 +340,7 @@ const MyFinancialRecords: React.FC = () => {
                     </div>
                     <div className="text-right">
                         <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Faith Promise Balance</p>
-                        <div className="mt-1 inline-block bg-red-50 border border-red-100 rounded-lg px-5 py-2">
+                        <div className="mt-1 inline-block bg-red-50 border border-red-100 rounded-none px-5 py-2">
                             <p className="text-3xl font-black text-red-600">P{formatAmount(fpBalance, false)}</p>
                         </div>
                     </div>
@@ -348,20 +348,20 @@ const MyFinancialRecords: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white border border-gray-100 rounded-xl p-4">
+                <div className="bg-white border border-gray-100 rounded-none p-4">
                     <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Tithe</p>
                     <p className="text-lg font-black text-gray-900 mt-2">{formatCurrency(totals.tithe)}</p>
                 </div>
-                <div className="bg-white border border-gray-100 rounded-xl p-4">
+                <div className="bg-white border border-gray-100 rounded-none p-4">
                     <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Faith Promise</p>
                     <p className="text-lg font-black text-gray-900 mt-2">{formatCurrency(totals.faith_promise)}</p>
                 </div>
-                <div className="bg-white border border-gray-100 rounded-xl p-4">
+                <div className="bg-white border border-gray-100 rounded-none p-4">
                     <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Love Gift</p>
                     <p className="text-lg font-black text-gray-900 mt-2">{formatCurrency(totals.love_gift)}</p>
                 </div>
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-                    <p className="text-[11px] font-bold text-blue-600 uppercase tracking-widest">Total</p>
+                <div className="bg-gray-50 border border-blue-100 rounded-none p-4">
+                    <p className="text-[11px] font-bold text-[var(--color-text-main)] uppercase tracking-widest">Total</p>
                     <p className="text-lg font-black text-blue-700 mt-2">{formatCurrency(totals.total)}</p>
                 </div>
             </div>

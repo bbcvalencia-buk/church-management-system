@@ -612,7 +612,7 @@ const ServiceForm: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate(-1)}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors text-[var(--color-text-main)]"
+                        className="p-2 hover:bg-gray-100 rounded-none transition-colors text-[var(--color-text-main)]"
                     >
                         <ArrowLeft size={20} />
                     </button>
@@ -686,7 +686,7 @@ const ServiceForm: React.FC = () => {
                                     />
                                 </div>
                                 {serviceDateWarning && (
-                                    <p className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                                    <p className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-100 rounded-none px-3 py-2">
                                         {serviceDateWarning}
                                     </p>
                                 )}

@@ -21,7 +21,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 }) => {
     return (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-white rounded-2xl border border-gray-200 shadow-2xl overflow-hidden">
+            <div className="w-full max-w-2xl bg-white rounded-none border border-gray-200 shadow-2xl overflow-hidden">
                 <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Edit Transaction History</h3>
@@ -30,7 +30,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                     <button
                         type="button"
                         onClick={closeEditModal}
-                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+                        className="p-2 rounded-none hover:bg-gray-100 text-gray-500"
                     >
                         <X size={16} />
                     </button>
@@ -38,14 +38,14 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 
                 <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="text-xs font-bold text-blue-600 uppercase tracking-wide">Tithe</label>
+                        <label className="text-xs font-bold text-[var(--color-text-main)] uppercase tracking-wide">Tithe</label>
                         <input
                             type="number"
                             min="0"
                             step="0.01"
                             value={editForm.tithe_amount}
                             onChange={(e) => setEditForm({ ...editForm, tithe_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                            className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
+                            className="w-full mt-1 border border-gray-200 rounded-none p-2.5"
                         />
                     </div>
                     <div>
@@ -56,18 +56,18 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                             step="0.01"
                             value={editForm.faith_promise_amount}
                             onChange={(e) => setEditForm({ ...editForm, faith_promise_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                            className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
+                            className="w-full mt-1 border border-gray-200 rounded-none p-2.5"
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-bold text-pink-600 uppercase tracking-wide">Love Gift</label>
+                        <label className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wide">Love Gift</label>
                         <input
                             type="number"
                             min="0"
                             step="0.01"
                             value={editForm.love_gift_amount}
                             onChange={(e) => setEditForm({ ...editForm, love_gift_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                            className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
+                            className="w-full mt-1 border border-gray-200 rounded-none p-2.5"
                         />
                     </div>
                     <div>
@@ -78,7 +78,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                             step="0.01"
                             value={editForm.pledge_amount}
                             onChange={(e) => setEditForm({ ...editForm, pledge_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                            className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
+                            className="w-full mt-1 border border-gray-200 rounded-none p-2.5"
                         />
                     </div>
                     <div className="md:col-span-2">
@@ -88,7 +88,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                             value={editForm.pledge_purpose}
                             onChange={(e) => setEditForm({ ...editForm, pledge_purpose: e.target.value })}
                             placeholder="Purpose (if pledge is used)"
-                            className="w-full mt-1 border border-gray-200 rounded-lg p-2.5"
+                            className="w-full mt-1 border border-gray-200 rounded-none p-2.5"
                         />
                     </div>
                 </div>
@@ -97,7 +97,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                     <button
                         type="button"
                         onClick={closeEditModal}
-                        className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100"
+                        className="px-4 py-2 rounded-none border border-gray-200 text-gray-600 hover:bg-gray-100"
                     >
                         Cancel
                     </button>
@@ -105,7 +105,7 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
                         type="button"
                         onClick={prepareUpdate}
                         disabled={updating}
-                        className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                        className="px-4 py-2 rounded-none bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] hover:bg-[var(--color-surface-hover)] disabled:opacity-50 flex items-center gap-2"
                     >
                         <Save size={14} />
                         {updating ? 'Saving...' : 'Save Changes'}

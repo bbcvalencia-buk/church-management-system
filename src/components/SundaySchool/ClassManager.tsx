@@ -44,18 +44,18 @@ const ClassManager: React.FC<ClassManagerProps> = ({
         <div className="space-y-10">
             {isChildTeacherOnly ? (
                 <div key="children">
-                    <div id="dept-children" className="px-3 py-2 text-sm font-bold uppercase tracking-widest text-gray-500">
+                    <div id="dept-children" className="py-2 text-sm font-bold uppercase tracking-widest text-gray-400 border-b border-gray-100 mb-4">
                         Children
                     </div>
                     <div className="space-y-8">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-300 overflow-hidden">
-                            <div className="p-4 sm:p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" style={{ backgroundColor: '#0088FE15', borderColor: '#0088FE30' }}>
+                        <div className="flex flex-col gap-6">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4">
                                 <div>
-                                    <h3 className="text-xl font-bold flex items-center gap-3 text-[#0088FE]">
-                                        <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: '#0088FE' }} />
+                                    <h3 className="text-3xl font-black tracking-tight flex items-center gap-3 text-gray-900" style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
+                                        <span className="w-4 h-4 rounded-none shadow-sm" style={{ backgroundColor: '#0088FE' }} />
                                         Children
                                     </h3>
-                                    <p className="text-xs font-semibold text-gray-500 mt-1 uppercase tracking-widest">Read-Only Mode</p>
+                                    <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-widest">Read-Only Mode</p>
                                 </div>
                                 <div>
                                     <button
@@ -72,15 +72,14 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                             setNewVisitors([]);
                                             setIsModalOpen(true);
                                         }}
-                                        className="px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-bold transition-all shadow-sm bg-white hover:bg-gray-50"
-                                        style={{ color: '#0088FE', border: '1px solid rgba(0, 136, 254, 0.25)' }}
+                                        className="px-6 py-3 rounded-none flex items-center gap-2 text-sm font-bold transition-all bg-gray-900 text-[var(--color-text-main)] hover:bg-gray-800 hover:-translate-y-0.5"
                                     >
                                         <Plus size={16} /> File Children Report
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="overflow-x-auto">
+                            <div className="overflow-x-auto bg-white rounded-[2rem] border border-gray-100 shadow-sm">
                                 <table className="w-full text-left border-collapse min-w-[700px]">
                                     <thead className="bg-gray-50/50">
                                         <tr className="border-b border-gray-100 text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -112,7 +111,7 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                                         <td className="p-4 text-center font-bold text-gray-900 bg-gray-50">{session.total_attendance}</td>
                                                         <td className="p-4 text-center">
                                                             {(session.souls_saved || 0) > 0 ? (
-                                                                <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold inline-block min-w-[28px]">
+                                                                <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-none text-xs font-bold inline-block min-w-[28px]">
                                                                     {session.souls_saved}
                                                                 </span>
                                                             ) : (
@@ -123,14 +122,14 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                                             <div className="flex justify-end gap-2">
                                                                 <button
                                                                     onClick={() => handleOpenAttendanceViewer(session)}
-                                                                    className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-emerald-200"
+                                                                    className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-none text-xs font-bold transition-colors flex items-center gap-1.5 border border-emerald-200"
                                                                     title="View Attendance"
                                                                 >
                                                                     <Eye size={14} /> Attendance
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleOpenModal(session)}
-                                                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-blue-200"
+                                                                    className="px-3 py-1.5 bg-gray-50 text-[var(--color-text-main)] hover:bg-blue-100 hover:text-blue-700 rounded-none text-xs font-bold transition-colors flex items-center gap-1.5 border border-blue-200"
                                                                     title="Edit Report"
                                                                 >
                                                                     <Edit2 size={14} /> Edit
@@ -150,26 +149,26 @@ const ClassManager: React.FC<ClassManagerProps> = ({
             ) : (
                 DEPARTMENT_GROUPS.filter((group) => group.departments.some((deptId) => managedDepartmentIds.includes(deptId))).map((group) => (
                     <div key={group.id}>
-                        <div className="px-3 py-2 text-sm font-bold uppercase tracking-widest text-gray-500">
+                        <div className="py-2 text-sm font-bold uppercase tracking-widest text-gray-400 border-b border-gray-100 mb-4">
                             {group.label}
                         </div>
-                        <div className="space-y-8">
+                        <div className="space-y-12">
                             {group.departments.map((deptId) => {
                                 const dept = DEPARTMENTS.find((item) => item.id === deptId);
                                 if (!dept) return null;
                                 const isManaged = managedDepartmentIds.includes(dept.id);
                                 const deptSessions = sessions.filter((s) => s.department === dept.id);
                                 return (
-                                    <div key={dept.id} id={`dept-${dept.id}`} className={`bg-white rounded-2xl shadow-sm border overflow-hidden ${isManaged ? 'border-gray-300 shadow-md' : 'border-gray-100 opacity-90'}`}>
+                                    <div key={dept.id} id={`dept-${dept.id}`} className={`flex flex-col gap-6 pt-4 ${!isManaged ? 'opacity-80' : ''}`}>
                                         {/* Department Header */}
-                                        <div className="p-4 sm:p-6 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative" style={{ backgroundColor: `${dept.color}15`, borderColor: `${dept.color}30` }}>
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                             <div className="z-10 relative">
-                                                <h3 className="text-xl font-bold flex items-center gap-3" style={{ color: isManaged ? dept.color : '#4b5563' }}>
+                                                <h3 className="text-3xl font-black tracking-tight flex items-center gap-3 text-gray-900" style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
                                                     {/* Dot indicator */}
-                                                    <span className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: dept.color }}></span>
+                                                    <span className="w-4 h-4 rounded-none shadow-sm" style={{ backgroundColor: dept.color }}></span>
                                                     {dept.label}
                                                 </h3>
-                                                {!isManaged && <p className="text-xs font-semibold text-gray-500 mt-1 uppercase tracking-widest">Read-Only Mode</p>}
+                                                {!isManaged && <p className="text-xs font-bold text-gray-400 mt-2 uppercase tracking-widest">Read-Only Mode</p>}
                                             </div>
                                             <div className="z-10 relative">
                                                 {isManaged && (
@@ -187,8 +186,8 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                                             setNewVisitors([]);
                                                             setIsModalOpen(true);
                                                         }}
-                                                        className="px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-bold transition-all shadow-sm bg-white hover:bg-gray-50"
-                                                        style={{ color: dept.color, border: `1px solid ${dept.color}40` }}
+                                                        className="px-6 py-3 rounded-none flex items-center gap-2 text-sm font-bold transition-all text-[var(--color-text-main)] hover:opacity-90 hover:-translate-y-0.5 shadow-sm"
+                                                        style={{ backgroundColor: dept.color }}
                                                     >
                                                         <Plus size={16} /> File {dept.label} Report
                                                     </button>
@@ -197,7 +196,7 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                         </div>
 
                                         {/* Department Table */}
-                                        <div className="overflow-x-auto">
+                                        <div className="overflow-x-auto bg-white rounded-[2rem] border border-gray-100 shadow-sm">
                                             <table className="w-full text-left border-collapse min-w-[700px]">
                                                 <thead className="bg-gray-50/50">
                                                     <tr className="border-b border-gray-100 text-xs font-bold text-gray-400 uppercase tracking-widest">
@@ -225,7 +224,7 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                                                 <td className="p-4 text-center font-bold text-gray-900 bg-gray-50">{session.total_attendance}</td>
                                                                 <td className="p-4 text-center">
                                                                     {(session.souls_saved || 0) > 0 ? (
-                                                                        <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold inline-block min-w-[28px]">
+                                                                        <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-none text-xs font-bold inline-block min-w-[28px]">
                                                                             {session.souls_saved}
                                                                         </span>
                                                                     ) : (
@@ -236,7 +235,7 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                                                     <div className="flex justify-end gap-2">
                                                                         <button
                                                                             onClick={() => handleOpenAttendanceViewer(session)}
-                                                                            className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-emerald-200"
+                                                                            className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 rounded-none text-xs font-bold transition-colors flex items-center gap-1.5 border border-emerald-200"
                                                                             title="View Attendance"
                                                                         >
                                                                             <Eye size={14} /> Attendance
@@ -244,7 +243,7 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                                                         {isManaged ? (
                                                                             <button
                                                                                 onClick={() => handleOpenModal(session)}
-                                                                                className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-blue-200"
+                                                                                className="px-3 py-1.5 bg-gray-50 text-[var(--color-text-main)] hover:bg-blue-100 hover:text-blue-700 rounded-none text-xs font-bold transition-colors flex items-center gap-1.5 border border-blue-200"
                                                                                 title="Edit Report"
                                                                             >
                                                                                 <Edit2 size={14} /> Edit
@@ -255,7 +254,7 @@ const ClassManager: React.FC<ClassManagerProps> = ({
                                                                                     setNewSession(session);
                                                                                     setIsModalOpen(true);
                                                                                 }}
-                                                                                className="px-3 py-1.5 bg-gray-50 text-gray-500 hover:bg-gray-100 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-gray-200"
+                                                                                className="px-3 py-1.5 bg-gray-50 text-gray-500 hover:bg-gray-100 rounded-none text-xs font-bold transition-colors flex items-center gap-1.5 border border-gray-200"
                                                                                 title="View Report"
                                                                             >
                                                                                 <Eye size={14} /> View

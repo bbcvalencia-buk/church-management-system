@@ -30,13 +30,13 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
             <div className="card-panel w-full max-w-sm p-6 relative animate-in zoom-in-95 duration-200 shadow-2xl bg-white">
                 <button
                     onClick={onCancel}
-                    className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-red-500 p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-red-500 p-1 hover:bg-gray-100 rounded-none transition-colors"
                 >
                     <X size={18} />
                 </button>
 
                 <div className="flex flex-col items-center text-center space-y-4">
-                    <div className={`p-4 rounded-full ${isDanger ? 'bg-red-50 text-red-500' : 'bg-yellow-50 text-yellow-500'}`}>
+                    <div className={`p-4 rounded-none ${isDanger ? 'bg-red-50 text-red-500' : 'bg-yellow-50 text-yellow-500'}`}>
                         <AlertTriangle size={32} />
                     </div>
 
@@ -50,13 +50,13 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     <div className="flex gap-3 w-full pt-4">
                         <button
                             onClick={onCancel}
-                            className="flex-1 px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-[var(--color-text-main)] font-medium transition-colors border border-[var(--color-border)]"
+                            className="flex-1 px-4 py-2.5 rounded-none bg-gray-100 hover:bg-gray-200 text-[var(--color-text-main)] font-medium transition-colors border border-[var(--color-border)]"
                         >
                             {cancelText}
                         </button>
                         <button
                             onClick={onConfirm}
-                            className={`flex-1 px-4 py-2.5 rounded-lg font-bold text-white shadow-lg transition-all active:scale-95 ${isDanger
+                            className={`flex-1 px-4 py-2.5 rounded-none font-bold text-[var(--color-text-main)] shadow-lg transition-all active:scale-95 ${isDanger
                                 ? 'bg-red-600 hover:bg-red-500 shadow-red-500/20'
                                 : 'bg-[var(--color-primary)] hover:bg-violet-600 shadow-purple-500/20'
                                 }`}

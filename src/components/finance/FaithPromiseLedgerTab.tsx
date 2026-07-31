@@ -171,11 +171,11 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                             placeholder="Search name or ID..."
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-64 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            className="pl-9 pr-4 py-2 border border-gray-200 rounded-none text-sm w-64 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 border border-gray-200 rounded-none px-3 py-2">
                         <Filter size={16} className="text-gray-400" />
                         <select
                             value={statusFilter}
@@ -190,7 +190,7 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-gray-50">
+                    <div className="flex items-center gap-2 border border-gray-200 rounded-none px-3 py-2 bg-gray-50">
                         <span className="text-xs font-bold text-gray-500 uppercase">Year</span>
                         <select
                             value={selectedYear}
@@ -204,17 +204,17 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
 
                 <div className="flex items-center gap-2">
                     {/* Batch Print, CSV, Rollover etc. */}
-                    <button onClick={downloadCsv} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2 transition-colors">
+                    <button onClick={downloadCsv} className="px-4 py-2 bg-white border border-gray-200 rounded-none text-sm font-medium hover:bg-gray-50 flex items-center gap-2 transition-colors">
                         <Download size={16} /> CSV
                     </button>
                     <button
                         onClick={() => window.open(`/finance/faith-promise-print?year=${selectedYear}`, '_blank')}
-                        className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                        className="px-4 py-2 bg-white border border-gray-200 rounded-none text-sm font-medium hover:bg-gray-50 flex items-center gap-2 transition-colors"
                     >
                         <Printer size={16} /> Print All
                     </button>
                     {isChurchAdmin && new Date().getMonth() === 0 && (
-                        <button onClick={handleRollover} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 flex items-center gap-2 shadow-sm transition-colors">
+                        <button onClick={handleRollover} className="px-4 py-2 bg-purple-600 text-[var(--color-text-main)] rounded-none text-sm font-bold hover:bg-purple-700 flex items-center gap-2 shadow-sm transition-colors">
                             Year Rollover
                         </button>
                     )}
@@ -262,7 +262,7 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex justify-center">
-                                                    <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${badge.color}`}>
+                                                    <span className={`flex items-center gap-1.5 px-3 py-1 rounded-none text-[10px] font-bold uppercase tracking-widest border ${badge.color}`}>
                                                         {badge.icon} {row.status}
                                                     </span>
                                                 </div>
@@ -271,7 +271,7 @@ const FaithPromiseLedgerTab: React.FC<Props> = ({ selectedYear, setSelectedYear,
                                                 <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => onQuickAdd(row.member_id, `${row.first_name} ${row.surname}`)}
-                                                        className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded text-xs font-bold flex items-center gap-1 transition-colors"
+                                                        className="px-3 py-1.5 bg-gray-50 text-blue-700 hover:bg-blue-100 rounded text-xs font-bold flex items-center gap-1 transition-colors"
                                                         title="Quick Add Payment"
                                                     >
                                                         <Plus size={14} /> Add Payment

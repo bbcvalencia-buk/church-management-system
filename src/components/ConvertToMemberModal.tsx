@@ -88,22 +88,22 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm shadow-2xl animate-fade-in">
-            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden animate-scale-in flex flex-col max-h-[90vh]">
+            <div className="bg-white rounded-none w-full max-w-lg shadow-xl overflow-hidden animate-scale-in flex flex-col max-h-[90vh]">
                 <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50 shrink-0">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                            <UserPlus className="text-blue-600" /> Convert to Member
+                            <UserPlus className="text-[var(--color-text-main)]" /> Convert to Member
                         </h2>
                         <p className="text-sm text-gray-500 mt-1">Convert {visitor.name} to the main member registry.</p>
                     </div>
-                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors shrink-0">
+                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-none transition-colors shrink-0">
                         <X size={20} />
                     </button>
                 </div>
 
                 <div className="p-6 overflow-y-auto w-full">
                     {/* Data to be carried over summary */}
-                    <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 mb-6">
+                    <div className="bg-gray-50/50 border border-blue-100 rounded-none p-4 mb-6">
                         <h4 className="text-xs font-bold text-blue-800 uppercase tracking-widest mb-3">Data to be Migrated</h4>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
@@ -127,7 +127,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
 
                     <form id="convert-form" onSubmit={handleSubmit} className="space-y-5">
                         {error && (
-                            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg font-medium shadow-sm">
+                            <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-none font-medium shadow-sm">
                                 {error}
                             </div>
                         )}
@@ -136,7 +136,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Target Member Number</label>
                             <input
                                 type="text"
-                                className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none uppercase font-mono"
+                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none uppercase font-mono"
                                 value={memberNumber}
                                 onChange={(e) => setMemberNumber(e.target.value)}
                                 placeholder="BBC-YYYY-001"
@@ -147,7 +147,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Membership Status Type</label>
                             <select
-                                className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none"
+                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none"
                                 value={statusType}
                                 onChange={(e) => setStatusType(e.target.value)}
                             >
@@ -165,7 +165,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                                     required
                                     value={dateJoined}
                                     onChange={(e) => setDateJoined(e.target.value)}
-                                    className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none"
+                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none"
                                 />
                             </div>
                             <div>
@@ -174,7 +174,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                                     type="date"
                                     value={baptismDate}
                                     onChange={(e) => setBaptismDate(e.target.value)}
-                                    className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm font-semibold text-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none"
+                                    className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-semibold text-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none"
                                 />
                             </div>
                         </div>
@@ -185,7 +185,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                     <button
                         type="button"
                         onClick={onClose}
-                        className="px-6 py-2.5 rounded-xl font-bold text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                        className="px-6 py-2.5 rounded-none font-bold text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
                     >
                         Cancel
                     </button>
@@ -193,7 +193,7 @@ const ConvertToMemberModal: React.FC<Props> = ({ visitor, isOpen, onClose, onSuc
                         type="submit"
                         form="convert-form"
                         disabled={submitting}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center min-w-[140px] gap-2 transition-all shadow-md shadow-blue-500/20 disabled:opacity-50"
+                        className="bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] px-6 py-2.5 rounded-none text-sm font-bold flex items-center justify-center min-w-[140px] gap-2 transition-all shadow-md  disabled:opacity-50"
                     >
                         {submitting ? 'Converting...' : 'Confirm Conversion'}
                     </button>

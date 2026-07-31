@@ -98,12 +98,12 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                             onFocus={() => setShowDropdown(true)}
                             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
                             placeholder="Type to search members..."
-                            className="w-full bg-white border border-gray-200 rounded-xl py-2.5 pl-9 pr-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400 font-semibold"
+                            className="w-full bg-white border border-gray-200 rounded-none py-2.5 pl-9 pr-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-400 font-semibold"
                         />
                     </div>
                     {/* Autocomplete Dropdown */}
                     {showDropdown && filteredMembers.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-none shadow-xl max-h-48 overflow-y-auto">
                             {filteredMembers.map(m => {
                                 const pos = m.church_positions?.find((p: any) => p.is_active)?.position_name;
                                 return (
@@ -113,7 +113,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                                         onClick={() => handleSelectMember(m)}
                                         className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 flex items-center gap-3"
                                     >
-                                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                                        <div className="w-8 h-8 rounded-none overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
                                             {m.profile_picture_url ? (
                                                 <img src={m.profile_picture_url} alt="" className="w-full h-full object-cover" />
                                             ) : (
@@ -141,7 +141,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                     <select
                         value={relationType}
                         onChange={(e) => onChange('relationType', e.target.value)}
-                        className="w-full bg-white border border-gray-200 rounded-xl p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
+                        className="w-full bg-white border border-gray-200 rounded-none p-2.5 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-semibold"
                     >
                         {Object.entries(RELATION_TYPES).map(([key, label]) => (
                             <option key={key} value={key}>{label}</option>
@@ -150,7 +150,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                 </div>
                 <button
                     onClick={addRelation}
-                    className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white p-2.5 rounded-xl flex items-center justify-center transition-colors shadow-sm"
+                    className="bg-[#2563eb] hover:bg-[#1d4ed8] text-[var(--color-text-main)] p-2.5 rounded-none flex items-center justify-center transition-colors shadow-sm"
                     title="Add Relative"
                 >
                     <UserPlus size={20} />
@@ -160,7 +160,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
             {/* List Relations */}
             <div className="space-y-3">
                 {relationships.length === 0 && (
-                    <p className="text-center text-gray-500 text-sm font-semibold py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">No family members linked yet.</p>
+                    <p className="text-center text-gray-500 text-sm font-semibold py-4 bg-gray-50 rounded-none border border-dashed border-gray-200">No family members linked yet.</p>
                 )}
 
                 {relationships.map((rel: any, idx: number) => {
@@ -171,7 +171,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                     return (
                         <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-[16px] border border-gray-200 group hover:border-[#93c5fd] hover:shadow-[0_4px_12px_-4px_rgba(59,130,246,0.15)] transition-all">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
+                                <div className="w-12 h-12 rounded-none overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
                                     {isLinked && relMember.profile_picture_url ? (
                                         <img src={relMember.profile_picture_url} alt="" className="w-full h-full object-cover" />
                                     ) : (
@@ -182,14 +182,14 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                                 </div>
                                 <div className="flex-1">
                                     {isLinked ? (
-                                        <a href={`/members/${relMember.id}`} target="_blank" rel="noopener noreferrer" className="font-bold text-gray-900 text-base hover:text-blue-600 transition-colors hover:underline">
+                                        <a href={`/members/${relMember.id}`} target="_blank" rel="noopener noreferrer" className="font-bold text-gray-900 text-base hover:text-[var(--color-text-main)] transition-colors hover:underline">
                                             {name}
                                         </a>
                                     ) : (
                                         <h4 className="font-bold text-gray-900 text-base">{name}</h4>
                                     )}
                                     <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                                        <span className="text-[10px] font-black tracking-widest uppercase bg-indigo-50 text-indigo-700 border border-indigo-100/50 px-2.5 py-1 rounded-md shadow-sm">
+                                        <span className="text-[10px] font-black tracking-widest uppercase bg-indigo-50 text-indigo-700 border border-indigo-100/50 px-2.5 py-1 rounded-none shadow-sm">
                                             {RELATION_TYPES[rel.relationship_type as keyof typeof RELATION_TYPES]}
                                         </span>
                                         {isLinked && relMember.member_number && (
@@ -200,7 +200,7 @@ const FamilyForm: React.FC<FamilyFormProps> = ({ data, onChange }) => {
                             </div>
                             <button
                                 onClick={() => removeRelation(idx)}
-                                className="p-2.5 text-red-500 bg-red-50/0 hover:bg-red-50 hover:text-red-700 rounded-xl transition-all border border-transparent hover:border-red-100"
+                                className="p-2.5 text-red-500 bg-red-50/0 hover:bg-red-50 hover:text-red-700 rounded-none transition-all border border-transparent hover:border-red-100"
                                 title="Remove related member"
                             >
                                 <X size={20} />

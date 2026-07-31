@@ -378,13 +378,13 @@ const MinistryDirectory: React.FC = () => {
                 { key: 'is_head', label: 'Head' }
               ]);
             }}
-            className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
+            className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-5 py-2.5 rounded-none text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
           >
             <Download size={16} /> Export CSV
           </button>
           <button
             onClick={() => handleOpenModal()}
-            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
+            className="bg-[#2563eb] hover:bg-[#1d4ed8] text-[var(--color-text-main)] px-5 py-2.5 rounded-none text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
           >
             <Plus size={16} strokeWidth={2.5} /> Establish New Group
           </button>
@@ -397,8 +397,8 @@ const MinistryDirectory: React.FC = () => {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-5 py-2.5 rounded-full text-[13px] font-bold whitespace-nowrap transition-colors ${selectedCategory === cat.id
-                ? 'bg-[#2563eb] text-white'
+              className={`px-5 py-2.5 rounded-none text-[13px] font-bold whitespace-nowrap transition-colors ${selectedCategory === cat.id
+                ? 'bg-[#2563eb] text-[var(--color-text-main)]'
                 : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                 }`}
             >

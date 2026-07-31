@@ -24,7 +24,7 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
       <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg overflow-hidden relative animate-in zoom-in-95 duration-200 border border-gray-100 flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={() => setViewingMember(null)}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 p-2 bg-gray-100/50 backdrop-blur-sm hover:bg-gray-200 rounded-full transition-all z-20"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 p-2 bg-gray-100/50 backdrop-blur-sm hover:bg-gray-200 rounded-none transition-all z-20"
           title="Close (Esc)"
         >
           <X size={24} strokeWidth={2.5} />
@@ -37,15 +37,15 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
               <img
                 src={viewingMember.profile_picture_url}
                 alt={`${viewingMember.first_name}`}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover shadow-lg border-4 border-white"
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-none object-cover shadow-lg border-4 border-white"
               />
             ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-blue-100 flex items-center justify-center border-4 border-white shadow-lg">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-none bg-blue-100 flex items-center justify-center border-4 border-white shadow-lg">
                 <User size={40} className="text-blue-500" />
               </div>
             )}
             {viewingMember.full_pos?.is_ministry_head && (
-              <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white p-1.5 rounded-full border-4 border-white shadow-sm" title="Ministry Head">
+              <div className="absolute -bottom-2 -right-2 bg-amber-500 text-[var(--color-text-main)] p-1.5 rounded-none border-4 border-white shadow-sm" title="Ministry Head">
                 <Star size={16} className="fill-current" />
               </div>
             )}
@@ -56,12 +56,12 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
 
           <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
             {viewingMember.member_number && (
-              <span className="bg-indigo-50 text-indigo-700 border border-indigo-100/50 px-2.5 py-1 rounded-md text-[11px] font-black tracking-widest font-mono shadow-sm">
+              <span className="bg-indigo-50 text-indigo-700 border border-indigo-100/50 px-2.5 py-1 rounded-none text-[11px] font-black tracking-widest font-mono shadow-sm">
                 {viewingMember.member_number}
               </span>
             )}
             {viewingMember.specific_role && (
-              <span className="bg-blue-50 text-blue-700 border border-blue-100/50 px-2.5 py-1 rounded-md text-[11px] font-black tracking-widest uppercase shadow-sm">
+              <span className="bg-gray-50 text-blue-700 border border-blue-100/50 px-2.5 py-1 rounded-none text-[11px] font-black tracking-widest uppercase shadow-sm">
                 {viewingMember.full_pos?.is_ministry_head ? `HEAD - ${viewingMember.specific_role}` : viewingMember.specific_role}
               </span>
             )}
@@ -74,7 +74,7 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
 
             {/* Left Column: Quick Stats */}
             <div className="space-y-4">
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+              <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100">
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                   <Activity size={12} /> Attendance Rate
                 </h4>
@@ -92,12 +92,12 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
                 )}
               </div>
 
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+              <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100">
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                   <Phone size={12} /> Contact Info
                 </h4>
                 {viewingMember.phone_number ? (
-                  <a href={`tel:${viewingMember.phone_number}`} className="text-sm font-bold text-gray-900 hover:text-blue-600 truncate block">
+                  <a href={`tel:${viewingMember.phone_number}`} className="text-sm font-bold text-gray-900 hover:text-[var(--color-text-main)] truncate block">
                     {viewingMember.phone_number}
                   </a>
                 ) : (
@@ -108,7 +108,7 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
 
             {/* Right Column: Service History & Music Practice History */}
             <div className="space-y-4">
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+              <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100 flex flex-col">
                 <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                   <Shield size={12} /> Recent Service Roles
                 </h4>
@@ -132,7 +132,7 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
               </div>
 
               {viewingMember?.full_pos?.position_category === 'music_ministry' && (
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                <div className="bg-white p-4 rounded-none shadow-sm border border-gray-100 flex flex-col">
                   <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                     <Music size={12} /> Practice Attendance
                   </h4>
@@ -146,9 +146,9 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
                           </div>
                           <div>
                             {practice.present ? (
-                              <span className="bg-green-50 text-green-700 border border-green-200 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase shadow-sm">Present</span>
+                              <span className="bg-green-50 text-green-700 border border-green-200 px-2.5 py-0.5 rounded-none text-[10px] font-black uppercase shadow-sm">Present</span>
                             ) : (
-                              <span className="bg-gray-100 text-gray-500 border border-gray-200 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase shadow-sm">Absent</span>
+                              <span className="bg-gray-100 text-gray-500 border border-gray-200 px-2.5 py-0.5 rounded-none text-[10px] font-black uppercase shadow-sm">Absent</span>
                             )}
                           </div>
                         </div>
@@ -168,7 +168,7 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({
         <div className="p-4 bg-white border-t border-gray-100">
           <Link
             to={`/members/${viewingMember.id}`}
-            className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-black transition-colors shadow-sm active:scale-[0.98]"
+            className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-900 text-[var(--color-text-main)] rounded-none font-bold text-sm hover:bg-black transition-colors shadow-sm active:scale-[0.98]"
           >
             <Eye size={16} /> View Full Profile
           </Link>

@@ -37,7 +37,7 @@ export const TreasuryActionHeader: React.FC<TreasuryActionHeaderProps> = ({
                 {isChurchAdmin && selectedMonth !== 'all' && (
                     <button
                         onClick={handleTogglePeriodLock}
-                        className={`border px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold ${isCurrentPeriodLocked
+                        className={`border px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-sm font-bold ${isCurrentPeriodLocked
                             ? 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
                             : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200'
                             }`}
@@ -49,7 +49,7 @@ export const TreasuryActionHeader: React.FC<TreasuryActionHeaderProps> = ({
 
                 <Link
                     to="/finance/reports"
-                    className="bg-white border border-[var(--color-border)] hover:bg-gray-50 text-[var(--color-text-main)] px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
+                    className="bg-white border border-[var(--color-border)] hover:bg-gray-50 text-[var(--color-text-main)] px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-sm">
                     <Printer size={18} />
                     <span>Reports</span>
                 </Link>
@@ -58,7 +58,7 @@ export const TreasuryActionHeader: React.FC<TreasuryActionHeaderProps> = ({
                         {canManageTreasury && (
                             <button
                                 onClick={() => setShowImport(true)}
-                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-bold"
+                                className="bg-green-600 hover:bg-green-700 text-[var(--color-text-main)] px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-sm font-bold"
                             >
                                 <Upload size={18} />
                                 <span>Import</span>
@@ -67,7 +67,7 @@ export const TreasuryActionHeader: React.FC<TreasuryActionHeaderProps> = ({
                         {canManageTreasury && (
                             <button
                                 onClick={() => setShowPledgeForm(true)}
-                                className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20 font-bold"
+                                className="bg-[var(--color-primary)] hover:bg-violet-600 text-[var(--color-text-main)] px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20 font-bold"
                             >
                                 <Plus size={18} />
                                 <span>New Pledge</span>
@@ -77,7 +77,7 @@ export const TreasuryActionHeader: React.FC<TreasuryActionHeaderProps> = ({
                 ) : canManageTreasury ? (
                     <Link
                         to="/finance/new"
-                        className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20"
+                        className="bg-[var(--color-primary)] hover:bg-violet-600 text-[var(--color-text-main)] px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20"
                     >
                         <Plus size={18} />
                         <span>New Entry</span>

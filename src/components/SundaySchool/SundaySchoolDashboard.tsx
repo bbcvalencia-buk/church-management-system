@@ -24,46 +24,66 @@ const SundaySchoolDashboard: React.FC<SundaySchoolDashboardProps> = ({
     thisMonthSaved,
 }) => {
     return (
-        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-            {/* Header bar */}
-            <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Hero Stat Block */}
+            <div className="md:col-span-2 bg-white rounded-[2rem] p-8 md:p-12 shadow-sm border border-gray-200 flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                    <Users size={120} />
+                </div>
                 <div>
-                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <BookOpen size={20} className="text-blue-600" /> Sunday School Overview
+                    <p className="text-sm font-bold tracking-widest text-gray-400 uppercase flex items-center gap-2 mb-3">
+                        <Users size={16} className="text-blue-500" /> Latest Sunday Attendance
+                    </p>
+                    <p className="text-7xl md:text-8xl font-black text-gray-900 tracking-tighter" style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
+                        {totalAttendanceToday}
+                    </p>
+                </div>
+                
+                <div className="mt-12 pt-8 border-t border-gray-100">
+                    <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <BookOpen size={20} className="text-[var(--color-text-main)]" /> Sunday School Overview
                     </h2>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                        Logged in as <span className="text-blue-600 font-semibold">{currentMember?.first_name} {currentMember?.surname}</span>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Logged in as <span className="text-[var(--color-text-main)] font-semibold">{currentMember?.first_name} {currentMember?.surname}</span>
                         {!isSundaySchoolAdmin ? (
                             <span> — {getSundaySchoolScopeLabel(teacherDepartments)} Teacher</span>
                         ) : (
                             <span> — Admin</span>
                         )}
                     </p>
+                    {latestDate && (
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-4">
+                            Latest Report: {new Date(latestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                    )}
                 </div>
-                {latestDate && (
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        Latest: {new Date(latestDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </span>
-                )}
             </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100 border-b border-gray-100">
-                <div className="px-5 py-4">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 flex items-center gap-1.5"><Users size={12} /> Latest Sunday</p>
-                    <p className="text-2xl font-black text-gray-900 mt-1">{totalAttendanceToday}</p>
+            {/* Smaller Stats Stack */}
+            <div className="grid grid-cols-1 gap-6">
+                <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-200 flex flex-col justify-center">
+                    <p className="text-xs uppercase tracking-widest font-bold text-gray-400 flex items-center gap-2 mb-2">
+                        <Calendar size={14} className="text-emerald-500" /> This Month
+                    </p>
+                    <p className="text-5xl font-black text-gray-900 tracking-tight" style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
+                        {thisMonthAttendance}
+                    </p>
                 </div>
-                <div className="px-5 py-4">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 flex items-center gap-1.5"><Calendar size={12} /> This Month</p>
-                    <p className="text-2xl font-black text-gray-900 mt-1">{thisMonthAttendance}</p>
+                <div className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-200 flex flex-col justify-center">
+                    <p className="text-xs uppercase tracking-widest font-bold text-gray-400 flex items-center gap-2 mb-2">
+                        <UserPlus size={14} className="text-purple-500" /> Visitors
+                    </p>
+                    <p className="text-5xl font-black text-gray-900 tracking-tight" style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
+                        {thisMonthVisitors}
+                    </p>
                 </div>
-                <div className="px-5 py-4">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 flex items-center gap-1.5"><UserPlus size={12} /> Visitors</p>
-                    <p className="text-2xl font-black text-gray-900 mt-1">{thisMonthVisitors}</p>
-                </div>
-                <div className="px-5 py-4">
-                    <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 flex items-center gap-1.5"><Heart size={12} /> Souls Saved</p>
-                    <p className="text-2xl font-black text-gray-900 mt-1">{thisMonthSaved}</p>
+                <div className="bg-gray-900 rounded-[2rem] p-8 shadow-sm flex flex-col justify-center relative overflow-hidden">
+                    <p className="text-xs uppercase tracking-widest font-bold text-gray-400 flex items-center gap-2 mb-2 z-10 relative">
+                        <Heart size={14} className="text-pink-500" /> Souls Saved
+                    </p>
+                    <p className="text-5xl font-black text-[var(--color-text-main)] tracking-tight z-10 relative" style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
+                        {thisMonthSaved}
+                    </p>
                 </div>
             </div>
         </div>

@@ -240,8 +240,8 @@ const MemberIDPrint: React.FC = () => {
         }
     };
 
-    if (loading) return <div className="text-white p-8 text-center">Loading ID Card...</div>;
-    if (!member) return <div className="text-white p-8 text-center">Member not found.</div>;
+    if (loading) return <div className="text-[var(--color-text-main)] p-8 text-center">Loading ID Card...</div>;
+    if (!member) return <div className="text-[var(--color-text-main)] p-8 text-center">Member not found.</div>;
 
     return (
         <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center p-8">
@@ -251,7 +251,7 @@ const MemberIDPrint: React.FC = () => {
                     <button
                         onClick={handleDownload}
                         disabled={generating}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg shadow-purple-500/20 disabled:opacity-50"
+                        className="bg-purple-600 hover:bg-purple-700 text-[var(--color-text-main)] px-6 py-2 rounded-none font-medium transition-colors flex items-center gap-2 shadow-lg shadow-purple-500/20 disabled:opacity-50"
                     >
                         <Download size={18} /> {generating ? 'Generating PDF...' : 'Download PDF'}
                     </button>
@@ -271,7 +271,7 @@ const MemberIDPrint: React.FC = () => {
                 <div className="absolute inset-0 z-0">
                     <div className="absolute top-0 left-0 w-full h-1/3" style={{ background: 'linear-gradient(to bottom, #1e3a5f, #1e40af)' }}></div>
                     <div className="absolute bottom-0 w-full h-12 bg-yellow-400/10 skew-y-6 translate-y-6"></div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-[20px] border-white/5 rounded-full"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-[20px] border-white/5 rounded-none"></div>
                 </div>
 
                 {/* Content Layer */}
@@ -279,15 +279,15 @@ const MemberIDPrint: React.FC = () => {
 
                     {/* Header Logo */}
                     <div className="mt-1 mb-3 flex flex-col items-center">
-                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border-2 border-yellow-400 shadow-sm mb-1">
+                        <div className="w-10 h-10 bg-white rounded-none flex items-center justify-center border-2 border-yellow-400 shadow-sm mb-1">
                             <Shield className="text-blue-900" size={20} />
                         </div>
-                        <h2 className="text-[9px] uppercase tracking-wider font-bold text-white leading-tight">Bible Baptist Church</h2>
+                        <h2 className="text-[9px] uppercase tracking-wider font-bold text-[var(--color-text-main)] leading-tight">Bible Baptist Church</h2>
                         <p className="text-[7px] text-blue-200 uppercase tracking-widest mt-0.5">Valencia City</p>
                     </div>
 
                     {/* Photo */}
-                    <div className="w-24 h-24 bg-gray-200 rounded-full border-4 border-white shadow-md overflow-hidden mb-3">
+                    <div className="w-24 h-24 bg-gray-200 rounded-none border-4 border-white shadow-md overflow-hidden mb-3">
                         {member.profile_picture_url ? (
                             <img
                                 src={member.profile_picture_url}
@@ -307,7 +307,7 @@ const MemberIDPrint: React.FC = () => {
                         <h1 className="text-sm font-bold text-blue-900 uppercase leading-tight break-words">
                             {member.first_name} {member.surname}
                         </h1>
-                        <div className="h-0.5 w-8 bg-yellow-400 mx-auto my-1.5 rounded-full"></div>
+                        <div className="h-0.5 w-8 bg-yellow-400 mx-auto my-1.5 rounded-none"></div>
                         <p className="text-[9px] font-bold text-gray-500 uppercase tracking-wider">
                             {member.is_pastor ? 'Pastor' : member.is_pastors_wife ? "Pastor's Wife" : 'Member'}
                         </p>

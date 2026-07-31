@@ -7,7 +7,7 @@ interface TableSkeletonProps {
 
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rows = 5 }) => {
     return (
-        <div className="w-full bg-white rounded-xl shadow-sm border border-[var(--color-border)] overflow-hidden">
+        <div className="w-full bg-white rounded-none shadow-sm border border-[var(--color-border)] overflow-hidden">
             {/* Header */}
             <div className="flex border-b border-[var(--color-border)] bg-gray-50/50 p-4">
                 {Array.from({ length: columns }).map((_, i) => (

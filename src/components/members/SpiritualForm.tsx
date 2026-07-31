@@ -27,7 +27,7 @@ const SpiritualForm: React.FC<SpiritualFormProps> = ({ data, onChange }) => {
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-medium text-white mb-4">Spiritual Information</h3>
+            <h3 className="text-lg font-medium text-[var(--color-text-main)] mb-4">Spiritual Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--color-text-muted)]">Salvation Date</label>
@@ -81,7 +81,7 @@ const SpiritualForm: React.FC<SpiritualFormProps> = ({ data, onChange }) => {
                 </div>
 
                 {/* Status Badges Preview */}
-                <div className="md:col-span-2 glass-panel p-4 bg-white/5 rounded-lg border border-white/10 mt-4">
+                <div className="md:col-span-2 glass-panel p-4 bg-white/5 rounded-none border border-white/10 mt-4">
                     <h4 className="text-sm font-bold text-[var(--color-text-muted)] uppercase mb-3">Membership Status</h4>
                     <div className="flex flex-wrap gap-4">
                         <label className="flex items-center gap-2">

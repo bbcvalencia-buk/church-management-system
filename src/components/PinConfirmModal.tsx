@@ -62,7 +62,7 @@ export const PinConfirmModal: React.FC<PinConfirmModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl relative">
+            <div className="bg-white rounded-none w-full max-w-sm overflow-hidden shadow-2xl relative">
                 <div className="flex justify-between items-center p-5 border-b border-gray-100">
                     <div className="flex items-center gap-2">
                         <Lock className="text-amber-500" size={20} />
@@ -82,7 +82,7 @@ export const PinConfirmModal: React.FC<PinConfirmModalProps> = ({
                             placeholder="Enter your password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                            className="w-full border border-gray-300 rounded-none p-2.5 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
                             autoFocus
                         />
                     </div>
@@ -92,14 +92,14 @@ export const PinConfirmModal: React.FC<PinConfirmModalProps> = ({
                             type="button"
                             onClick={onClose}
                             disabled={loading}
-                            className="px-4 py-2 hover:bg-gray-100 text-gray-600 font-medium rounded-lg transition-colors"
+                            className="px-4 py-2 hover:bg-gray-100 text-gray-600 font-medium rounded-none transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading || !password}
-                            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
+                            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-[var(--color-text-main)] font-medium rounded-none transition-colors disabled:opacity-50"
                         >
                             {loading ? 'Verifying...' : actionLabel}
                         </button>

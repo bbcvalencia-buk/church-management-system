@@ -49,27 +49,27 @@ const FaithPromiseQuickAdd: React.FC<Props> = ({ memberId, memberName, year, onC
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-scale-in">
+            <div className="bg-white rounded-none shadow-xl w-full max-w-md overflow-hidden animate-scale-in">
                 <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
                     <div>
                         <h2 className="text-xl font-bold text-gray-900">Quick Add Payment</h2>
                         <p className="text-sm text-gray-500 mt-1">Faith Promise • {year}</p>
                     </div>
-                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-none transition-colors">
                         <X size={20} />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-5">
                     {error && (
-                        <div className="p-3 bg-red-50 text-red-700 rounded-lg text-sm border border-red-100">
+                        <div className="p-3 bg-red-50 text-red-700 rounded-none text-sm border border-red-100">
                             {error}
                         </div>
                     )}
 
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Member</label>
-                        <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 font-medium">
+                        <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-none text-gray-700 font-medium">
                             {memberName}
                         </div>
                     </div>
@@ -82,7 +82,7 @@ const FaithPromiseQuickAdd: React.FC<Props> = ({ memberId, memberName, year, onC
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
                             max={new Date().toISOString().split('T')[0]} // Not allowing future
-                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                         />
                     </div>
 
@@ -98,7 +98,7 @@ const FaithPromiseQuickAdd: React.FC<Props> = ({ memberId, memberName, year, onC
                                 placeholder="0.00"
                                 value={amount}
                                 onChange={(e) => setAmount(parseFloat(e.target.value) || '')}
-                                className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 font-mono text-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                className="w-full pl-9 pr-4 py-3 bg-white border border-gray-200 rounded-none text-gray-900 font-mono text-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                             />
                         </div>
                     </div>
@@ -107,14 +107,14 @@ const FaithPromiseQuickAdd: React.FC<Props> = ({ memberId, memberName, year, onC
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl font-bold transition-colors"
+                            className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-none font-bold transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="flex-1 px-4 py-3 text-white bg-blue-600 hover:bg-blue-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                            className="flex-1 px-4 py-3 text-[var(--color-text-main)] bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] rounded-none font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                         >
                             {submitting ? 'Saving...' : <><Check size={18} /> Save Payment</>}
                         </button>

@@ -426,11 +426,11 @@ const MusicMinistry: React.FC = () => {
                         <div>
                             <button
                                 onClick={() => setViewSession(null)}
-                                className="text-blue-600 font-bold uppercase tracking-wider text-xs flex items-center gap-1 hover:underline mb-2"
+                                className="text-[var(--color-text-main)] font-bold uppercase tracking-wider text-xs flex items-center gap-1 hover:underline mb-2"
                             >
                                 <ArrowLeft size={14} /> Back to Dashboard
                             </button>
-                            <div className="flex items-center gap-2 text-sm font-semibold text-blue-600 mb-1">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-[var(--color-text-main)] mb-1">
                                 <Calendar size={14} />
                                 <span>{formatPracticeTypeLabel(viewSession.practice_type)}</span>
                                 <span className="text-gray-400">•</span>
@@ -439,7 +439,7 @@ const MusicMinistry: React.FC = () => {
                             <h1 className="text-4xl font-black text-gray-900 tracking-tight">Music Practice Report</h1>
                         </div>
                         <div className="flex gap-3">
-                            <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                            <button className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-none text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                                 <Printer size={16} /> Print Report
                             </button>
                             <button
@@ -459,19 +459,19 @@ const MusicMinistry: React.FC = () => {
                                         { key: 'status', label: 'Status' }
                                     ]);
                                 }}
-                                className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2"
+                                className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-none text-sm font-bold shadow-sm transition-colors flex items-center gap-2"
                             >
                                 <Download size={16} /> Export to CSV
                             </button>
                             <button
                                 onClick={() => handleOpenModal(viewSession)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-transform hover:-translate-y-0.5 flex items-center gap-2"
+                                className="bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] px-4 py-2 rounded-none text-sm font-bold shadow-sm transition-transform hover:-translate-y-0.5 flex items-center gap-2"
                             >
                                 <Edit2 size={16} /> Edit Record
                             </button>
                             <button
                                 onClick={() => setConfirmDelete({ isOpen: true, id: viewSession.id })}
-                                className="bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-transform hover:-translate-y-0.5 flex items-center gap-2"
+                                className="bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 px-4 py-2 rounded-none text-sm font-bold shadow-sm transition-transform hover:-translate-y-0.5 flex items-center gap-2"
                             >
                                 <Trash2 size={16} /> Delete
                             </button>
@@ -486,15 +486,15 @@ const MusicMinistry: React.FC = () => {
                                 <p className="text-gray-500 font-bold uppercase text-xs tracking-widest mb-2">Total Attendance</p>
                                 <div className="flex justify-between items-end mb-4">
                                     <span className="text-5xl font-black text-gray-900 tracking-tighter">{viewedTotalAttendance}</span>
-                                    <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-800">
+                                    <div className="w-12 h-12 rounded-none bg-slate-50 flex items-center justify-center text-slate-800">
                                         <BarChart2 size={24} />
                                     </div>
                                 </div>
                                 <p className="text-xs font-semibold text-gray-500">
                                     Members: {attendedCount} | Non-members: {viewedNonMemberAttendance}
                                 </p>
-                                <div className="w-full bg-gray-100 rounded-full h-2 mt-6 overflow-hidden">
-                                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${attendancePercentage}%` }}></div>
+                                <div className="w-full bg-gray-100 rounded-none h-2 mt-6 overflow-hidden">
+                                    <div className="bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] h-2 rounded-none" style={{ width: `${attendancePercentage}%` }}></div>
                                 </div>
                                 <p className="text-right text-xs text-gray-400 font-semibold mt-2">{attendancePercentage}% of roster</p>
                             </div>
@@ -524,7 +524,7 @@ const MusicMinistry: React.FC = () => {
                                                 const isPresent = viewSessionAttendance.includes(member.id);
                                                 const initials = `${member.first_name?.[0] || ''}${member.surname?.[0] || ''}`.toUpperCase();
                                                 const colors = [
-                                                    'bg-[#e2e8e0] text-[#4d6a42]', 'bg-[#1f2937] text-white', 'bg-[#e0e7ff] text-[#4338ca]', 'bg-[#fae8d4] text-[#855322]'
+                                                    'bg-[#e2e8e0] text-[#4d6a42]', 'bg-[#1f2937] text-[var(--color-text-main)]', 'bg-[#e0e7ff] text-[#4338ca]', 'bg-[#fae8d4] text-[#855322]'
                                                 ];
                                                 const colorClass = colors[idx % colors.length];
 
@@ -533,11 +533,11 @@ const MusicMinistry: React.FC = () => {
                                                         <td className="py-4 px-6">
                                                             <div className="flex items-center gap-3">
                                                                 <div className="relative">
-                                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold leading-none ${colorClass}`}>
+                                                                    <div className={`w-10 h-10 rounded-none flex items-center justify-center text-xs font-bold leading-none ${colorClass}`}>
                                                                         {initials}
                                                                     </div>
                                                                     {isPresent && (
-                                                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                                                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-none"></div>
                                                                     )}
                                                                 </div>
                                                                 <div>
@@ -548,12 +548,12 @@ const MusicMinistry: React.FC = () => {
                                                         </td>
                                                         <td className="py-4 px-6">
                                                             {isPresent ? (
-                                                                <div className="inline-flex items-center gap-1.5 bg-[#f0fdf6] px-3 py-1 rounded-full border border-green-100 text-[11px] font-bold text-green-700 uppercase tracking-wider">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div> Present
+                                                                <div className="inline-flex items-center gap-1.5 bg-[#f0fdf6] px-3 py-1 rounded-none border border-green-100 text-[11px] font-bold text-green-700 uppercase tracking-wider">
+                                                                    <div className="w-1.5 h-1.5 rounded-none bg-green-500"></div> Present
                                                                 </div>
                                                             ) : (
-                                                                <div className="inline-flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-full border border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                                                                    <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div> Absent
+                                                                <div className="inline-flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-none border border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                                                                    <div className="w-1.5 h-1.5 rounded-none bg-gray-400"></div> Absent
                                                                 </div>
                                                             )}
                                                         </td>
@@ -563,7 +563,7 @@ const MusicMinistry: React.FC = () => {
                                                         <td className="py-4 px-6 text-right">
                                                             <button
                                                                 onClick={() => handleOpenModal(viewSession)}
-                                                                className="text-gray-400 hover:text-blue-600 transition-colors p-1"
+                                                                className="text-gray-400 hover:text-[var(--color-text-main)] transition-colors p-1"
                                                                 title="Edit Attendance"
                                                             >
                                                                 <Edit2 size={16} />
@@ -585,7 +585,7 @@ const MusicMinistry: React.FC = () => {
 
                                 <div className="space-y-8 flex-1">
                                     <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                                        <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
                                             <MapPin size={18} />
                                         </div>
                                         <div>
@@ -594,7 +594,7 @@ const MusicMinistry: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                                        <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
                                             <Clock size={18} />
                                         </div>
                                         <div>
@@ -605,7 +605,7 @@ const MusicMinistry: React.FC = () => {
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-4">
-                                        <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                                        <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
                                             <User size={18} />
                                         </div>
                                         <div>
@@ -616,7 +616,7 @@ const MusicMinistry: React.FC = () => {
                                 </div>
 
                                 <div className="mt-8 pt-6 border-t border-gray-100 flex justify-center">
-                                    <button className="text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors">
+                                    <button className="text-sm font-bold text-[var(--color-text-main)] hover:text-blue-700 flex items-center gap-1 transition-colors">
                                         View Full Event <ArrowRight size={16} />
                                     </button>
                                 </div>
@@ -635,7 +635,7 @@ const MusicMinistry: React.FC = () => {
                     <div className="flex justify-between items-center bg-white p-6 -mx-8 -mt-8 px-8 border-b border-gray-100 shadow-sm z-10 sticky top-0">
                         <div>
                             <h1 className="text-2xl font-black flex items-center gap-3 text-gray-900 tracking-tight">
-                                <div className="w-10 h-10 rounded-[10px] bg-[#EEF2FF] flex items-center justify-center text-blue-600">
+                                <div className="w-10 h-10 rounded-[10px] bg-[#EEF2FF] flex items-center justify-center text-[var(--color-text-main)]">
                                     <Music size={20} />
                                 </div>
                                 Music Ministry
@@ -644,7 +644,7 @@ const MusicMinistry: React.FC = () => {
                         </div>
                         <button
                             onClick={() => handleOpenModal()}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-[8px] flex items-center gap-2 transition-transform hover:-translate-y-0.5 font-bold shadow-sm"
+                            className="bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] px-5 py-2.5 rounded-[8px] flex items-center gap-2 transition-transform hover:-translate-y-0.5 font-bold shadow-sm"
                         >
                             <Plus size={18} /> Log Practice
                         </button>
@@ -660,7 +660,7 @@ const MusicMinistry: React.FC = () => {
                                         <span className="text-4xl font-black text-gray-900">{totalPractices}</span>
                                     </div>
                                 </div>
-                                <div className="w-10 h-10 rounded-[10px] bg-[#EEF2FF] flex items-center justify-center text-blue-600">
+                                <div className="w-10 h-10 rounded-[10px] bg-[#EEF2FF] flex items-center justify-center text-[var(--color-text-main)]">
                                     <Calendar size={18} />
                                 </div>
                             </div>
@@ -701,7 +701,7 @@ const MusicMinistry: React.FC = () => {
                         <div className="lg:col-span-2 space-y-6">
                             <div className="flex justify-between items-center">
                                 <h2 className="text-lg font-bold text-gray-900">Recent & Upcoming Practices</h2>
-                                <button className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-1">
+                                <button className="text-sm font-bold text-[var(--color-text-main)] hover:underline flex items-center gap-1">
                                     View All <ArrowRight size={14} />
                                 </button>
                             </div>
@@ -748,16 +748,16 @@ const MusicMinistry: React.FC = () => {
                                                         <span className="text-[11px] font-bold text-gray-900">{session.members_present}/{sessionRosterCount}</span>
                                                     </div>
                                                     {(session.non_member_attendance || 0) > 0 && (
-                                                        <p className="text-[10px] font-bold text-blue-600 mb-1 text-right">
+                                                        <p className="text-[10px] font-bold text-[var(--color-text-main)] mb-1 text-right">
                                                             +{session.non_member_attendance} guest{session.non_member_attendance === 1 ? '' : 's'}
                                                         </p>
                                                     )}
-                                                    <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                                                    <div className="w-full bg-gray-100 rounded-none h-1.5 overflow-hidden">
                                                         <div className={`h - 1.5 rounded - full ${isLow ? 'bg-orange-400' : 'bg-green-500'} `} style={{ width: `${attendanceRatio * 100}% ` }}></div>
                                                     </div>
                                                 </div>
 
-                                                <button className="bg-[#f8f9fa] border border-gray-200 text-blue-600 hover:bg-blue-50 hover:border-blue-200 px-4 py-2 rounded-[8px] text-[11px] font-bold uppercase tracking-wider transition-colors shrink-0">
+                                                <button className="bg-[#f8f9fa] border border-gray-200 text-[var(--color-text-main)] hover:bg-gray-50 hover:border-blue-200 px-4 py-2 rounded-[8px] text-[11px] font-bold uppercase tracking-wider transition-colors shrink-0">
                                                     Edit Details
                                                 </button>
                                             </div>

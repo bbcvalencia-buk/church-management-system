@@ -106,7 +106,7 @@ const FaithPromiseStatementPrint: React.FC = () => {
                     <div className="mb-6 border border-gray-300 rounded overflow-hidden">
                         <table className="w-full text-xs text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-800 text-white uppercase tracking-wider text-[10px]">
+                                <tr className="bg-slate-800 text-[var(--color-text-main)] uppercase tracking-wider text-[10px]">
                                     <th className="p-2 border border-slate-700 w-1/4">Sunday Date</th>
                                     <th className="p-2 border border-slate-700 text-right w-1/4">Given Amount</th>
                                     <th className="p-2 border border-slate-700 text-right w-1/4">Running Balance</th>

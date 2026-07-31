@@ -548,7 +548,7 @@ const FinancialReportPrint: React.FC = () => {
                 </div>
                 <table className="w-full text-[11px] table-fixed border-collapse">
                     <thead>
-                        <tr className="bg-slate-800 text-white uppercase text-[10px]">
+                        <tr className="bg-slate-800 text-[var(--color-text-main)] uppercase text-[10px]">
                             <th className="text-left px-2 py-1 w-10">Day</th>
                             <th className="text-right px-2 py-1">Tithe</th>
                             <th className="text-right px-2 py-1">FP</th>
@@ -623,7 +623,7 @@ const FinancialReportPrint: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="p-4 bg-[var(--color-primary)]/10 rounded-xl border border-[var(--color-primary)]/20 flex items-center justify-between flex-wrap gap-4">
+                <div className="p-4 bg-[var(--color-primary)]/10 rounded-none border border-[var(--color-primary)]/20 flex items-center justify-between flex-wrap gap-4">
                     <div className="flex items-center gap-6 flex-wrap">
                         <label className="flex items-center gap-2 cursor-pointer group">
                             <input
@@ -658,7 +658,7 @@ const FinancialReportPrint: React.FC = () => {
                         <button
                             onClick={handleDownloadPng}
                             disabled={generatingPng || loading || reportData.length === 0}
-                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+                            className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-4 py-2 rounded-none font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
                         >
                             {generatingPng ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
                             Download PNG
@@ -731,7 +731,7 @@ const FinancialReportPrint: React.FC = () => {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Faith Promise Balance</p>
-                                            <div className="mt-1 inline-block bg-red-50 border border-red-100 rounded-lg px-5 py-2">
+                                            <div className="mt-1 inline-block bg-red-50 border border-red-100 rounded-none px-5 py-2">
                                                 <p className="text-3xl font-black text-red-600">P{formatAmount(statement.fpBalance, false)}</p>
                                             </div>
                                         </div>

@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 const LoadingScreen: React.FC = () => (
-    <div className="min-h-screen bg-[#111] flex items-center justify-center text-white">Loading...</div>
+    <div className="min-h-screen bg-[#111] flex items-center justify-center text-[var(--color-text-main)]">Loading...</div>
 );
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

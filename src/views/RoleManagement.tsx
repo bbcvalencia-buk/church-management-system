@@ -39,7 +39,7 @@ const ROLE_DESCRIPTIONS = {
 };
 
 const ROLE_BADGE_COLORS: Record<string, string> = {
-    [UserRole.CHURCH_ADMINISTRATOR]: 'bg-slate-800 text-white border-slate-700',
+    [UserRole.CHURCH_ADMINISTRATOR]: 'bg-slate-800 text-[var(--color-text-main)] border-slate-700',
     [UserRole.PASTOR]: 'bg-purple-100 text-purple-700 border-purple-200',
     [UserRole.CHURCH_CLERK]: 'bg-blue-100 text-blue-700 border-blue-200',
     [UserRole.TREASURER]: 'bg-green-100 text-green-700 border-green-200',
@@ -259,11 +259,11 @@ const RoleManagement: React.FC = () => {
                 </div>
 
                 {/* User's own role badge */}
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full shadow-sm border border-gray-100">
+                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-none shadow-sm border border-gray-100">
                     <span className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">Your Access:</span>
                     {roles.length > 0 ? (
                         roles.map(r => (
-                            <span key={r} className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wide ${ROLE_BADGE_COLORS[r] || 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                            <span key={r} className={`text-[10px] font-bold px-2 py-0.5 rounded-none border uppercase tracking-wide ${ROLE_BADGE_COLORS[r] || 'bg-gray-50 text-[var(--color-text-main)] border-blue-100'}`}>
                                 {r.replace(/_/g, ' ')}
                             </span>
                         ))
@@ -274,13 +274,13 @@ const RoleManagement: React.FC = () => {
             </div>
 
             {error && (
-                <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl flex items-center gap-2 animate-pulse">
+                <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-none flex items-center gap-2 animate-pulse">
                     <AlertCircle size={20} /> {error}
                 </div>
             )}
 
             {editRequests.length > 0 && (
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-4">
+                <div className="bg-amber-50 border border-amber-200 rounded-none p-5 space-y-4">
                     <div className="flex items-center gap-2 text-amber-900">
                         <Bell size={18} />
                         <h3 className="font-bold text-sm uppercase tracking-wider">
@@ -289,7 +289,7 @@ const RoleManagement: React.FC = () => {
                     </div>
                     <div className="space-y-3">
                         {editRequests.slice(0, 5).map((req) => (
-                            <div key={req.id} className="bg-white border border-amber-100 rounded-xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div key={req.id} className="bg-white border border-amber-100 rounded-none p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                                 <div>
                                     <p className="text-sm font-bold text-gray-900">{getMemberDisplayName(req.target_member_id)}</p>
                                     <p className="text-xs text-gray-600 mt-1">{req.request_message}</p>
@@ -302,14 +302,14 @@ const RoleManagement: React.FC = () => {
                                     <button
                                         onClick={() => resolveProfileEditRequest(req.id, 'approved')}
                                         disabled={resolvingRequestId === req.id}
-                                        className="px-3 py-2 rounded-lg bg-green-600 text-white text-xs font-bold hover:bg-green-700 disabled:opacity-50"
+                                        className="px-3 py-2 rounded-none bg-green-600 text-[var(--color-text-main)] text-xs font-bold hover:bg-green-700 disabled:opacity-50"
                                     >
                                         Approve
                                     </button>
                                     <button
                                         onClick={() => resolveProfileEditRequest(req.id, 'rejected')}
                                         disabled={resolvingRequestId === req.id}
-                                        className="px-3 py-2 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 disabled:opacity-50"
+                                        className="px-3 py-2 rounded-none bg-red-600 text-[var(--color-text-main)] text-xs font-bold hover:bg-red-700 disabled:opacity-50"
                                     >
                                         Reject
                                     </button>
@@ -330,18 +330,18 @@ const RoleManagement: React.FC = () => {
                             placeholder="Search members..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all"
+                            className="w-full bg-white border border-gray-200 rounded-none pl-10 pr-4 py-3 text-[var(--color-text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] shadow-sm transition-all"
                         />
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-[600px] flex flex-col">
+                    <div className="bg-white rounded-none border border-gray-100 shadow-sm overflow-hidden h-[600px] flex flex-col">
                         <div className="p-3 bg-gray-50 border-b border-gray-100 font-semibold text-xs text-gray-500 uppercase tracking-wider">
                             Select a Member
                         </div>
                         <div className="overflow-y-auto flex-1">
                             {loading ? (
                                 <div className="p-8 text-center text-gray-400 flex flex-col items-center gap-2">
-                                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-5 h-5 border-2 border-[var(--color-border)] border-t-transparent rounded-none animate-spin"></div>
                                     <span>Loading directory...</span>
                                 </div>
                             ) : filteredMembers.length === 0 ? (
@@ -360,14 +360,14 @@ const RoleManagement: React.FC = () => {
                                                 key={member.id}
                                                 onClick={() => setSelectedMember(member)}
                                                 className={`w-full text-left p-4 transition-all duration-200 hover:bg-gray-50 flex items-center gap-3
-                                                    ${isSelected ? 'bg-blue-50/60 border-l-4 border-[var(--color-primary)]' : 'border-l-4 border-transparent'}
+                                                    ${isSelected ? 'bg-gray-50/60 border-l-4 border-[var(--color-primary)]' : 'border-l-4 border-transparent'}
                                                 `}
                                             >
-                                                <div className={`w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border ${isSelected ? 'border-blue-200 shadow-sm' : 'border-gray-100'}`}>
+                                                <div className={`w-10 h-10 rounded-none overflow-hidden flex-shrink-0 border ${isSelected ? 'border-blue-200 shadow-sm' : 'border-gray-100'}`}>
                                                     {member.profile_picture_url ? (
                                                         <img src={member.profile_picture_url} alt="" className="w-full h-full object-cover" />
                                                     ) : (
-                                                        <div className={`w-full h-full flex items-center justify-center text-xs font-bold ${isSelected ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'}`}>
+                                                        <div className={`w-full h-full flex items-center justify-center text-xs font-bold ${isSelected ? 'bg-blue-100 text-[var(--color-text-main)]' : 'bg-gray-100 text-gray-400'}`}>
                                                             {member.first_name[0]}{member.surname[0]}
                                                         </div>
                                                     )}
@@ -404,12 +404,12 @@ const RoleManagement: React.FC = () => {
                 {/* Right: Role Assignment Panel */}
                 <div className="lg:col-span-2">
                     {selectedMember ? (
-                        <div className="bg-white rounded-2xl border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden fade-in-up">
+                        <div className="bg-white rounded-none border border-gray-100 shadow-xl shadow-gray-200/50 overflow-hidden fade-in-up">
                             {/* Header */}
                             <div className="p-6 border-b border-gray-100 flex flex-col gap-5 bg-gradient-to-r from-gray-50 to-white">
                                 <div className="flex items-center gap-5">
-                                    <div className="w-20 h-20 rounded-2xl shadow-md overflow-hidden bg-white p-1 border border-gray-100">
-                                        <div className="w-full h-full rounded-xl overflow-hidden bg-gray-50">
+                                    <div className="w-20 h-20 rounded-none shadow-md overflow-hidden bg-white p-1 border border-gray-100">
+                                        <div className="w-full h-full rounded-none overflow-hidden bg-gray-50">
                                             {selectedMember.profile_picture_url ? (
                                                 <img src={selectedMember.profile_picture_url} alt="" className="w-full h-full object-cover" />
                                             ) : (
@@ -427,7 +427,7 @@ const RoleManagement: React.FC = () => {
                                             <User size={14} /> ID: {selectedMember.id}
                                         </p>
                                         {selectedMemberScopeLabel ? (
-                                            <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                                            <div className="mt-2 inline-flex items-center gap-2 rounded-none border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                                                 <Shield size={12} /> Sunday School: {selectedMemberScopeLabel}
                                             </div>
                                         ) : (
@@ -436,7 +436,7 @@ const RoleManagement: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className="rounded-2xl bg-white border border-gray-200 p-4">
+                                <div className="rounded-none bg-white border border-gray-200 p-4">
                                     <div className="flex flex-wrap gap-2">
                                         {(['sunday_school_adult', 'beginners_class', 'sunday_school_children'] as ChurchPosition['position_category'][]).map((category) => {
                                             const active = hasScope(category);
@@ -445,7 +445,7 @@ const RoleManagement: React.FC = () => {
                                                     key={category}
                                                     onClick={() => toggleScopeCategory(category)}
                                                     disabled={savingScope}
-                                                    className={`px-3 py-2 rounded-full border text-xs font-semibold transition-colors ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'} ${savingScope ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                    className={`px-3 py-2 rounded-none border text-xs font-semibold transition-colors ${active ? 'bg-indigo-600 text-[var(--color-text-main)] border-indigo-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'} ${savingScope ? 'opacity-60 cursor-not-allowed' : ''}`}
                                                 >
                                                     {getScopeLabel(category)}
                                                 </button>
@@ -474,15 +474,15 @@ const RoleManagement: React.FC = () => {
                                                 key={role}
                                                 onClick={() => toggleRole(selectedMember.id, role, !isActive)}
                                                 disabled={saving}
-                                                className={`group relative p-4 rounded-xl border-2 text-left transition-all duration-200 flex items-start gap-4 hover:-translate-y-0.5
+                                                className={`group relative p-4 rounded-none border-2 text-left transition-all duration-200 flex items-start gap-4 hover:-translate-y-0.5
                                                     ${isActive
-                                                        ? 'bg-blue-50/50 border-[var(--color-primary)] shadow-md shadow-blue-500/10'
+                                                        ? 'bg-gray-50/50 border-[var(--color-primary)] shadow-md '
                                                         : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm'
                                                     }
                                                 `}
                                             >
-                                                <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 transition-colors mt-0.5
-                                                    ${isActive ? 'bg-[var(--color-primary)] text-white' : 'bg-gray-100 text-gray-300 group-hover:bg-gray-200'}
+                                                <div className={`w-6 h-6 rounded-none flex items-center justify-center flex-shrink-0 transition-colors mt-0.5
+                                                    ${isActive ? 'bg-[var(--color-primary)] text-[var(--color-text-main)]' : 'bg-gray-100 text-gray-300 group-hover:bg-gray-200'}
                                                 `}>
                                                     {isActive && <Check size={14} strokeWidth={3} />}
                                                 </div>
@@ -506,8 +506,8 @@ const RoleManagement: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-[600px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-                            <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
+                        <div className="h-[600px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-gray-200 rounded-none bg-gray-50/50">
+                            <div className="w-16 h-16 bg-white rounded-none shadow-sm flex items-center justify-center mb-4">
                                 <User className="text-gray-300" size={32} />
                             </div>
                             <h3 className="text-lg font-bold text-gray-500">No Member Selected</h3>

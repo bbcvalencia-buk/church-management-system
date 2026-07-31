@@ -23,12 +23,12 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                         <img
                             src={member.profile_picture_url}
                             alt={`${member.first_name} ${member.surname}`}
-                            className="w-14 h-14 rounded-2xl object-cover shadow-sm ring-1 ring-black/5"
+                            className="w-14 h-14 rounded-none object-cover shadow-sm ring-1 ring-black/5"
                         />
                     ) : (
                         <div className={`
-              w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-bold shadow-sm ring-1 ring-black/5
-              ${isMale ? 'bg-blue-50 text-blue-600' : 'bg-pink-50 text-pink-600'}
+              w-14 h-14 rounded-none flex items-center justify-center text-xl font-bold shadow-sm ring-1 ring-black/5
+              ${isMale ? 'bg-gray-50 text-[var(--color-text-main)]' : 'bg-transparent text-[var(--color-text-muted)]'}
             `}>
                             {fallbackInitial}
                         </div>
@@ -52,7 +52,7 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                                 {member.nickname && (
                                     <>
                                         {member.is_regular_member && (
-                                            <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                                            <span className="w-1 h-1 rounded-none bg-gray-300"></span>
                                         )}
                                         <span>"{member.nickname}"</span>
                                     </>
@@ -63,14 +63,14 @@ export const MemberCard = ({ member }: MemberCardProps) => {
                 </div>
 
                 <div className={`
-          px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border
+          px-2.5 py-1 rounded-none text-[10px] font-bold uppercase tracking-wide border
           ${member.membership_status === 'active' ? 'bg-green-50 text-green-700 border-green-100' :
                         member.membership_status === 'inactive' ? 'bg-gray-50 text-gray-600 border-gray-100' : 'bg-red-50 text-red-600 border-red-100'}
         `}>
                     {member.membership_status}
                 </div>
                 {!member.is_regular_member && (
-                    <span className="bg-yellow-50 text-yellow-700 text-[10px] font-semibold px-2 py-1 rounded-md border border-yellow-100">
+                    <span className="bg-yellow-50 text-yellow-700 text-[10px] font-semibold px-2 py-1 rounded-none border border-yellow-100">
                         Visitor
                     </span>
                 )}
@@ -92,17 +92,17 @@ export const MemberCard = ({ member }: MemberCardProps) => {
             {/* Badges */}
             <div className="flex flex-wrap gap-2 mt-auto pt-3 border-t border-dashed border-[var(--color-border)]">
                 {member.is_pastor && (
-                    <span className="bg-purple-50 text-purple-700 text-[10px] font-semibold px-2 py-1 rounded-md flex items-center gap-1 border border-purple-100">
+                    <span className="bg-purple-50 text-purple-700 text-[10px] font-semibold px-2 py-1 rounded-none flex items-center gap-1 border border-purple-100">
                         <Shield size={10} /> Pastor
                     </span>
                 )}
                 {member.is_pastors_wife && (
-                    <span className="bg-pink-50 text-pink-700 text-[10px] font-semibold px-2 py-1 rounded-md flex items-center gap-1 border border-pink-100">
+                    <span className="bg-transparent text-pink-700 text-[10px] font-semibold px-2 py-1 rounded-none flex items-center gap-1 border border-pink-100">
                         <User size={10} /> Pastor's Wife
                     </span>
                 )}
                 {member.is_regular_member && (
-                    <span className="bg-blue-50 text-blue-700 text-[10px] font-semibold px-2 py-1 rounded-md border border-blue-100">Regular Member</span>
+                    <span className="bg-gray-50 text-blue-700 text-[10px] font-semibold px-2 py-1 rounded-none border border-blue-100">Regular Member</span>
                 )}
             </div>
 

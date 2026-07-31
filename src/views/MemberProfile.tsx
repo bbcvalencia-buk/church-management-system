@@ -688,8 +688,8 @@ const MemberProfile: React.FC = () => {
 
     if (loading) return (
         <div className="max-w-6xl mx-auto space-y-6 pb-20 animate-pulse">
-            <Skeleton className="w-full h-48 rounded-2xl" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><Skeleton className="h-96 rounded-2xl" /><Skeleton className="h-96 rounded-2xl" /><Skeleton className="h-96 rounded-2xl" /></div>
+            <Skeleton className="w-full h-48 rounded-none" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><Skeleton className="h-96 rounded-none" /><Skeleton className="h-96 rounded-none" /><Skeleton className="h-96 rounded-none" /></div>
         </div>
     );
 
@@ -760,28 +760,28 @@ const MemberProfile: React.FC = () => {
     return (
         <div className="max-w-6xl mx-auto space-y-8 pb-20 font-sans relative">
             {isDirty && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm sticky top-4 z-40">
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-none flex items-center justify-between shadow-sm sticky top-4 z-40">
                     <div className="flex items-center gap-2 font-semibold text-sm">
                         <AlertCircle size={18} className="text-amber-500" />
                         You have unsaved changes
                     </div>
-                    <button onClick={handleDiscardChanges} className="text-xs font-bold text-amber-900 border border-amber-300 hover:bg-amber-100 px-3 py-1.5 rounded-lg transition-colors bg-white">
+                    <button onClick={handleDiscardChanges} className="text-xs font-bold text-amber-900 border border-amber-300 hover:bg-amber-100 px-3 py-1.5 rounded-none transition-colors bg-white">
                         Discard Changes
                     </button>
                 </div>
             )}
 
             {draftFound && (
-                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-xl flex items-center justify-between shadow-sm sticky top-4 z-40">
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-none flex items-center justify-between shadow-sm sticky top-4 z-40">
                     <div className="flex items-center gap-2 font-semibold text-sm">
                         <AlertCircle size={18} className="text-yellow-600" />
                         You have an unsaved draft from {new Date(draftFound.timestamp).toLocaleString()}
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={handleRestoreDraft} className="text-xs font-bold bg-yellow-400 text-yellow-900 hover:bg-yellow-500 px-3 py-1.5 rounded-lg transition-colors">
+                        <button onClick={handleRestoreDraft} className="text-xs font-bold bg-yellow-400 text-yellow-900 hover:bg-yellow-500 px-3 py-1.5 rounded-none transition-colors">
                             Restore Draft
                         </button>
-                        <button onClick={handleDiscardChanges} className="text-xs font-bold border border-yellow-300 hover:bg-yellow-200 px-3 py-1.5 rounded-lg transition-colors bg-white text-yellow-800">
+                        <button onClick={handleDiscardChanges} className="text-xs font-bold border border-yellow-300 hover:bg-yellow-200 px-3 py-1.5 rounded-none transition-colors bg-white text-yellow-800">
                             Discard
                         </button>
                     </div>
@@ -790,7 +790,7 @@ const MemberProfile: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <button onClick={() => isEditMode ? setIsViewing(true) : navigate(-1)} className="p-2.5 hover:bg-gray-100 rounded-full transition-colors group">
+                    <button onClick={() => isEditMode ? setIsViewing(true) : navigate(-1)} className="p-2.5 hover:bg-gray-100 rounded-none transition-colors group">
                         <ArrowLeft size={20} className="text-gray-900 group-hover:-translate-x-1 transition-transform" />
                     </button>
                     <div>
@@ -817,7 +817,7 @@ const MemberProfile: React.FC = () => {
                             Cancel
                         </button>
                     )}
-                    <button className="px-7 py-2.5 bg-[#4c1d95] text-white rounded-[12px] shadow-sm text-sm font-bold hover:bg-[#3b1773] flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleSave} disabled={saving || !canManageProfiles}>
+                    <button className="px-7 py-2.5 bg-[#4c1d95] text-[var(--color-text-main)] rounded-[12px] shadow-sm text-sm font-bold hover:bg-[#3b1773] flex items-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed" onClick={handleSave} disabled={saving || !canManageProfiles}>
                         {saving ? <>Saving...</> : <><Save size={18} /> Save Member</>}
                     </button>
                 </div>
@@ -828,14 +828,14 @@ const MemberProfile: React.FC = () => {
                 <div className="lg:col-span-3 space-y-6">
                     {/* Profile Photo Card */}
                     <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-8 flex flex-col items-center gap-5 text-center transition-all hover:shadow-md">
-                        <label className="w-32 h-32 rounded-full bg-gray-50/50 border-[2px] border-dashed border-gray-200 flex items-center justify-center relative overflow-hidden group cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all">
+                        <label className="w-32 h-32 rounded-none bg-gray-50/50 border-[2px] border-dashed border-gray-200 flex items-center justify-center relative overflow-hidden group cursor-pointer hover:border-blue-400 hover:bg-gray-50/30 transition-all">
                             {previewUrl ? (
                                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                             ) : (
                                 <Upload size={28} className="text-gray-400 group-hover:text-blue-500 transition-colors" strokeWidth={1.5} />
                             )}
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
-                                <span className="text-xs font-bold text-white tracking-wide">Change Photo</span>
+                                <span className="text-xs font-bold text-[var(--color-text-main)] tracking-wide">Change Photo</span>
                             </div>
                             <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                         </label>
@@ -852,12 +852,12 @@ const MemberProfile: React.FC = () => {
                             <button
                                 key={section.id}
                                 onClick={() => setActiveSection(section.id as any)}
-                                className={`w-full flex items-center gap-4 px-5 py-4 rounded-xl text-sm font-bold transition-all ${activeSection === section.id
-                                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                                className={`w-full flex items-center gap-4 px-5 py-4 rounded-none text-sm font-bold transition-all ${activeSection === section.id
+                                    ? "bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] shadow-md "
                                     : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                                     }`}
                             >
-                                <section.icon size={18} className={activeSection === section.id ? "text-white" : "text-gray-400"} strokeWidth={activeSection === section.id ? 2.5 : 2} />
+                                <section.icon size={18} className={activeSection === section.id ? "text-[var(--color-text-main)]" : "text-gray-400"} strokeWidth={activeSection === section.id ? 2.5 : 2} />
                                 {section.label}
                             </button>
                         ))}
@@ -869,7 +869,7 @@ const MemberProfile: React.FC = () => {
                         {sections.find((s) => s.id === activeSection)?.icon &&
                             React.createElement(sections.find((s) => s.id === activeSection)!.icon, {
                                 size: 24,
-                                className: "text-blue-600",
+                                className: "text-[var(--color-text-main)]",
                                 strokeWidth: 2.5
                             })
                         }
@@ -887,7 +887,7 @@ const MemberProfile: React.FC = () => {
             </div>
             {showEditRequestModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-xl w-full max-w-lg p-6 space-y-4">
+                    <div className="bg-white rounded-none border border-gray-100 shadow-xl w-full max-w-lg p-6 space-y-4">
                         <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                             <MessageSquare size={18} className="text-amber-600" />
                             Request Profile Edit
@@ -899,7 +899,7 @@ const MemberProfile: React.FC = () => {
                             value={editRequestMessage}
                             onChange={(e) => setEditRequestMessage(e.target.value)}
                             rows={5}
-                            className="w-full rounded-xl border border-gray-200 p-3 text-sm text-gray-900 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none"
+                            className="w-full rounded-none border border-gray-200 p-3 text-sm text-gray-900 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none"
                             placeholder="Example: Please update my phone number and home address."
                         />
                         <div className="flex justify-end gap-2">
@@ -908,14 +908,14 @@ const MemberProfile: React.FC = () => {
                                     setShowEditRequestModal(false);
                                     setEditRequestMessage("");
                                 }}
-                                className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50"
+                                className="px-4 py-2 rounded-none border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleRequestEdit}
                                 disabled={submittingEditRequest || !editRequestMessage.trim()}
-                                className="px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-bold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-4 py-2 rounded-none bg-amber-600 text-[var(--color-text-main)] text-sm font-bold hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {submittingEditRequest ? "Submitting..." : "Send Request"}
                             </button>
@@ -925,7 +925,7 @@ const MemberProfile: React.FC = () => {
             )}
             {showMinistryMatesModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-                    <div className="bg-white rounded-2xl border border-gray-100 shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[80vh] flex flex-col">
+                    <div className="bg-white rounded-none border border-gray-100 shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[80vh] flex flex-col">
                         <div className="flex justify-between items-center mb-2">
                             <h3 className="text-[18px] font-bold text-gray-900">
                                 Ministry: {formatMinistryDepartment(selectedMinistryName) || selectedMinistryName}
@@ -940,8 +940,8 @@ const MemberProfile: React.FC = () => {
                                 <div className="text-center py-6 text-gray-400 animate-pulse font-medium text-sm">Loading members...</div>
                             ) : selectedMinistryMates.length > 0 ? (
                                 selectedMinistryMates.map((mate, idx) => (
-                                    <div key={idx} className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 bg-gray-50/50">
-                                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                                    <div key={idx} className="flex items-center gap-4 p-3 rounded-none border border-gray-100 bg-gray-50/50">
+                                        <div className="w-10 h-10 rounded-none overflow-hidden bg-gray-200 shrink-0">
                                             {mate.avatar ? (
                                                 <img src={mate.avatar} alt="Avatar" className="w-full h-full object-cover" />
                                             ) : (
@@ -953,13 +953,13 @@ const MemberProfile: React.FC = () => {
                                             <p className="text-xs text-gray-500 truncate">{mate.position}</p>
                                         </div>
                                         {mate.isHead && (
-                                            <span className="shrink-0 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-2 py-1 uppercase">Head</span>
+                                            <span className="shrink-0 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded-none px-2 py-1 uppercase">Head</span>
                                         )}
                                     </div>
                                 ))
                             ) : (
                                 <div className="text-center py-6 px-4">
-                                    <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
+                                    <div className="w-12 h-12 rounded-none bg-gray-50 flex items-center justify-center mx-auto mb-3">
                                         <Users size={20} className="text-gray-400" />
                                     </div>
                                     <p className="text-gray-500 font-medium text-sm">No other mates found in this ministry yet.</p>
@@ -968,7 +968,7 @@ const MemberProfile: React.FC = () => {
                         </div>
 
                         <div className="pt-2">
-                            <button onClick={() => setShowMinistryMatesModal(false)} className="w-full py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl text-sm hover:bg-gray-200 transition-colors">
+                            <button onClick={() => setShowMinistryMatesModal(false)} className="w-full py-2.5 bg-gray-100 text-gray-700 font-bold rounded-none text-sm hover:bg-gray-200 transition-colors">
                                 Close
                             </button>
                         </div>

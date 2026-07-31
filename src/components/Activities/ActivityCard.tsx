@@ -13,7 +13,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, setViewAct
     return (
         <div
             onClick={() => setViewActivity(activity)}
-            className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-4 hover:border-[var(--color-primary)]/50 hover:shadow-md transition-all group relative cursor-pointer"
+            className="bg-white border border-gray-200 rounded-none shadow-sm p-6 space-y-4 hover:border-[var(--color-primary)]/50 hover:shadow-md transition-all group relative cursor-pointer"
         >
             <button
                 onClick={(e) => {
@@ -26,9 +26,9 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, setViewAct
             </button>
 
             <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center 
+                <div className={`w-10 h-10 rounded-none flex items-center justify-center 
                     ${activity.activity_type === 'soul_winning' ? 'bg-red-50 text-red-500' :
-                        activity.activity_type === 'bible_study' ? 'bg-blue-50 text-blue-500' :
+                        activity.activity_type === 'bible_study' ? 'bg-gray-50 text-blue-500' :
                             activity.activity_type === 'visitation' ? 'bg-purple-50 text-purple-500' :
                                 'bg-purple-50 text-purple-500'}`}
                 >
@@ -94,7 +94,7 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({ activity, setViewAct
                     </p>
                 </div>
             </div>
-            <p className="text-[10px] text-blue-400/70 mt-1 uppercase font-bold text-right group-hover:text-blue-600 transition-colors">Click to view details</p>
+            <p className="text-[10px] text-blue-400/70 mt-1 uppercase font-bold text-right group-hover:text-[var(--color-text-main)] transition-colors">Click to view details</p>
         </div>
     );
 };

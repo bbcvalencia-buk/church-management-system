@@ -14,7 +14,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ data, onChange }) => {
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-medium text-white mb-4">Contact & Location</h3>
+            <h3 className="text-lg font-medium text-[var(--color-text-main)] mb-4">Contact & Location</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium text-[var(--color-text-muted)]">Home Address <span className="text-red-400">*</span></label>

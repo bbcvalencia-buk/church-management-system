@@ -28,7 +28,7 @@ const StudentEditorModal: React.FC<Props> = ({
 }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
+            <div className="bg-white rounded-none shadow-2xl w-full max-w-xl overflow-hidden">
                 <div className="px-6 py-5 border-b border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900">Edit Student Profile</h3>
                     <p className="text-xs text-gray-500 mt-1">Update student details for your class roster.</p>
@@ -40,7 +40,7 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="text"
                             value={editingStudent.first_name}
                             onChange={(e) => onChange({ ...editingStudent, first_name: e.target.value })}
-                            className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                         />
                     </div>
                     <div>
@@ -49,7 +49,7 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="text"
                             value={editingStudent.surname}
                             onChange={(e) => onChange({ ...editingStudent, surname: e.target.value })}
-                            className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                         />
                     </div>
                     <div>
@@ -58,7 +58,7 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="text"
                             value={editingStudent.phone_number}
                             onChange={(e) => onChange({ ...editingStudent, phone_number: e.target.value })}
-                            className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                         />
                     </div>
                     <div>
@@ -67,7 +67,7 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="date"
                             value={editingStudent.date_of_birth || ""}
                             onChange={(e) => onChange({ ...editingStudent, date_of_birth: e.target.value })}
-                            className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                         />
                     </div>
                     <div className="sm:col-span-2">
@@ -76,21 +76,21 @@ const StudentEditorModal: React.FC<Props> = ({
                             type="text"
                             value={editingStudent.home_address}
                             onChange={(e) => onChange({ ...editingStudent, home_address: e.target.value })}
-                            className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
+                            className="w-full border border-gray-200 rounded-none p-3 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none"
                         />
                     </div>
                 </div>
                 <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold"
+                        className="px-4 py-2 rounded-none border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={onSave}
                         disabled={studentSaving}
-                        className="px-5 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-5 py-2 rounded-none bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] hover:bg-[var(--color-surface-hover)] text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {studentSaving ? "Saving..." : "Save Student"}
                     </button>

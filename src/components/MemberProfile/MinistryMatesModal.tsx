@@ -33,7 +33,7 @@ interface Props {
 const MinistryMatesModal: React.FC<Props> = ({ ministryName, mates, loading, onClose }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[80vh] flex flex-col">
+            <div className="bg-white rounded-none border border-gray-100 shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[80vh] flex flex-col">
                 <div className="flex justify-between items-center mb-2">
                     <h3 className="text-[18px] font-bold text-gray-900">
                         Ministry: {formatMinistryDepartment(ministryName) || ministryName}
@@ -50,8 +50,8 @@ const MinistryMatesModal: React.FC<Props> = ({ ministryName, mates, loading, onC
                         <div className="text-center py-6 text-gray-400 animate-pulse font-medium text-sm">Loading members...</div>
                     ) : mates.length > 0 ? (
                         mates.map((mate, idx) => (
-                            <div key={idx} className="flex items-center gap-4 p-3 rounded-xl border border-gray-100 bg-gray-50/50">
-                                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
+                            <div key={idx} className="flex items-center gap-4 p-3 rounded-none border border-gray-100 bg-gray-50/50">
+                                <div className="w-10 h-10 rounded-none overflow-hidden bg-gray-200 shrink-0">
                                     {mate.avatar ? (
                                         <img src={mate.avatar} alt="Avatar" className="w-full h-full object-cover" />
                                     ) : (
@@ -65,13 +65,13 @@ const MinistryMatesModal: React.FC<Props> = ({ ministryName, mates, loading, onC
                                     <p className="text-xs text-gray-500 truncate">{mate.position}</p>
                                 </div>
                                 {mate.isHead && (
-                                    <span className="shrink-0 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-2 py-1 uppercase">Head</span>
+                                    <span className="shrink-0 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-100 rounded-none px-2 py-1 uppercase">Head</span>
                                 )}
                             </div>
                         ))
                     ) : (
                         <div className="text-center py-6 px-4">
-                            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
+                            <div className="w-12 h-12 rounded-none bg-gray-50 flex items-center justify-center mx-auto mb-3">
                                 <Users size={20} className="text-gray-400" />
                             </div>
                             <p className="text-gray-500 font-medium text-sm">No other mates found in this ministry yet.</p>
@@ -80,7 +80,7 @@ const MinistryMatesModal: React.FC<Props> = ({ ministryName, mates, loading, onC
                 </div>
 
                 <div className="pt-2">
-                    <button onClick={onClose} className="w-full py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl text-sm hover:bg-gray-200 transition-colors">
+                    <button onClick={onClose} className="w-full py-2.5 bg-gray-100 text-gray-700 font-bold rounded-none text-sm hover:bg-gray-200 transition-colors">
                         Close
                     </button>
                 </div>

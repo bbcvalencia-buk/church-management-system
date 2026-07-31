@@ -98,7 +98,7 @@ export const ImportReviewPanel: React.FC = () => {
 
     if (conflicts.length === 0) {
         return (
-            <div className="text-center p-12 bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-200 dark:border-green-800/30">
+            <div className="text-center p-12 bg-green-50 dark:bg-green-900/10 rounded-none border border-green-200 dark:border-green-800/30">
                 <Check className="mx-auto h-12 w-12 text-green-500 mb-3" />
                 <h3 className="text-lg font-medium text-green-800 dark:text-green-400">All Clear!</h3>
                 <p className="text-green-600 dark:text-green-500 text-sm mt-1">There are no pending import conflicts to resolve.</p>
@@ -115,7 +115,7 @@ export const ImportReviewPanel: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-4 rounded-lg flex items-start gap-3">
+            <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-4 rounded-none flex items-start gap-3">
                 <AlertCircle className="text-yellow-600 shrink-0 mt-0.5" size={20} />
                 <div>
                     <h4 className="font-semibold text-yellow-800 dark:text-yellow-500">Action Required</h4>
@@ -126,7 +126,7 @@ export const ImportReviewPanel: React.FC = () => {
             </div>
 
             {Object.entries(grouped).map(([type, items]: any) => (
-                <div key={type} className="border border-[var(--color-border)] rounded-xl overflow-hidden">
+                <div key={type} className="border border-[var(--color-border)] rounded-none overflow-hidden">
                     <div className="bg-gray-50 dark:bg-white/5 border-b border-[var(--color-border)] px-4 py-3 flex items-center justify-between">
                         <h3 className="font-semibold text-[var(--color-text-main)] capitalize">
                             {type.replace('_', ' ')} Imports ({items.length})
@@ -137,7 +137,7 @@ export const ImportReviewPanel: React.FC = () => {
                             <div key={conflict.id} className="p-4 flex flex-col lg:flex-row gap-4 justify-between">
                                 <div className="space-y-2 flex-1">
                                     <div className="flex items-center gap-2">
-                                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                                        <span className="px-2 py-0.5 rounded-none text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
                                             {conflict.conflict_reason.replace(/_/g, ' ')}
                                         </span>
                                         <span className="text-xs text-[var(--color-text-muted)]">
@@ -145,7 +145,7 @@ export const ImportReviewPanel: React.FC = () => {
                                         </span>
                                     </div>
 
-                                    <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-lg text-sm font-mono overflow-x-auto">
+                                    <div className="bg-gray-50 dark:bg-white/5 p-3 rounded-none text-sm font-mono overflow-x-auto">
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                             {Object.entries(conflict.raw_data).map(([k, v]) => {
                                                 if (!v || k === 'id' || k === 'created_at' || k === 'updated_at') return null;
@@ -164,7 +164,7 @@ export const ImportReviewPanel: React.FC = () => {
                                     <button
                                         onClick={() => { setResolvingConflict(conflict); setSearchModalOpen(true); }}
                                         disabled={resolvingId === conflict.id}
-                                        className="w-full bg-[var(--color-primary)] text-white text-sm font-medium py-2 px-3 rounded-lg hover:bg-opacity-90 flex items-center justify-center gap-2"
+                                        className="w-full bg-[var(--color-primary)] text-[var(--color-text-main)] text-sm font-medium py-2 px-3 rounded-none hover:bg-opacity-90 flex items-center justify-center gap-2"
                                     >
                                         <Search size={14} /> Match Member
                                     </button>
@@ -172,7 +172,7 @@ export const ImportReviewPanel: React.FC = () => {
                                     {(type === 'member' || type === 'visitor') && (
                                         <button
                                             disabled={resolvingId === conflict.id}
-                                            className="w-full bg-white dark:bg-transparent border border-[var(--color-border)] text-[var(--color-text-main)] text-sm font-medium py-2 px-3 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 flex items-center justify-center gap-2"
+                                            className="w-full bg-white dark:bg-transparent border border-[var(--color-border)] text-[var(--color-text-main)] text-sm font-medium py-2 px-3 rounded-none hover:bg-gray-50 dark:hover:bg-white/5 flex items-center justify-center gap-2"
                                         >
                                             <Plus size={14} /> Create New
                                         </button>
@@ -181,7 +181,7 @@ export const ImportReviewPanel: React.FC = () => {
                                     <button
                                         onClick={() => handleSkip(conflict)}
                                         disabled={resolvingId === conflict.id}
-                                        className="w-full bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium py-2 px-3 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 flex items-center justify-center gap-2"
+                                        className="w-full bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium py-2 px-3 rounded-none hover:bg-red-100 dark:hover:bg-red-900/20 flex items-center justify-center gap-2"
                                     >
                                         <X size={14} /> Skip Record
                                     </button>

@@ -54,10 +54,10 @@ export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="bg-white dark:bg-gray-800 rounded-none shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[80vh]">
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                     <h3 className="text-lg font-semibold">{isMulti ? 'Select Members' : 'Match Member'}</h3>
-                    <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                    <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-none">
                         <X size={20} />
                     </button>
                 </div>
@@ -70,7 +70,7 @@ export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({
                             placeholder="Search by name or number..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-none bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
                             autoFocus
                         />
                     </div>
@@ -91,10 +91,10 @@ export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({
                                     <button
                                         key={member.id}
                                         onClick={() => onSelect(member.id)}
-                                        className={`w-full text-left p-3 rounded-lg border transition-colors flex items-center justify-between ${isSelected ? 'border-[var(--color-primary)] bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-[var(--color-primary)] hover:bg-blue-50 dark:hover:bg-blue-900/20'}`}
+                                        className={`w-full text-left p-3 rounded-none border transition-colors flex items-center justify-between ${isSelected ? 'border-[var(--color-primary)] bg-gray-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-[var(--color-primary)] hover:bg-gray-50 dark:hover:bg-blue-900/20'}`}
                                     >
                                         <div>
-                                            <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                            <div className="font-medium text-gray-900 dark:text-[var(--color-text-main)] flex items-center gap-2">
                                                 {member.surname}, {member.first_name}
                                             </div>
                                             <div className="text-sm text-gray-500 flex items-center gap-2">
@@ -115,7 +115,7 @@ export const SearchMemberModal: React.FC<SearchMemberModalProps> = ({
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         <button
                             onClick={onClose}
-                            className="w-full bg-[var(--color-primary)] text-white font-bold py-2.5 rounded-lg hover:bg-opacity-90 transition-opacity"
+                            className="w-full bg-[var(--color-primary)] text-[var(--color-text-main)] font-bold py-2.5 rounded-none hover:bg-opacity-90 transition-opacity"
                         >
                             Done Selecting
                         </button>

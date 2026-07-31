@@ -91,7 +91,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
         <div className="bg-white rounded-[16px] border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden font-sans">
             <div className="flex justify-between items-center p-6 border-b border-gray-100">
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-none bg-gray-50 text-[var(--color-text-main)] flex items-center justify-center shrink-0">
                         <User size={20} />
                     </div>
                     <div>
@@ -102,7 +102,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                 <button
                     type="button"
                     onClick={addVisitor}
-                    className="bg-[#2563eb] text-white hover:bg-blue-700 px-4 py-2.5 rounded-lg flex items-center gap-2 transition-colors font-bold text-sm shadow-sm"
+                    className="bg-[#2563eb] text-[var(--color-text-main)] hover:bg-[var(--color-surface-hover)] px-4 py-2.5 rounded-none flex items-center gap-2 transition-colors font-bold text-sm shadow-sm"
                 >
                     <Plus size={16} /> Add Visitor Card
                 </button>
@@ -118,13 +118,13 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
 
                     if (isEditing) {
                         return (
-                            <div key={visitor.id} className="bg-gray-50 p-5 rounded-xl border border-blue-100 space-y-4 relative">
+                            <div key={visitor.id} className="bg-gray-50 p-5 rounded-none border border-blue-100 space-y-4 relative">
                                 <div className="flex justify-between items-center mb-2">
                                     <h4 className="font-bold text-gray-900">Visitor Card Details</h4>
                                     <button
                                         type="button"
                                         onClick={() => setEditingId(null)}
-                                        className="text-sm font-bold text-blue-600 hover:text-blue-800"
+                                        className="text-sm font-bold text-[var(--color-text-main)] hover:text-blue-800"
                                     >
                                         Done
                                     </button>
@@ -139,7 +139,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                                 placeholder="Full Name"
                                                 value={visitor.name}
                                                 onChange={(e) => updateVisitor(visitor.id, 'name', e.target.value)}
-                                                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                className="w-full bg-white border border-gray-200 rounded-none px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                             />
                                         </div>
                                         <div className="space-y-1">
@@ -149,7 +149,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                                 placeholder="Complete Home Address"
                                                 value={visitor.address || ''}
                                                 onChange={(e) => updateVisitor(visitor.id, 'address', e.target.value)}
-                                                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                className="w-full bg-white border border-gray-200 rounded-none px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                             />
                                         </div>
                                         <div className="space-y-1">
@@ -159,7 +159,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                                 placeholder="Office Address"
                                                 value={visitor.office_address || ''}
                                                 onChange={(e) => updateVisitor(visitor.id, 'office_address', e.target.value)}
-                                                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                className="w-full bg-white border border-gray-200 rounded-none px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                             />
                                         </div>
                                     </div>
@@ -173,8 +173,8 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                                         key={status}
                                                         type="button"
                                                         onClick={() => updateVisitor(visitor.id, 'marital_status', status)}
-                                                        className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${visitor.marital_status === status
-                                                            ? 'bg-blue-600 border-blue-600 text-white'
+                                                        className={`px-3 py-2 rounded-none border text-sm font-semibold transition-colors ${visitor.marital_status === status
+                                                            ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] border-[var(--color-border)] text-[var(--color-text-main)]'
                                                             : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300'
                                                             }`}
                                                     >
@@ -192,8 +192,8 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                                         key={gender}
                                                         type="button"
                                                         onClick={() => updateVisitor(visitor.id, 'gender', gender)}
-                                                        className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${visitor.gender === gender
-                                                            ? 'bg-blue-600 border-blue-600 text-white'
+                                                        className={`px-3 py-2 rounded-none border text-sm font-semibold transition-colors ${visitor.gender === gender
+                                                            ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] border-[var(--color-border)] text-[var(--color-text-main)]'
                                                             : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300'
                                                             }`}
                                                     >
@@ -211,7 +211,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                             placeholder="Church Name"
                                             value={visitor.church_name || ''}
                                             onChange={(e) => updateVisitor(visitor.id, 'church_name', e.target.value)}
-                                            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            className="w-full bg-white border border-gray-200 rounded-none px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                         />
                                     </div>
 
@@ -222,7 +222,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                                 type="number"
                                                 value={visitor.age ?? ''}
                                                 onChange={(e) => updateVisitor(visitor.id, 'age', asNumberOrUndefined(e.target.value))}
-                                                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                className="w-full bg-white border border-gray-200 rounded-none px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                                 placeholder="0"
                                                 min={0}
                                             />
@@ -233,7 +233,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                                 type="date"
                                                 value={visitor.date_of_birth || ''}
                                                 onChange={(e) => updateVisitor(visitor.id, 'date_of_birth', e.target.value)}
-                                                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                className="w-full bg-white border border-gray-200 rounded-none px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                             />
                                         </div>
                                     </div>
@@ -244,7 +244,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                             type="text"
                                             value={visitor.contact || ''}
                                             onChange={(e) => updateVisitor(visitor.id, 'contact', e.target.value)}
-                                            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            className="w-full bg-white border border-gray-200 rounded-none px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                             placeholder="+1 (555) 000-0000"
                                         />
                                     </div>
@@ -256,7 +256,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                                 type="text"
                                                 value={visitor.invited_by || ''}
                                                 onChange={(e) => updateVisitor(visitor.id, 'invited_by', e.target.value)}
-                                                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                                className="w-full bg-white border border-gray-200 rounded-none px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                                 placeholder="Member / Teacher Name"
                                             />
                                         </div>
@@ -268,8 +268,8 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                                         key={slot}
                                                         type="button"
                                                         onClick={() => updateVisitor(visitor.id, 'visit_time', slot)}
-                                                        className={`px-3 py-2 rounded-lg border text-sm font-semibold transition-colors ${visitor.visit_time === slot
-                                                            ? 'bg-blue-600 border-blue-600 text-white'
+                                                        className={`px-3 py-2 rounded-none border text-sm font-semibold transition-colors ${visitor.visit_time === slot
+                                                            ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] border-[var(--color-border)] text-[var(--color-text-main)]'
                                                             : 'bg-white border-gray-200 text-gray-700 hover:border-blue-300'
                                                             }`}
                                                     >
@@ -286,7 +286,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                             type="date"
                                             value={visitor.visit_date || resolvedDefaultVisitDate}
                                             onChange={(e) => updateVisitor(visitor.id, 'visit_date', e.target.value)}
-                                            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                                            className="w-full bg-white border border-gray-200 rounded-none px-3 py-2 text-sm outline-none text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                                         />
                                     </div>
 
@@ -305,11 +305,11 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                     }
 
                     return (
-                        <div key={visitor.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-colors gap-4">
+                        <div key={visitor.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-white border border-gray-200 rounded-none hover:border-gray-300 transition-colors gap-4">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-gray-100 text-gray-400 flex items-center justify-center shrink-0 relative">
+                                <div className="w-12 h-12 rounded-none bg-gray-100 text-gray-400 flex items-center justify-center shrink-0 relative">
                                     <User size={24} />
-                                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-none"></div>
                                 </div>
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-3">
@@ -359,7 +359,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 border-t border-gray-100 md:border-0 pt-3 md:pt-0">
-                                <button type="button" onClick={() => setEditingId(visitor.id)} className="flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:text-blue-800">
+                                <button type="button" onClick={() => setEditingId(visitor.id)} className="flex items-center gap-1.5 text-sm font-bold text-[var(--color-text-main)] hover:text-blue-800">
                                     <Edit3 size={16} /> Edit
                                 </button>
                                 <button type="button" onClick={() => removeVisitor(visitor.id)} className="flex items-center gap-1.5 text-sm font-bold text-red-500 hover:text-red-700">
@@ -373,9 +373,9 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
                 <button
                     type="button"
                     onClick={addVisitor}
-                    className="w-full py-4 border-2 border-dashed border-gray-200 rounded-xl flex items-center justify-center gap-3 text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 transition-colors group font-bold text-sm"
+                    className="w-full py-4 border-2 border-dashed border-gray-200 rounded-none flex items-center justify-center gap-3 text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 transition-colors group font-bold text-sm"
                 >
-                    <div className="w-6 h-6 rounded-full bg-gray-400 text-white flex items-center justify-center group-hover:bg-gray-500 transition-colors">
+                    <div className="w-6 h-6 rounded-none bg-gray-400 text-[var(--color-text-main)] flex items-center justify-center group-hover:bg-gray-500 transition-colors">
                         <Plus size={14} />
                     </div>
                     Add another visitor card
@@ -384,7 +384,7 @@ const QuickVisitorRegistration: React.FC<QuickVisitorRegistrationProps> = ({
 
             <div className="bg-gray-50 border-t border-gray-100 p-3 text-center">
                 <p className="text-xs font-medium text-gray-500 flex items-center justify-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-[10px]">i</span>
+                    <span className="w-5 h-5 rounded-none bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-[10px]">i</span>
                     Fill card fields and upload front/back (plus sketch image if available)
                 </p>
             </div>

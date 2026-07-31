@@ -133,13 +133,13 @@ const SystemSettings: React.FC = () => {
                 <button
                     onClick={handleSaveSettings}
                     disabled={loading}
-                    className="bg-[var(--color-primary)] hover:bg-opacity-90 text-white px-6 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg"
+                    className="bg-[var(--color-primary)] hover:bg-opacity-90 text-[var(--color-text-main)] px-6 py-2 rounded-none font-medium transition-colors flex items-center gap-2 shadow-lg"
                 >
                     <Save size={18} /> {loading ? 'Saving...' : 'Save All Changes'}
                 </button>
             </div>
 
-            <div className="bg-[var(--color-bg)] rounded-xl shadow-sm border border-[var(--color-border)] p-4 sm:p-6 lg:p-8">
+            <div className="bg-[var(--color-bg)] rounded-none shadow-sm border border-[var(--color-border)] p-4 sm:p-6 lg:p-8">
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                             <div>
                                 <h2 className="text-2xl font-bold text-[var(--color-text-main)]">General Identity</h2>
@@ -147,7 +147,7 @@ const SystemSettings: React.FC = () => {
                             </div>
 
                             {/* Church Logo Section */}
-                            <div className="p-6 border border-gray-200 dark:border-white/10 rounded-xl bg-gray-50 dark:bg-white/5 space-y-4">
+                            <div className="p-6 border border-gray-200 dark:border-white/10 rounded-none bg-gray-50 dark:bg-white/5 space-y-4">
                                 <div className="flex items-center gap-3 mb-2">
                                     <Image size={20} className="text-[var(--color-primary)]" />
                                     <label className="text-sm font-semibold text-[var(--color-text-main)] uppercase tracking-wider">Church Logo</label>
@@ -155,7 +155,7 @@ const SystemSettings: React.FC = () => {
 
                                 <div className="flex items-start gap-6">
                                     {/* Logo Preview */}
-                                    <div className="w-28 h-28 rounded-xl border-2 border-dashed border-gray-300 dark:border-white/20 flex items-center justify-center bg-white dark:bg-white/5 overflow-hidden flex-shrink-0">
+                                    <div className="w-28 h-28 rounded-none border-2 border-dashed border-gray-300 dark:border-white/20 flex items-center justify-center bg-white dark:bg-white/5 overflow-hidden flex-shrink-0">
                                         {settings.church_logo_url && !logoPreviewError ? (
                                             <img
                                                 src={settings.church_logo_url}
@@ -195,7 +195,7 @@ const SystemSettings: React.FC = () => {
                                                 type="button"
                                                 onClick={() => fileInputRef.current?.click()}
                                                 disabled={logoUploading}
-                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] text-[var(--color-text-main)] text-sm font-medium rounded-none hover:bg-opacity-90 transition-colors disabled:opacity-50"
                                             >
                                                 {logoUploading ? (
                                                     <Loader2 size={16} className="animate-spin" />
@@ -209,7 +209,7 @@ const SystemSettings: React.FC = () => {
                                                     type="button"
                                                     onClick={handleRemoveLogo}
                                                     disabled={logoUploading}
-                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 border border-red-200"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-none hover:bg-red-100 transition-colors disabled:opacity-50 border border-red-200"
                                                 >
                                                     <Trash2 size={16} />
                                                     Remove
@@ -235,7 +235,7 @@ const SystemSettings: React.FC = () => {
                                         placeholder="e.g. Bible Baptist Church"
                                         value={settings.church_name}
                                         onChange={(e) => setSettings({ ...settings, church_name: e.target.value })}
-                                        className="w-full bg-transparent border border-gray-300 dark:border-white/10 rounded-xl p-4 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all shadow-sm"
+                                        className="w-full bg-transparent border border-gray-300 dark:border-white/10 rounded-none p-4 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all shadow-sm"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -245,7 +245,7 @@ const SystemSettings: React.FC = () => {
                                         placeholder="e.g. Church Management System"
                                         value={settings.system_name}
                                         onChange={(e) => setSettings({ ...settings, system_name: e.target.value })}
-                                        className="w-full bg-transparent border border-gray-300 dark:border-white/10 rounded-xl p-4 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all shadow-sm"
+                                        className="w-full bg-transparent border border-gray-300 dark:border-white/10 rounded-none p-4 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all shadow-sm"
                                     />
                                     <p className="text-xs text-[var(--color-text-muted)] mt-1">This appears in the sidebar header and browser tabs.</p>
                                 </div>
@@ -257,7 +257,7 @@ const SystemSettings: React.FC = () => {
                                             placeholder="e.g. v1.0.0"
                                             value={settings.system_version}
                                             onChange={(e) => setSettings({ ...settings, system_version: e.target.value })}
-                                            className="w-full bg-transparent border border-gray-300 dark:border-white/10 rounded-xl p-4 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all shadow-sm"
+                                            className="w-full bg-transparent border border-gray-300 dark:border-white/10 rounded-none p-4 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all shadow-sm"
                                         />
                                         <p className="text-xs text-[var(--color-text-muted)] mt-1">Tracks the current deployment version of the system.</p>
                                     </div>
@@ -267,7 +267,7 @@ const SystemSettings: React.FC = () => {
                                     <textarea
                                         value={settings.church_address}
                                         onChange={(e) => setSettings({ ...settings, church_address: e.target.value })}
-                                        className="w-full bg-transparent border border-gray-300 dark:border-white/10 rounded-xl p-4 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all shadow-sm min-h-[120px]"
+                                        className="w-full bg-transparent border border-gray-300 dark:border-white/10 rounded-none p-4 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all shadow-sm min-h-[120px]"
                                         placeholder="123 Faith Avenue, Holy City..."
                                     />
                                 </div>

@@ -42,11 +42,11 @@ const ResetPassword: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#f4f6f8] p-4">
-            <div className="w-full max-w-[480px] bg-white rounded-2xl shadow-xl border-b-4 border-blue-500 overflow-hidden">
+            <div className="w-full max-w-[480px] bg-white rounded-none shadow-xl border-b-4 border-blue-500 overflow-hidden">
                 <div className="p-10 space-y-6 text-center">
 
                     {/* Icon */}
-                    <div className="mx-auto w-14 h-14 bg-[#f0f4f8] rounded-full flex items-center justify-center mb-6">
+                    <div className="mx-auto w-14 h-14 bg-[#f0f4f8] rounded-none flex items-center justify-center mb-6">
                         <KeyRound className="text-[#2a3b5c] w-6 h-6" />
                     </div>
 
@@ -71,7 +71,7 @@ const ResetPassword: React.FC = () => {
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full border border-gray-200 bg-[#fbfcfd] px-4 py-3 text-[#1f2937] focus:border-[#2a3b5c] focus:ring-1 focus:ring-[#2a3b5c] outline-none transition-colors sm:text-lg tracking-widest rounded-lg font-mono"
+                                    className="block w-full border border-gray-200 bg-[#fbfcfd] px-4 py-3 text-[#1f2937] focus:border-[#2a3b5c] focus:ring-1 focus:ring-[#2a3b5c] outline-none transition-colors sm:text-lg tracking-widest rounded-none font-mono"
                                     placeholder="••••••••"
                                 />
                                 <div
@@ -84,7 +84,7 @@ const ResetPassword: React.FC = () => {
                         </div>
 
                         {/* Password Requirements Box */}
-                        <div className="bg-[#f8f9fa] rounded-xl p-5 border border-gray-100">
+                        <div className="bg-[#f8f9fa] rounded-none p-5 border border-gray-100">
                             <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-4">
                                 Password Requirements
                             </h4>
@@ -131,7 +131,7 @@ const ResetPassword: React.FC = () => {
                                 type="password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
-                                className={`block w-full border ${password === confirmPassword && confirmPassword.length > 0 ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-[#fbfcfd]'} px-4 py-3 text-[#1f2937] focus:border-[#2a3b5c] focus:ring-1 focus:ring-[#2a3b5c] outline-none transition-colors sm:text-lg tracking-widest rounded-lg font-mono`}
+                                className={`block w-full border ${password === confirmPassword && confirmPassword.length > 0 ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-[#fbfcfd]'} px-4 py-3 text-[#1f2937] focus:border-[#2a3b5c] focus:ring-1 focus:ring-[#2a3b5c] outline-none transition-colors sm:text-lg tracking-widest rounded-none font-mono`}
                                 placeholder="Re-enter new password"
                             />
                         </div>
@@ -139,10 +139,10 @@ const ResetPassword: React.FC = () => {
                         <button
                             type="submit"
                             disabled={!isReady || loading}
-                            className="w-full flex justify-center items-center py-4 px-4 border border-transparent text-sm font-bold text-white bg-[#203158] hover:bg-[#152342] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#203158] disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-wide rounded-lg shadow-md mt-8"
+                            className="w-full flex justify-center items-center py-4 px-4 border border-transparent text-sm font-bold text-[var(--color-text-main)] bg-[#203158] hover:bg-[#152342] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#203158] disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-wide rounded-none shadow-md mt-8"
                         >
                             {loading ? (
-                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-none animate-spin" />
                             ) : (
                                 <div className="flex items-center gap-2">
                                     RESET PASSWORD <ArrowRight size={16} />

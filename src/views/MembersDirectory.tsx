@@ -121,14 +121,14 @@ const MembersDirectory: React.FC = () => {
                                 { key: 'membership_status', label: 'Status' }
                             ]);
                         }}
-                        className="bg-white border border-[var(--color-border)] text-[var(--color-text-main)] hover:bg-gray-50 px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm font-medium"
+                        className="bg-white border border-[var(--color-border)] text-[var(--color-text-main)] hover:bg-gray-50 px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-sm font-medium"
                     >
                         <Download size={18} />
                         <span>Export CSV</span>
                     </button>
                     <Link
                         to="/members/new"
-                        className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20"
+                        className="bg-[var(--color-primary)] hover:bg-violet-600 text-[var(--color-text-main)] px-4 py-2 rounded-none flex items-center gap-2 transition-colors shadow-lg shadow-purple-500/20"
                     >
                         <Plus size={18} />
                         <span>Add Member</span>
@@ -148,7 +148,7 @@ const MembersDirectory: React.FC = () => {
                         placeholder="Search by name or nickname..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 bg-white border border-[var(--color-border)] shadow-sm text-[var(--color-text-main)] placeholder-gray-400 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-xl transition-all h-11"
+                        className="pl-10 bg-white border border-[var(--color-border)] shadow-sm text-[var(--color-text-main)] placeholder-gray-400 focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-none transition-all h-11"
                     />
                 </div>
                 <div className="flex items-center gap-2 w-full md:w-auto">
@@ -156,7 +156,7 @@ const MembersDirectory: React.FC = () => {
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="bg-white border border-[var(--color-border)] shadow-sm text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-xl transition-all h-11 px-4"
+                        className="bg-white border border-[var(--color-border)] shadow-sm text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)]/20 focus:border-[var(--color-primary)] rounded-none transition-all h-11 px-4"
                     >
                         <option value="all">All People</option>
                         <option value="regular">Regular Members</option>
@@ -173,7 +173,7 @@ const MembersDirectory: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {Array.from({ length: 8 }).map((_, i) => (
                         <div key={i} className="card-panel p-4 flex items-center gap-4 bg-white min-h-[96px] overflow-hidden border border-[var(--color-border)] shadow-sm">
-                            <div className="w-12 h-12 rounded-full bg-gray-200 animate-pulse shrink-0"></div>
+                            <div className="w-12 h-12 rounded-none bg-gray-200 animate-pulse shrink-0"></div>
                             <div className="flex-1 space-y-2">
                                 <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
                                 <div className="h-3 bg-gray-100 rounded w-1/2 animate-pulse"></div>

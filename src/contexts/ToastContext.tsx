@@ -58,11 +58,11 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
                     <div
                         key={toast.id}
                         className={`
-                            pointer-events-auto min-w-[300px] max-w-md p-4 rounded-lg shadow-lg border border-white/5
+                            pointer-events-auto min-w-[300px] max-w-md p-4 rounded-none shadow-lg border border-white/5
                             flex items-start gap-3 transform transition-all duration-300 animate-slide-in-right
-                            ${toast.type === 'success' ? 'bg-green-600 text-white' : ''}
-                            ${toast.type === 'error' ? 'bg-red-600 text-white' : ''}
-                            ${toast.type === 'info' ? 'bg-blue-600 text-white' : ''}
+                            ${toast.type === 'success' ? 'bg-green-600 text-[var(--color-text-main)]' : ''}
+                            ${toast.type === 'error' ? 'bg-red-600 text-[var(--color-text-main)]' : ''}
+                            ${toast.type === 'info' ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)]' : ''}
                         `}
                     >
                         <div className="mt-0.5">
@@ -75,7 +75,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
                         </div>
                         <button
                             onClick={() => removeToast(toast.id)}
-                            className="absolute top-2 right-2 p-1 hover:bg-white/20 rounded-full transition-colors"
+                            className="absolute top-2 right-2 p-1 hover:bg-white/20 rounded-none transition-colors"
                         >
                             <X size={14} />
                         </button>

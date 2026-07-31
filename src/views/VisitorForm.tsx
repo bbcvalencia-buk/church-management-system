@@ -144,7 +144,7 @@ const VisitorForm: React.FC = () => {
 
     if (loading && isEditMode) return (
         <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
+            <div className="animate-spin rounded-none h-8 w-8 border-b-2 border-[var(--color-primary)]"></div>
         </div>
     );
 
@@ -155,7 +155,7 @@ const VisitorForm: React.FC = () => {
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate(-1)}
-                        className="p-2 hover:bg-gray-100 rounded-xl transition-colors text-gray-600"
+                        className="p-2 hover:bg-gray-100 rounded-none transition-colors text-gray-600"
                     >
                         <ArrowLeft size={20} />
                     </button>
@@ -173,14 +173,14 @@ const VisitorForm: React.FC = () => {
                     <button
                         type="button"
                         onClick={() => navigate('/visitors')}
-                        className="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 transition-colors"
+                        className="px-6 py-2.5 rounded-none text-sm font-bold text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="bg-[#2563eb] hover:bg-blue-700 text-white px-8 py-2.5 rounded-xl flex items-center gap-2 transition-all shadow-md shadow-blue-500/20 font-bold disabled:opacity-50"
+                        className="bg-[#2563eb] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] px-8 py-2.5 rounded-none flex items-center gap-2 transition-all shadow-md  font-bold disabled:opacity-50"
                     >
                         <Save size={18} />
                         {loading ? 'Saving...' : 'Save Visitor'}
@@ -201,8 +201,8 @@ const VisitorForm: React.FC = () => {
                                         setActiveTab(tab.id);
                                         document.getElementById(tab.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === tab.id
-                                        ? 'bg-blue-50 text-blue-600'
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-none text-sm font-bold transition-all ${activeTab === tab.id
+                                        ? 'bg-gray-50 text-[var(--color-text-main)]'
                                         : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                         }`}
                                 >
@@ -220,8 +220,8 @@ const VisitorForm: React.FC = () => {
                         {/* 1. Visit Details */}
                         <div id="visit" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
                             <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                                    <Calendar className="text-blue-600" size={20} />
+                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
+                                    <Calendar className="text-[var(--color-text-main)]" size={20} />
                                 </div>
                                 <h3 className="text-[18px] font-bold text-gray-900">Visit Details</h3>
                             </div>
@@ -232,7 +232,7 @@ const VisitorForm: React.FC = () => {
                                         type="date"
                                         value={visitor.visit_date}
                                         onChange={(e) => update('visit_date', e.target.value)}
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
                                         required
                                     />
                                 </div>
@@ -241,7 +241,7 @@ const VisitorForm: React.FC = () => {
                                     <select
                                         value={visitor.visit_time}
                                         onChange={(e) => update('visit_time', e.target.value)}
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
                                     >
                                         <option value="AM">AM Service</option>
                                         <option value="PM">PM Service</option>
@@ -251,7 +251,7 @@ const VisitorForm: React.FC = () => {
                                     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Invited By</label>
                                     <input
                                         type="text"
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
                                         value={visitor.invited_by || ''}
                                         onChange={(e) => update('invited_by', e.target.value)}
                                         placeholder="Member / Teacher Name"
@@ -263,8 +263,8 @@ const VisitorForm: React.FC = () => {
                         {/* 2. Personal Information */}
                         <div id="personal" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
                             <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                                    <User className="text-blue-600" size={20} />
+                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
+                                    <User className="text-[var(--color-text-main)]" size={20} />
                                 </div>
                                 <h3 className="text-[18px] font-bold text-gray-900">Personal Information</h3>
                             </div>
@@ -273,7 +273,7 @@ const VisitorForm: React.FC = () => {
                                     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Full Name</label>
                                     <input
                                         type="text"
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
                                         value={visitor.name || ''}
                                         onChange={(e) => update('name', e.target.value)}
                                         placeholder="e.g. Maria Clara"
@@ -284,7 +284,7 @@ const VisitorForm: React.FC = () => {
                                     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Age</label>
                                     <input
                                         type="number"
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
                                         value={visitor.age || ''}
                                         onChange={(e) => {
                                             if (!e.target.value.trim()) {
@@ -300,7 +300,7 @@ const VisitorForm: React.FC = () => {
                                     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Date of Birth</label>
                                     <input
                                         type="date"
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm text-gray-500"
+                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm text-gray-500"
                                         value={visitor.date_of_birth || ''}
                                         onChange={(e) => update('date_of_birth', e.target.value)}
                                     />
@@ -308,7 +308,7 @@ const VisitorForm: React.FC = () => {
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Gender</label>
                                     <select
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
                                         value={visitor.gender}
                                         onChange={(e) => update('gender', e.target.value as any)}
                                     >
@@ -319,7 +319,7 @@ const VisitorForm: React.FC = () => {
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Marital Status</label>
                                     <select
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
                                         value={visitor.marital_status}
                                         onChange={(e) => update('marital_status', e.target.value as any)}
                                     >
@@ -334,7 +334,7 @@ const VisitorForm: React.FC = () => {
                                     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Current Church</label>
                                     <input
                                         type="text"
-                                        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+                                        className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
                                         value={visitor.church_name || ''}
                                         onChange={(e) => update('church_name', e.target.value)}
                                         placeholder="Church affiliation (if any)"
@@ -346,8 +346,8 @@ const VisitorForm: React.FC = () => {
                         {/* 3. Contact Details */}
                         <div id="contact" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
                             <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                                    <MapPin className="text-blue-600" size={20} />
+                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
+                                    <MapPin className="text-[var(--color-text-main)]" size={20} />
                                 </div>
                                 <h3 className="text-[18px] font-bold text-gray-900">Contact Details</h3>
                             </div>
@@ -359,7 +359,7 @@ const VisitorForm: React.FC = () => {
                                         onChange={(e) => update('address', e.target.value)}
                                         placeholder="Complete Address"
                                         required
-                                        className="min-h-[100px] w-full bg-white border border-gray-200 rounded-xl p-4 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-medium text-sm resize-none"
+                                        className="min-h-[100px] w-full bg-white border border-gray-200 rounded-none p-4 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-medium text-sm resize-none"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -368,12 +368,12 @@ const VisitorForm: React.FC = () => {
                                         value={visitor.office_address || ''}
                                         onChange={(e) => update('office_address', e.target.value)}
                                         placeholder="Office Address"
-                                        className="min-h-[90px] w-full bg-white border border-gray-200 rounded-xl p-4 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-medium text-sm resize-none"
+                                        className="min-h-[90px] w-full bg-white border border-gray-200 rounded-none p-4 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-medium text-sm resize-none"
                                     />
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Contact Number</label>
-                                    <div className="flex bg-white border border-gray-200 rounded-xl focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 shadow-sm transition-all overflow-hidden">
+                                    <div className="flex bg-white border border-gray-200 rounded-none focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 shadow-sm transition-all overflow-hidden">
                                         <div className="p-3 text-gray-400 bg-gray-50 border-r border-gray-200"><Phone size={18} /></div>
                                         <input
                                             type="tel"
@@ -391,45 +391,45 @@ const VisitorForm: React.FC = () => {
                         {/* 4. Spiritual Status */}
                         <div id="spiritual" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
                             <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                                    <Heart className="text-blue-600" size={20} />
+                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
+                                    <Heart className="text-[var(--color-text-main)]" size={20} />
                                 </div>
                                 <h3 className="text-[18px] font-bold text-gray-900">Spiritual Status</h3>
                             </div>
                             <div className="p-8 space-y-4">
-                                <label className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-white transition-colors">
+                                <label className="flex items-center justify-between p-4 bg-gray-50 rounded-none border border-gray-200 cursor-pointer hover:bg-white transition-colors">
                                     <div>
                                         <span className="font-bold text-gray-900 text-sm">Is Saved?</span>
                                         <p className="text-xs font-semibold text-gray-500 mt-0.5">Check if visitor has accepted Christ</p>
                                     </div>
-                                    <div className={`w-12 h-6 rounded-full flex items-center transition-colors p-1 border ${visitor.is_saved ? 'bg-blue-600 border-blue-600' : 'bg-gray-200 border-gray-300'}`}>
+                                    <div className={`w-12 h-6 rounded-none flex items-center transition-colors p-1 border ${visitor.is_saved ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] border-[var(--color-border)]' : 'bg-gray-200 border-gray-300'}`}>
                                         <input
                                             type="checkbox"
                                             checked={visitor.is_saved || false}
                                             onChange={(e) => update('is_saved', e.target.checked)}
                                             className="hidden"
                                         />
-                                        <div className={`w-4 h-4 rounded-full bg-white transition-transform transform shadow-sm ${visitor.is_saved ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                        <div className={`w-4 h-4 rounded-none bg-white transition-transform transform shadow-sm ${visitor.is_saved ? 'translate-x-6' : 'translate-x-0'}`}></div>
                                     </div>
                                 </label>
-                                <label className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-white transition-colors">
+                                <label className="flex items-center justify-between p-4 bg-gray-50 rounded-none border border-gray-200 cursor-pointer hover:bg-white transition-colors">
                                     <div>
                                         <span className="font-bold text-gray-900 text-sm">Prospect for Baptism?</span>
                                         <p className="text-xs font-semibold text-gray-500 mt-0.5">Check if visitor is a candidate for baptism</p>
                                     </div>
-                                    <div className={`w-12 h-6 rounded-full flex items-center transition-colors p-1 border ${visitor.is_prospect_for_baptism ? 'bg-blue-600 border-blue-600' : 'bg-gray-200 border-gray-300'}`}>
+                                    <div className={`w-12 h-6 rounded-none flex items-center transition-colors p-1 border ${visitor.is_prospect_for_baptism ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] border-[var(--color-border)]' : 'bg-gray-200 border-gray-300'}`}>
                                         <input
                                             type="checkbox"
                                             checked={visitor.is_prospect_for_baptism || false}
                                             onChange={(e) => update('is_prospect_for_baptism', e.target.checked)}
                                             className="hidden"
                                         />
-                                        <div className={`w-4 h-4 rounded-full bg-white transition-transform transform shadow-sm ${visitor.is_prospect_for_baptism ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                                        <div className={`w-4 h-4 rounded-none bg-white transition-transform transform shadow-sm ${visitor.is_prospect_for_baptism ? 'translate-x-6' : 'translate-x-0'}`}></div>
                                     </div>
                                 </label>
 
                                 {isEditMode && canConvert && !visitor.converted_to_member && visitor.status !== 'converted' && (
-                                    <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between bg-white rounded-xl p-4 border shadow-sm">
+                                    <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between bg-white rounded-none p-4 border shadow-sm">
                                         <div>
                                             <span className="font-bold text-gray-900 text-sm">Convert to Member</span>
                                             <p className="text-xs font-semibold text-gray-500 mt-0.5">Convert this visitor fully to the main Member Registry</p>
@@ -437,7 +437,7 @@ const VisitorForm: React.FC = () => {
                                         <button
                                             type="button"
                                             onClick={() => setShowConvertModal(true)}
-                                            className="text-green-600 bg-white hover:bg-green-50 px-4 py-2 rounded-xl flex items-center gap-2 transition-colors text-sm font-bold border-2 border-green-200"
+                                            className="text-green-600 bg-white hover:bg-green-50 px-4 py-2 rounded-none flex items-center gap-2 transition-colors text-sm font-bold border-2 border-green-200"
                                         >
                                             <CheckCircle size={18} />
                                             Convert to Member
@@ -446,7 +446,7 @@ const VisitorForm: React.FC = () => {
                                 )}
                                 {(visitor.converted_to_member || visitor.status === 'converted') && (
                                     <div className="pt-4 mt-4 border-t border-gray-100">
-                                        <div className="flex items-center gap-2 text-green-600 text-sm font-bold px-4 py-3 bg-green-50 rounded-xl border border-green-200 w-full justify-center">
+                                        <div className="flex items-center gap-2 text-green-600 text-sm font-bold px-4 py-3 bg-green-50 rounded-none border border-green-200 w-full justify-center">
                                             <CheckCircle size={18} /> Fully Converted Member
                                         </div>
                                     </div>
@@ -457,14 +457,14 @@ const VisitorForm: React.FC = () => {
                         {/* 5. Visitor Cards */}
                         <div id="cards" className="bg-white rounded-[24px] border border-gray-200 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] overflow-hidden">
                             <div className="p-6 border-b border-gray-100 flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                                    <FileText className="text-blue-600" size={20} />
+                                <div className="w-10 h-10 rounded-none bg-gray-50 flex items-center justify-center">
+                                    <FileText className="text-[var(--color-text-main)]" size={20} />
                                 </div>
                                 <h3 className="text-[18px] font-bold text-gray-900">Visitor Cards</h3>
                             </div>
                             <div className="p-8">
                                 <p className="text-[12px] font-semibold text-gray-500 mb-4">Upload photos of visitor cards (Front/Back) or other relevant documents.</p>
-                                <div className="border border-dashed border-gray-300 rounded-2xl bg-gray-50">
+                                <div className="border border-dashed border-gray-300 rounded-none bg-gray-50">
                                     <MultiImageUpload
                                         values={visitor.visitor_card_images || []}
                                         onChange={(urls) => update('visitor_card_images', urls)}

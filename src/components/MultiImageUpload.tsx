@@ -56,7 +56,7 @@ const MultiImageUpload: React.FC<MultiImageUploadProps> = ({
                 ))}
 
                 {/* Add New Button / Uploader */}
-                <div className="bg-white/5 border border-white/10 rounded-lg p-4 flex flex-col items-center justify-center gap-2 min-h-[160px]">
+                <div className="bg-white/5 border border-white/10 rounded-none p-4 flex flex-col items-center justify-center gap-2 min-h-[160px]">
                     <span className="text-sm font-medium text-[var(--color-text-muted)]">Add Another</span>
                     <ImageUpload
                         value=""

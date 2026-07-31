@@ -135,10 +135,10 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                 </label>
                 <button
                     type="button"
-                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors ${
+                    className={`text-xs font-bold px-3 py-1.5 rounded-none transition-colors ${
                         allSelected 
                             ? "bg-gray-100 text-gray-700 hover:bg-gray-200" 
-                            : "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
+                            : "bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] hover:bg-[var(--color-surface-hover)] shadow-sm"
                     }`}
                     onClick={toggleSelectAll}
                 >
@@ -150,7 +150,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                 <label className="inline-flex items-center gap-2 text-xs text-gray-600 font-semibold">
                     <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
+                        className="w-4 h-4 rounded border-gray-300 text-[var(--color-text-main)] focus:ring-blue-500 focus:ring-2"
                         checked={includeVisitors}
                         onChange={(e) => setIncludeVisitors(e.target.checked)}
                     />
@@ -167,11 +167,11 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                     placeholder="Search member..."
                     value={searchTerm}
                     onChange={(e) => onSearchTermChange(e.target.value)}
-                    className="w-full bg-white border border-gray-200 rounded-lg pl-10 p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                    className="w-full bg-white border border-gray-200 rounded-none pl-10 p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                 />
             </div>
 
-            <div className={`${maxHeightClass} overflow-y-auto space-y-1 custom-scrollbar px-1 py-2 border border-gray-100 rounded-xl bg-white`}>
+            <div className={`${maxHeightClass} overflow-y-auto space-y-1 custom-scrollbar px-1 py-2 border border-gray-100 rounded-none bg-white`}>
                 {filteredMembers.length === 0 && (
                     <div className="p-6 text-center text-sm text-gray-500">
                         {members.length === 0
@@ -191,13 +191,13 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                     return (
                         <div
                             key={member.id}
-                            className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-2.5 rounded-xl transition-colors group ${isPresent ? 'bg-blue-50/50' : isTardy ? 'bg-amber-50/50' : 'hover:bg-gray-50'}`}
+                            className={`flex flex-col sm:flex-row items-start sm:items-center gap-4 p-2.5 rounded-none transition-colors group ${isPresent ? 'bg-gray-50/50' : isTardy ? 'bg-amber-50/50' : 'hover:bg-gray-50'}`}
                         >
                             <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
                                 {member.profile_picture_url ? (
-                                    <img src={member.profile_picture_url} alt={`${member.first_name} ${member.surname}`} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                                    <img src={member.profile_picture_url} alt={`${member.first_name} ${member.surname}`} className="w-8 h-8 rounded-none object-cover shrink-0" />
                                 ) : (
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${colorClass}`}>
+                                    <div className={`w-8 h-8 rounded-none flex items-center justify-center text-[10px] font-bold shrink-0 ${colorClass}`}>
                                         {initials}
                                     </div>
                                 )}
@@ -209,8 +209,8 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                             </div>
 
                             {/* Attendance Controls */}
-                            <div className="flex items-center gap-2 w-full sm:w-auto bg-gray-50 p-1 rounded-lg border border-gray-100 flex-shrink-0">
-                                <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-md cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${!isPresent && !isTardy ? 'bg-white shadow-sm text-gray-700 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
+                            <div className="flex items-center gap-2 w-full sm:w-auto bg-gray-50 p-1 rounded-none border border-gray-100 flex-shrink-0">
+                                <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-none cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${!isPresent && !isTardy ? 'bg-white shadow-sm text-gray-700 ring-1 ring-gray-200' : 'text-gray-500 hover:text-gray-700'}`}>
                                     <input
                                         type="radio"
                                         name={`attendance_${member.id}`}
@@ -225,7 +225,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                                 </label>
 
                                 {onTardyChange && (
-                                    <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-md cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${isTardy ? 'bg-amber-100 shadow-sm text-amber-800 ring-1 ring-amber-200' : 'text-gray-500 hover:text-amber-600'}`}>
+                                    <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-none cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${isTardy ? 'bg-amber-100 shadow-sm text-amber-800 ring-1 ring-amber-200' : 'text-gray-500 hover:text-amber-600'}`}>
                                         <input
                                             type="radio"
                                             name={`attendance_${member.id}`}
@@ -237,7 +237,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                                     </label>
                                 )}
 
-                                <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-md cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${isPresent ? 'bg-blue-100 shadow-sm text-blue-800 ring-1 ring-blue-200' : 'text-gray-500 hover:text-blue-600'}`}>
+                                <label className={`flex gap-1.5 items-center px-3 py-1.5 rounded-none cursor-pointer text-[10px] font-bold uppercase tracking-wider transition-all ${isPresent ? 'bg-blue-100 shadow-sm text-blue-800 ring-1 ring-blue-200' : 'text-gray-500 hover:text-[var(--color-text-main)]'}`}>
                                     <input
                                         type="radio"
                                         name={`attendance_${member.id}`}
@@ -257,7 +257,7 @@ const MemberAttendancePicker: React.FC<MemberAttendancePickerProps> = ({
                                         e.stopPropagation();
                                         onEditMember(member);
                                     }}
-                                    className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors text-[10px] font-bold uppercase tracking-wide ml-auto sm:ml-0"
+                                    className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-none border border-blue-200 text-[var(--color-text-main)] hover:bg-gray-50 transition-colors text-[10px] font-bold uppercase tracking-wide ml-auto sm:ml-0"
                                     title="Edit profile"
                                 >
                                     <Edit2 size={12} />

@@ -42,7 +42,7 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 lg:left-64 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]" onClick={() => setManageGroup(null)}>
       <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-lg p-4 sm:p-6 relative animate-in zoom-in-95 duration-200 border border-gray-100 mx-2 sm:mx-0" onClick={(e) => e.stopPropagation()}>
-        <button onClick={() => setManageGroup(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors z-10" title="Close (Esc)">
+        <button onClick={() => setManageGroup(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 p-2 bg-gray-100 hover:bg-gray-200 rounded-none transition-colors z-10" title="Close (Esc)">
           <X size={24} strokeWidth={2.5} />
         </button>
         <h2 className="text-[20px] font-bold text-gray-900 mb-2">{manageGroup.name} Members</h2>
@@ -55,7 +55,7 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
               type="text"
               value={groupDraftName}
               onChange={(e) => setGroupDraftName(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
             />
           </div>
           <div className="space-y-1.5">
@@ -65,13 +65,13 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
               value={groupDraftSchedule}
               onChange={(e) => setGroupDraftSchedule(e.target.value)}
               placeholder="e.g. Sunday 8:30"
-              className="w-full bg-white border border-gray-200 rounded-xl p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
+              className="w-full bg-white border border-gray-200 rounded-none p-3 text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm transition-all outline-none font-semibold text-sm"
             />
           </div>
           <button
             onClick={handleUpdateGroupMeta}
             disabled={savingGroupMeta || !groupDraftName.trim()}
-            className="w-full py-3 bg-[#2563eb] text-white rounded-xl shadow-md text-sm font-bold hover:bg-[#1d4ed8] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-[#2563eb] text-[var(--color-text-main)] rounded-none shadow-md text-sm font-bold hover:bg-[#1d4ed8] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {savingGroupMeta ? 'Saving Ministry Details...' : 'Save Ministry Name & Schedule'}
           </button>
@@ -79,15 +79,15 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
 
         <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
           {sortGroupMembers(manageGroup.members).map((m: any) => (
-            <div key={m.full_pos.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
+            <div key={m.full_pos.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-none hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-4">
                 {m.profile_picture_url ? (
-                  <img src={m.profile_picture_url} className="w-10 h-10 rounded-full object-cover shadow-sm bg-white" alt="Profile" />
+                  <img src={m.profile_picture_url} className="w-10 h-10 rounded-none object-cover shadow-sm bg-white" alt="Profile" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200"><User size={18} className="text-gray-500" /></div>
+                  <div className="w-10 h-10 rounded-none bg-gray-100 flex items-center justify-center border border-gray-200"><User size={18} className="text-gray-500" /></div>
                 )}
                 <div>
-                  <button onClick={(e) => { e.preventDefault(); setManageGroup(null); handleViewMember(m); }} className="text-[13px] font-bold text-gray-900 hover:text-blue-600 transition-colors text-left">{m.first_name} {m.surname}</button>
+                  <button onClick={(e) => { e.preventDefault(); setManageGroup(null); handleViewMember(m); }} className="text-[13px] font-bold text-gray-900 hover:text-[var(--color-text-main)] transition-colors text-left">{m.first_name} {m.surname}</button>
                   {m.member_number && (
                     <p className="text-[9px] font-bold text-indigo-600 tracking-tight">{m.member_number}</p>
                   )}
@@ -142,26 +142,26 @@ const ManageGroupModal: React.FC<ManageGroupModalProps> = ({
                 <button
                   onClick={() => handleSetGroupHead(m)}
                   disabled={savingHeadAssignmentId === m.full_pos.id}
-                  className={`p-2 rounded-xl transition-colors ${m.full_pos?.is_ministry_head ? 'text-amber-600 bg-amber-50 hover:bg-amber-100' : 'text-gray-600 bg-gray-100 hover:bg-gray-200'} disabled:opacity-60 disabled:cursor-not-allowed`}
+                  className={`p-2 rounded-none transition-colors ${m.full_pos?.is_ministry_head ? 'text-amber-600 bg-amber-50 hover:bg-amber-100' : 'text-gray-600 bg-gray-100 hover:bg-gray-200'} disabled:opacity-60 disabled:cursor-not-allowed`}
                   title={m.full_pos?.is_ministry_head ? 'Remove as Ministry Head' : 'Set as Ministry Head'}
                 >
                   <Star size={16} className={m.full_pos?.is_ministry_head ? 'fill-current' : ''} />
                 </button>
-                <button onClick={() => { setManageGroup(null); handleOpenModal(null, m.full_pos); }} className="p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors">
+                <button onClick={() => { setManageGroup(null); handleOpenModal(null, m.full_pos); }} className="p-2 text-[var(--color-text-main)] bg-gray-50 hover:bg-blue-100 rounded-none transition-colors">
                   <Shield size={16} />
                 </button>
-                <button onClick={() => { setManageGroup(null); setConfirmRemove({ isOpen: true, assignment: m.full_pos }); }} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors">
+                <button onClick={() => { setManageGroup(null); setConfirmRemove({ isOpen: true, assignment: m.full_pos }); }} className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-none transition-colors">
                   <X size={16} />
                 </button>
               </div>
             </div>
           ))}
           {manageGroup.members.length === 0 && (
-            <div className="text-center py-6 text-gray-500 text-sm font-semibold border-2 border-dashed border-gray-100 rounded-xl">No members in this group yet.</div>
+            <div className="text-center py-6 text-gray-500 text-sm font-semibold border-2 border-dashed border-gray-100 rounded-none">No members in this group yet.</div>
           )}
         </div>
 
-        <button onClick={() => { setManageGroup(null); handleOpenModal(manageGroup.name); }} className="w-full mt-6 py-3.5 border-2 border-dashed border-gray-200 rounded-xl text-blue-600 font-bold hover:bg-blue-50/50 hover:border-blue-300 transition-all flex items-center justify-center gap-2">
+        <button onClick={() => { setManageGroup(null); handleOpenModal(manageGroup.name); }} className="w-full mt-6 py-3.5 border-2 border-dashed border-gray-200 rounded-none text-[var(--color-text-main)] font-bold hover:bg-gray-50/50 hover:border-blue-300 transition-all flex items-center justify-center gap-2">
           <Plus size={16} strokeWidth={2.5} /> Add Member to Group
         </button>
       </div>

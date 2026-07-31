@@ -478,7 +478,7 @@ const TreasuryDashboard: React.FC = () => {
 
             <TreasurySummaryCards totals={totals} formatCurrency={formatCurrency} />
 
-            <div className="card-panel p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white rounded-2xl shadow-sm border border-[var(--color-border)]">
+            <div className="card-panel p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-white rounded-none shadow-sm border border-[var(--color-border)]">
                 <div className="flex gap-4">
                     <button
                         className={`font-bold text-lg pb-1 transition-colors ${activeTab === 'active' ? 'text-black border-b-2 border-black' : 'text-gray-400 hover:text-gray-600'}`}
@@ -495,7 +495,7 @@ const TreasuryDashboard: React.FC = () => {
                         </button>
                     )}
                     <button
-                        className={`font-bold text-lg pb-1 transition-colors flex items-center gap-2 ${activeTab === 'faith_promise' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`font-bold text-lg pb-1 transition-colors flex items-center gap-2 ${activeTab === 'faith_promise' ? 'text-[var(--color-text-main)] border-b-2 border-[var(--color-border)]' : 'text-gray-400 hover:text-gray-600'}`}
                         onClick={() => setActiveTab('faith_promise')}
                     >
                         <Heart size={18} /> Faith Promise Ledger
@@ -504,7 +504,7 @@ const TreasuryDashboard: React.FC = () => {
 
                 {activeTab !== 'faith_promise' && (
                     <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)]">
+                        <div className="flex items-center bg-[var(--color-bg)] rounded-none p-1 border border-[var(--color-border)]">
                             <span className="text-xs font-medium text-[var(--color-text-muted)] px-2">Year</span>
                             <select
                                 value={selectedYear}
@@ -515,7 +515,7 @@ const TreasuryDashboard: React.FC = () => {
                             </select>
                         </div>
 
-                        <div className="flex items-center bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)]">
+                        <div className="flex items-center bg-[var(--color-bg)] rounded-none p-1 border border-[var(--color-border)]">
                             <span className="text-xs font-medium text-[var(--color-text-muted)] px-2">Month</span>
                             <select
                                 value={selectedMonth}
@@ -529,7 +529,7 @@ const TreasuryDashboard: React.FC = () => {
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-2 bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)]">
+                        <div className="flex items-center gap-2 bg-[var(--color-bg)] rounded-none p-1 border border-[var(--color-border)]">
                             <Calendar size={14} className="text-[var(--color-text-muted)] ml-2" />
                             <input
                                 type="date"
@@ -552,7 +552,7 @@ const TreasuryDashboard: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="flex items-center bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)]">
+                        <div className="flex items-center bg-[var(--color-bg)] rounded-none p-1 border border-[var(--color-border)]">
                             <span className="text-xs font-medium text-[var(--color-text-muted)] px-2">Sort</span>
                             <select
                                 value={sortDirection}

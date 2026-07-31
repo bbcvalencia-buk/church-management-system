@@ -35,7 +35,7 @@ import type { ChurchEvent } from "../types";
 
 
 const EVENT_TYPES = [
-    { value: 'fellowship', label: 'Fellowship', icon: Users, color: 'bg-blue-500/10 text-blue-500' },
+    { value: 'fellowship', label: 'Fellowship', icon: Users, color: 'bg-gray-500/10 text-blue-500' },
     { value: 'bible_quiz', label: 'Bible Quiz', icon: Award, color: 'bg-amber-500/10 text-amber-500' },
     { value: 'camp', label: 'Camp', icon: Tent, color: 'bg-emerald-500/10 text-emerald-500' },
     { value: 'anniversary', label: 'Anniversary', icon: PartyPopper, color: 'bg-rose-500/10 text-rose-500' },
@@ -247,7 +247,7 @@ const ChurchEvents: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
-                        <Calendar size={32} className="text-blue-600" />
+                        <Calendar size={32} className="text-[var(--color-text-main)]" />
                         Church Events
                     </h1>
                     <p className="text-gray-500 mt-1">Manage fellowships, camps, and special programs.</p>
@@ -255,7 +255,7 @@ const ChurchEvents: React.FC = () => {
                 {canEdit && (
                     <button
                         onClick={() => handleOpenModal()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all font-bold shadow-lg shadow-blue-500/20 active:scale-95"
+                        className="bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] px-6 py-3 rounded-none flex items-center justify-center gap-2 transition-all font-bold shadow-lg  active:scale-95"
                     >
                         <Plus size={20} /> New Event
                     </button>
@@ -266,8 +266,8 @@ const ChurchEvents: React.FC = () => {
             <div className="flex overflow-x-auto pb-2 gap-2 scrollbar-hide no-scrollbar">
                 <button
                     onClick={() => setFilterType('all')}
-                    className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm border ${filterType === 'all'
-                        ? 'bg-blue-600 text-white border-blue-600'
+                    className={`px-5 py-2.5 rounded-none font-bold text-sm transition-all whitespace-nowrap shadow-sm border ${filterType === 'all'
+                        ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] border-[var(--color-border)]'
                         : 'bg-white text-gray-500 border-gray-100 hover:border-blue-200'
                         }`}
                 >
@@ -277,8 +277,8 @@ const ChurchEvents: React.FC = () => {
                     <button
                         key={t.value}
                         onClick={() => setFilterType(t.value)}
-                        className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shadow-sm border flex items-center gap-2 ${filterType === t.value
-                            ? 'bg-blue-600 text-white border-blue-600'
+                        className={`px-5 py-2.5 rounded-none font-bold text-sm transition-all whitespace-nowrap shadow-sm border flex items-center gap-2 ${filterType === t.value
+                            ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] border-[var(--color-border)]'
                             : 'bg-white text-gray-500 border-gray-100 hover:border-blue-200'
                             }`}
                     >
@@ -291,12 +291,12 @@ const ChurchEvents: React.FC = () => {
             {/* Event List */}
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
-                    <Loader2 className="animate-spin text-blue-600" size={40} />
+                    <Loader2 className="animate-spin text-[var(--color-text-main)]" size={40} />
                     <p className="text-gray-400 font-medium">Fetching events...</p>
                 </div>
             ) : filteredEvents.length === 0 ? (
                 <div className="bg-white border-2 border-dashed border-gray-200 rounded-3xl p-20 text-center">
-                    <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <div className="bg-gray-50 w-20 h-20 rounded-none flex items-center justify-center mx-auto mb-6">
                         <Calendar size={40} className="text-gray-300" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">No Events Found</h3>
@@ -310,10 +310,10 @@ const ChurchEvents: React.FC = () => {
                             <div
                                 key={event.id}
                                 onClick={() => handleOpenModal(event)}
-                                className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all group cursor-pointer animate-in zoom-in-95"
+                                className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:border-blue-500/50 hover:shadow-xl hover: transition-all group cursor-pointer animate-in zoom-in-95"
                             >
                                 <div className="flex justify-between items-start mb-6">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${getTypeColor(event.event_type)} shadow-sm`}>
+                                    <div className={`w-12 h-12 rounded-none flex items-center justify-center ${getTypeColor(event.event_type)} shadow-sm`}>
                                         <Icon size={24} />
                                     </div>
                                     <div className="text-right">
@@ -322,7 +322,7 @@ const ChurchEvents: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <h3 className="text-xl font-black text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors uppercase italic">{event.event_name}</h3>
+                                <h3 className="text-xl font-black text-gray-900 mb-2 line-clamp-1 group-hover:text-[var(--color-text-main)] transition-colors uppercase italic">{event.event_name}</h3>
                                 {event.event_theme && (
                                     <p className="text-sm text-gray-400 italic mb-4">"{event.event_theme}"</p>
                                 )}
@@ -345,7 +345,7 @@ const ChurchEvents: React.FC = () => {
                                 </div>
 
                                 <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getTypeColor(event.event_type)}`}>
+                                    <span className={`px-3 py-1 rounded-none text-[10px] font-black uppercase tracking-widest ${getTypeColor(event.event_type)}`}>
                                         {event.event_type.replace('_', ' ')}
                                     </span>
                                     <ChevronRight size={18} className="text-gray-300 group-hover:text-blue-500 transition-all group-hover:translate-x-1" />
@@ -364,13 +364,13 @@ const ChurchEvents: React.FC = () => {
                         <div className="bg-white px-10 py-8 border-b border-gray-100 flex justify-between items-center gap-4">
                             <div>
                                 <h2 className="text-3xl font-black text-gray-900 tracking-tight uppercase italic flex items-center gap-3">
-                                    <ViewIcon size={28} className="text-blue-600" />
+                                    <ViewIcon size={28} className="text-[var(--color-text-main)]" />
                                     {form.id ? 'Edit Event' : 'Schedule New Event'}
                                 </h2>
-                                {form.event_theme && <p className="text-blue-600 font-bold italic mt-1 text-lg">"{form.event_theme}"</p>}
+                                {form.event_theme && <p className="text-[var(--color-text-main)] font-bold italic mt-1 text-lg">"{form.event_theme}"</p>}
                                 <p className="text-gray-500 font-medium">Capture attendance and programs for specific activities.</p>
                             </div>
-                            <button onClick={() => setIsModalOpen(false)} className="w-12 h-12 rounded-2xl bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-all active:scale-90">
+                            <button onClick={() => setIsModalOpen(false)} className="w-12 h-12 rounded-none bg-gray-50 text-gray-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition-all active:scale-90">
                                 <X size={24} />
                             </button>
                         </div>
@@ -389,7 +389,7 @@ const ChurchEvents: React.FC = () => {
                                                     type="text"
                                                     value={form.event_name}
                                                     onChange={(e) => setForm({ ...form, event_name: e.target.value })}
-                                                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-base font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                    className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-base font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
                                                     placeholder="e.g., Youth Summer Fellowship"
                                                 />
                                             </div>
@@ -401,7 +401,7 @@ const ChurchEvents: React.FC = () => {
                                                         type="text"
                                                         value={form.event_theme || ''}
                                                         onChange={(e) => setForm({ ...form, event_theme: e.target.value })}
-                                                        className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-base font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                        className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-base font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
                                                         placeholder='e.g., "Faithful in All Seasons"'
                                                     />
                                                 </div>
@@ -413,7 +413,7 @@ const ChurchEvents: React.FC = () => {
                                                     <select
                                                         value={form.event_type}
                                                         onChange={(e) => setForm({ ...form, event_type: e.target.value as any })}
-                                                        className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm appearance-none"
+                                                        className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm appearance-none"
                                                     >
                                                         {EVENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                                                     </select>
@@ -424,7 +424,7 @@ const ChurchEvents: React.FC = () => {
                                                         type="date"
                                                         value={form.event_date}
                                                         onChange={(e) => setForm({ ...form, event_date: e.target.value })}
-                                                        className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                        className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
                                                     />
                                                 </div>
                                             </div>
@@ -435,7 +435,7 @@ const ChurchEvents: React.FC = () => {
                                                     type="text"
                                                     value={form.location}
                                                     onChange={(e) => setForm({ ...form, location: e.target.value })}
-                                                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                    className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm"
                                                     placeholder="e.g., Church Main Hall"
                                                 />
                                             </div>
@@ -450,7 +450,7 @@ const ChurchEvents: React.FC = () => {
                                                         min="0"
                                                         value={form.visitors_count || 0}
                                                         onChange={(e) => setForm({ ...form, visitors_count: parseInt(e.target.value) || 0 })}
-                                                        className="w-full bg-pink-50/30 border border-pink-100 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all shadow-sm"
+                                                        className="w-full bg-transparent/30 border border-pink-100 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all shadow-sm"
                                                         placeholder="Number of non-member visitors"
                                                     />
                                                 </div>
@@ -462,7 +462,7 @@ const ChurchEvents: React.FC = () => {
                                                     rows={4}
                                                     value={form.notes}
                                                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                                                    className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm resize-none"
+                                                    className="w-full bg-white border border-gray-200 rounded-none px-5 py-4 text-sm font-bold text-gray-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all shadow-sm resize-none"
                                                     placeholder="Outline of the program, speakers, etc."
                                                 />
                                             </div>
@@ -481,18 +481,18 @@ const ChurchEvents: React.FC = () => {
                                                     )}
                                                     <button
                                                         onClick={() => removeAttachment(url)}
-                                                        className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90"
+                                                        className="absolute top-2 right-2 p-2 bg-red-500 text-[var(--color-text-main)] rounded-none shadow-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90"
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>
                                                 </div>
                                             ))}
-                                            <label className="aspect-video rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-400 cursor-pointer transition-all group overflow-hidden relative">
+                                            <label className="aspect-video rounded-3xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 hover:bg-gray-50 hover:border-blue-400 cursor-pointer transition-all group overflow-hidden relative">
                                                 {uploading ? (
-                                                    <Loader2 className="animate-spin text-blue-600" size={32} />
+                                                    <Loader2 className="animate-spin text-[var(--color-text-main)]" size={32} />
                                                 ) : (
                                                     <>
-                                                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                        <div className="w-12 h-12 rounded-none bg-gray-50 text-[var(--color-text-main)] flex items-center justify-center group-hover:scale-110 transition-transform">
                                                             <Upload size={24} />
                                                         </div>
                                                         <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Add File</p>
@@ -509,7 +509,7 @@ const ChurchEvents: React.FC = () => {
                                     <section className="space-y-6 flex-1 flex flex-col">
                                         <div className="flex justify-between items-end border-b border-gray-100 pb-2">
                                             <h3 className="text-xs font-black tracking-[0.2em] text-gray-400 uppercase">Member Attendance</h3>
-                                            <p className="text-xs font-black text-blue-600 uppercase tracking-widest px-3 py-1 bg-blue-50 rounded-full">
+                                            <p className="text-xs font-black text-[var(--color-text-main)] uppercase tracking-widest px-3 py-1 bg-gray-50 rounded-none">
                                                 {selectedMemberIds.length} Checked In
                                             </p>
                                         </div>
@@ -522,7 +522,7 @@ const ChurchEvents: React.FC = () => {
                                                     min="0"
                                                     value={form.total_attendance}
                                                     onChange={(e) => setForm({ ...form, total_attendance: parseInt(e.target.value) || 0 })}
-                                                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                                    className="w-full bg-gray-50 border border-gray-200 rounded-none px-4 py-2.5 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                                                     placeholder="Enter if higher than member count"
                                                 />
                                             </div>
@@ -551,7 +551,7 @@ const ChurchEvents: React.FC = () => {
                                 {form.id && (
                                     <button
                                         onClick={() => setConfirmDelete({ isOpen: true, id: form.id! })}
-                                        className="text-red-500 font-bold text-sm flex items-center gap-2 hover:bg-red-50 px-5 py-3 rounded-2xl transition-all"
+                                        className="text-red-500 font-bold text-sm flex items-center gap-2 hover:bg-red-50 px-5 py-3 rounded-none transition-all"
                                     >
                                         <Trash2 size={18} /> Delete Event
                                     </button>
@@ -560,14 +560,14 @@ const ChurchEvents: React.FC = () => {
                             <div className="flex items-center gap-4">
                                 <button
                                     onClick={() => setIsModalOpen(false)}
-                                    className="px-8 py-4 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all border border-gray-100"
+                                    className="px-8 py-4 rounded-none font-bold text-gray-500 hover:bg-gray-100 transition-all border border-gray-100"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={saving}
-                                    className="px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-sm bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/30 transition-all disabled:opacity-50 flex items-center gap-3 active:scale-95"
+                                    className="px-10 py-4 rounded-none font-black uppercase tracking-widest text-sm bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] shadow-xl  transition-all disabled:opacity-50 flex items-center gap-3 active:scale-95"
                                 >
                                     {saving ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
                                     {form.id ? 'Update Report' : 'Save Event'}

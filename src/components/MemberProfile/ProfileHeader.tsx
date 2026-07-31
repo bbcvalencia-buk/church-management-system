@@ -38,8 +38,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                         )}
                     </div>
                     {member.is_regular_member && (
-                        <div className="absolute -bottom-2 -right-2 bg-amber-400 text-white p-1.5 rounded-full ring-4 ring-white" title="Regular Member">
-                            <Star size={14} className="fill-white text-white" />
+                        <div className="absolute -bottom-2 -right-2 bg-amber-400 text-[var(--color-text-main)] p-1.5 rounded-none ring-4 ring-white" title="Regular Member">
+                            <Star size={14} className="fill-white text-[var(--color-text-main)]" />
                         </div>
                     )}
                 </div>
@@ -52,11 +52,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                                 {member.first_name} {member.surname}
                             </h1>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 mb-4">
-                                <span className={`px-2.5 py-1 rounded-md font-bold text-[10px] uppercase tracking-wider ${member.membership_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                                <span className={`px-2.5 py-1 rounded-none font-bold text-[10px] uppercase tracking-wider ${member.membership_status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
                                     {member.membership_status} {member.is_regular_member ? 'Member' : 'Visitor'}
                                 </span>
                                 {member.member_number && (
-                                    <span className="bg-indigo-600 text-white px-3 py-1 rounded-md font-bold text-[12px] tracking-wider shadow-sm">
+                                    <span className="bg-indigo-600 text-[var(--color-text-main)] px-3 py-1 rounded-none font-bold text-[12px] tracking-wider shadow-sm">
                                         {member.member_number}
                                     </span>
                                 )}
@@ -73,26 +73,26 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                             <FamilyLinks family={family} />
                         </div>
                         <div className="flex flex-wrap gap-3">
-                            <button onClick={() => window.location.href = `mailto:${member.email || ''}`} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors shadow-sm">
+                            <button onClick={() => window.location.href = `mailto:${member.email || ''}`} className="px-4 py-2 bg-white border border-gray-200 rounded-none text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors shadow-sm">
                                 <Mail size={16} className="text-gray-500" /> Email
                             </button>
                             {canManageProfiles && id && (
-                                <button onClick={() => window.open(`/members/${id}/print-id`, '_blank')} className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors shadow-sm">
+                                <button onClick={() => window.open(`/members/${id}/print-id`, '_blank')} className="px-4 py-2 bg-white border border-gray-200 rounded-none text-sm font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors shadow-sm">
                                     <Printer size={16} className="text-gray-500" /> Label
                                 </button>
                             )}
                             {canManageProfiles ? (
-                                <button onClick={() => setIsViewing(false)} className="px-5 py-2 bg-[#4f46e5] text-white rounded-lg text-sm font-bold hover:bg-[#4338ca] flex items-center gap-2 transition-colors shadow-sm">
+                                <button onClick={() => setIsViewing(false)} className="px-5 py-2 bg-[#4f46e5] text-[var(--color-text-main)] rounded-none text-sm font-bold hover:bg-[#4338ca] flex items-center gap-2 transition-colors shadow-sm">
                                     <Edit3 size={16} /> Edit Profile
                                 </button>
                             ) : (
                                 <div className="flex items-center gap-2">
-                                    <span className="px-5 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm font-bold border border-gray-200">
+                                    <span className="px-5 py-2 bg-gray-100 text-gray-500 rounded-none text-sm font-bold border border-gray-200">
                                         Read Only
                                     </span>
                                     <button
                                         onClick={() => setShowEditRequestModal(true)}
-                                        className="px-5 py-2 bg-amber-100 text-amber-800 rounded-lg text-sm font-bold border border-amber-200 hover:bg-amber-200 transition-colors flex items-center gap-2"
+                                        className="px-5 py-2 bg-amber-100 text-amber-800 rounded-none text-sm font-bold border border-amber-200 hover:bg-amber-200 transition-colors flex items-center gap-2"
                                     >
                                         <MessageSquare size={16} />
                                         Request Edit
@@ -111,7 +111,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`py-4 px-1 text-sm font-bold border-b-2 transition-all ${activeTab === tab
-                            ? 'border-blue-600 text-blue-600'
+                            ? 'border-[var(--color-border)] text-[var(--color-text-main)]'
                             : 'border-transparent text-gray-400 hover:text-gray-600'
                             }`}
                     >

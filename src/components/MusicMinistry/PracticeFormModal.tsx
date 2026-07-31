@@ -50,7 +50,7 @@ const PracticeFormModal: React.FC<Props> = ({
                 {/* Body */}
                 <div className="p-8 overflow-y-auto custom-scrollbar flex-1 space-y-6">
                     <h2 className="text-xl font-bold flex items-center gap-4 text-gray-900 border-b border-gray-100 pb-6">
-                        <div className="w-10 h-10 rounded-[10px] bg-[#EEF2FF] flex items-center justify-center text-blue-600">
+                        <div className="w-10 h-10 rounded-[10px] bg-[#EEF2FF] flex items-center justify-center text-[var(--color-text-main)]">
                             <Music size={20} />
                         </div>
                         {form.id ? 'Edit Practice Record' : 'Log New Practice'}
@@ -138,7 +138,7 @@ const PracticeFormModal: React.FC<Props> = ({
                         {form.id && (
                             <button
                                 onClick={() => onDeleteRequest(form.id as string)}
-                                className="px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors text-xs font-bold uppercase tracking-widest"
+                                className="px-4 py-2 rounded-none text-red-400 hover:bg-red-400/10 transition-colors text-xs font-bold uppercase tracking-widest"
                                 title="Delete Record"
                             >
                                 Delete
@@ -148,14 +148,14 @@ const PracticeFormModal: React.FC<Props> = ({
                     <div className="flex gap-4 items-center w-full justify-end">
                         <button
                             onClick={onClose}
-                            className="text-sm font-medium text-gray-300 hover:text-white transition-colors py-2 px-4"
+                            className="text-sm font-medium text-gray-300 hover:text-[var(--color-text-main)] transition-colors py-2 px-4"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={onSave}
                             disabled={saving}
-                            className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_12px_rgba(37,99,235,0.2)] rounded-lg px-8 py-2.5 text-sm font-bold transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] shadow-[0_4px_12px_rgba(37,99,235,0.2)] rounded-none px-8 py-2.5 text-sm font-bold transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {saving ? 'Saving...' : (form.id ? 'Save Changes' : 'Submit Practice')}
                         </button>

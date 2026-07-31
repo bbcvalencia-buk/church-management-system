@@ -50,9 +50,9 @@ const MinistryList: React.FC<MinistryListProps> = ({
                 {previewMembers.map((preview: any, idx: number) => (
                   <div key={`${preview.id}-${idx}`} className="flex items-center gap-3">
                     {preview.profile_picture_url ? (
-                      <img src={preview.profile_picture_url} alt={`${preview.first_name} ${preview.surname}`} className="w-9 h-9 rounded-full object-cover shadow-sm bg-gray-100" />
+                      <img src={preview.profile_picture_url} alt={`${preview.first_name} ${preview.surname}`} className="w-9 h-9 rounded-none object-cover shadow-sm bg-gray-100" />
                     ) : (
-                      <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shadow-sm">
+                      <div className="w-9 h-9 rounded-none bg-gray-100 border border-gray-200 flex items-center justify-center shadow-sm">
                         <User size={16} className="text-gray-500" />
                       </div>
                     )}
@@ -61,7 +61,7 @@ const MinistryList: React.FC<MinistryListProps> = ({
                         {preview.full_pos?.is_ministry_head ? `Head - ${preview.specific_role || 'Member'}` : (preview.specific_role || 'Member')}
                       </p>
                       <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleViewMember(preview); }} className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors truncate text-left">
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleViewMember(preview); }} className="text-sm font-bold text-gray-900 hover:text-[var(--color-text-main)] transition-colors truncate text-left">
                           {preview.first_name} {preview.surname}
                         </button>
 
@@ -127,7 +127,7 @@ const MinistryList: React.FC<MinistryListProps> = ({
                     <Calendar size={14} />
                     <span className="text-[12px] font-semibold text-gray-600">{group.schedule || 'Schedule Not Set'}</span>
                   </div>
-                  <button onClick={(e) => { e.stopPropagation(); openManageGroup(group); }} className="flex items-center gap-1.5 bg-blue-50 px-2 py-1 rounded text-blue-600 hover:bg-blue-100 transition-colors">
+                  <button onClick={(e) => { e.stopPropagation(); openManageGroup(group); }} className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded text-[var(--color-text-main)] hover:bg-blue-100 transition-colors">
                     <Eye size={12} />
                     <span className="text-[11px] font-bold">View All</span>
                   </button>
@@ -143,15 +143,15 @@ const MinistryList: React.FC<MinistryListProps> = ({
       })}
 
       {/* View All Members Placeholder Card */}
-      <div onClick={() => setAllMembersOpen(true)} className="border border-blue-100 rounded-[28px] overflow-hidden flex flex-col items-center justify-center p-8 bg-blue-50/40 cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all min-h-[300px] group shadow-sm">
-        <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-sm">
-          <Users size={24} className="text-blue-600" />
+      <div onClick={() => setAllMembersOpen(true)} className="border border-blue-100 rounded-[28px] overflow-hidden flex flex-col items-center justify-center p-8 bg-gray-50/40 cursor-pointer hover:border-blue-300 hover:bg-gray-50 transition-all min-h-[300px] group shadow-sm">
+        <div className="w-14 h-14 bg-white rounded-none flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-sm">
+          <Users size={24} className="text-[var(--color-text-main)]" />
         </div>
         <h3 className="text-lg font-serif font-extrabold text-[#111827] mb-2 text-center">View All Members</h3>
         <p className="text-xs text-gray-500 text-center leading-relaxed px-4">
           Open a quick roster of every member and jump to any profile.
         </p>
-        <div className="mt-4 text-[12px] font-bold text-blue-700 bg-white rounded-full px-3 py-1 border border-blue-100">
+        <div className="mt-4 text-[12px] font-bold text-blue-700 bg-white rounded-none px-3 py-1 border border-blue-100">
           {membersLength} Total Member{membersLength !== 1 ? 's' : ''}
         </div>
       </div>

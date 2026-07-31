@@ -79,7 +79,7 @@ const AuditLogs: React.FC = () => {
                 </div>
                 <button
                     onClick={() => fetchLogs(page)}
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 rounded-xl font-bold shadow-sm transition-all text-sm"
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 rounded-none font-bold shadow-sm transition-all text-sm"
                 >
                     <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                     Refresh
@@ -87,7 +87,7 @@ const AuditLogs: React.FC = () => {
             </div>
 
             {error ? (
-                <div className="bg-red-50 text-red-600 p-6 rounded-2xl flex items-center gap-4">
+                <div className="bg-red-50 text-red-600 p-6 rounded-none flex items-center gap-4">
                     <ServerCrash className="shrink-0" size={32} />
                     <div>
                         <h3 className="font-bold text-lg">Error loading logs</h3>
@@ -131,7 +131,7 @@ const AuditLogs: React.FC = () => {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider border ${getActionColor(log.action)}`}>
+                                                <span className={`px-2.5 py-1 rounded-none text-[10px] font-black uppercase tracking-wider border ${getActionColor(log.action)}`}>
                                                     {log.action}
                                                 </span>
                                             </td>
@@ -159,14 +159,14 @@ const AuditLogs: React.FC = () => {
                             <button
                                 disabled={page === 0 || loading}
                                 onClick={() => setPage(p => p - 1)}
-                                className="p-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-white hover:border-gray-300 disabled:opacity-50 transition-colors"
+                                className="p-2 border border-gray-200 rounded-none text-gray-600 hover:bg-white hover:border-gray-300 disabled:opacity-50 transition-colors"
                             >
                                 <ArrowLeft size={16} />
                             </button>
                             <button
                                 disabled={!hasMore || loading}
                                 onClick={() => setPage(p => p + 1)}
-                                className="p-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-white hover:border-gray-300 disabled:opacity-50 transition-colors"
+                                className="p-2 border border-gray-200 rounded-none text-gray-600 hover:bg-white hover:border-gray-300 disabled:opacity-50 transition-colors"
                             >
                                 <ArrowRight size={16} />
                             </button>

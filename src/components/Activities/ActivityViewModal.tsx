@@ -25,7 +25,7 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                 <div className="bg-white px-8 py-6 border-b border-gray-100 flex justify-between items-start gap-4">
                     <div className="space-y-3 flex-1">
                         <div className="flex items-center gap-3 text-xs font-semibold">
-                            <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full uppercase tracking-wider">{getTypeLabel(viewActivity.activity_type)}</span>
+                            <span className="bg-gray-50 text-[var(--color-text-main)] px-3 py-1 rounded-none uppercase tracking-wider">{getTypeLabel(viewActivity.activity_type)}</span>
                             <span className="text-gray-400 flex items-center gap-1.5"><Calendar size={14} /> {new Date(viewActivity.activity_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         </div>
                         <h2 className="text-3xl font-extrabold text-gray-900 leading-tight">
@@ -41,13 +41,13 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button onClick={() => setConfirmDelete({ isOpen: true, id: viewActivity.id })} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Record">
+                        <button onClick={() => setConfirmDelete({ isOpen: true, id: viewActivity.id })} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-none transition-colors" title="Delete Record">
                             <Trash2 size={18} />
                         </button>
-                        <button onClick={() => handleOpenModal(viewActivity)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Record">
+                        <button onClick={() => handleOpenModal(viewActivity)} className="p-2 text-gray-400 hover:text-[var(--color-text-main)] hover:bg-gray-50 rounded-none transition-colors" title="Edit Record">
                             <Edit2 size={18} />
                         </button>
-                        <button onClick={() => setViewActivity(null)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-1" title="Close">
+                        <button onClick={() => setViewActivity(null)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-none transition-colors flex items-center gap-1" title="Close">
                             <span className="text-xs font-bold uppercase tracking-wider px-2">Close</span>
                         </button>
                     </div>
@@ -62,18 +62,18 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {viewActivity.attachment_url ? (
-                                <div className="col-span-1 rounded-2xl overflow-hidden shadow-sm border border-gray-100 bg-white aspect-[4/3] group relative flex items-center justify-center">
+                                <div className="col-span-1 rounded-none overflow-hidden shadow-sm border border-gray-100 bg-white aspect-[4/3] group relative flex items-center justify-center">
                                     {viewActivity.attachment_url.match(/\.(jpeg|jpg|gif|png)$/i) ? (
                                         <img src={viewActivity.attachment_url} alt="Activity Resource" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                     ) : (
                                         <div className="text-center p-6">
                                             <FileText size={48} className="mx-auto text-gray-300 mb-3" />
-                                            <a href={viewActivity.attachment_url} target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline">View Document</a>
+                                            <a href={viewActivity.attachment_url} target="_blank" rel="noreferrer" className="text-[var(--color-text-main)] font-bold hover:underline">View Document</a>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="col-span-1 md:col-span-2 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 aspect-[4/2] flex flex-col items-center justify-center text-gray-400">
+                                <div className="col-span-1 md:col-span-2 rounded-none border-2 border-dashed border-gray-200 bg-gray-50 aspect-[4/2] flex flex-col items-center justify-center text-gray-400">
                                     <ImageIcon size={48} className="mb-3 opacity-50" />
                                     <p className="font-medium text-sm">No photos or documents attached</p>
                                 </div>
@@ -81,16 +81,16 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                             {/* Placeholder for more photos to match mockup aesthetics */}
                             {viewActivity.attachment_url && viewActivity.attachment_url.match(/\.(jpeg|jpg|gif|png)$/i) && (
                                 <div className="col-span-1 grid grid-rows-2 gap-4">
-                                    <div className="rounded-2xl border border-gray-100 bg-white p-6 flex flex-col items-center justify-center text-gray-400 relative overflow-hidden group">
-                                        <div className="absolute inset-0 bg-blue-50/50 group-hover:bg-blue-50 transition-colors" />
+                                    <div className="rounded-none border border-gray-100 bg-white p-6 flex flex-col items-center justify-center text-gray-400 relative overflow-hidden group">
+                                        <div className="absolute inset-0 bg-gray-50/50 group-hover:bg-gray-50 transition-colors" />
                                         <div className="relative z-10 text-center">
                                             <ImageIcon size={32} className="mx-auto mb-2 opacity-50 text-blue-300" />
-                                            <p className="text-xs font-bold text-blue-600/70">Add More Photos</p>
+                                            <p className="text-xs font-bold text-[var(--color-text-main)]/70">Add More Photos</p>
                                         </div>
                                     </div>
-                                    <div className="rounded-2xl border border-gray-100 bg-white p-6 flex flex-col items-center justify-center relative overflow-hidden">
+                                    <div className="rounded-none border border-gray-100 bg-white p-6 flex flex-col items-center justify-center relative overflow-hidden">
                                         {viewActivity.facebook_post_link && (
-                                            <a href={viewActivity.facebook_post_link} target="_blank" rel="noreferrer" className="absolute inset-0 flex flex-col items-center justify-center bg-blue-600 text-white hover:bg-blue-700 transition-colors group">
+                                            <a href={viewActivity.facebook_post_link} target="_blank" rel="noreferrer" className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] hover:bg-[var(--color-surface-hover)] transition-colors group">
                                                 <ExternalLink size={24} className="mb-2 opacity-70 group-hover:opacity-100 group-hover:-mt-1 transition-all" />
                                                 <span className="font-bold text-sm tracking-wide">View on Facebook</span>
                                             </a>
@@ -109,7 +109,7 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
 
                     {/* Meta Info */}
                     <div className="flex flex-wrap gap-4 items-center text-sm font-medium border-y border-gray-100 py-4 pb-4">
-                        <div className="flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-50">
+                        <div className="flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-none shadow-sm border border-gray-50">
                             <MapPin size={16} className="text-blue-500" /> Location: <span className="text-gray-900">{viewActivity.area || 'Unknown'}</span>
                         </div>
                         <div className="flex text-gray-400 px-4 py-2">
@@ -119,7 +119,7 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
 
                     {/* Type Specific Details */}
                     {viewActivity.activity_data && Object.keys(viewActivity.activity_data).length > 0 && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 rounded-none p-6 border border-gray-100">
                             {viewActivity.activity_type === 'visitation' && (
                                 <>
                                     <div>
@@ -142,7 +142,7 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Study Details</p>
                                         <p className="text-lg font-bold text-gray-900">{viewActivity.activity_data.book || 'N/A'} - {viewActivity.activity_data.session_number || 'N/A'}</p>
                                         {viewActivity.activity_data.format && (
-                                            <p className="text-xs text-blue-600 font-medium mt-1">Format: {viewActivity.activity_data.format.join(', ')}</p>
+                                            <p className="text-xs text-[var(--color-text-main)] font-medium mt-1">Format: {viewActivity.activity_data.format.join(', ')}</p>
                                         )}
                                     </div>
                                 </>
@@ -167,8 +167,8 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
 
                     {/* Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
-                            <div className="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center text-green-500 shrink-0">
+                        <div className="bg-white p-6 rounded-none shadow-sm border border-gray-100 flex items-center gap-5">
+                            <div className="w-12 h-12 rounded-none bg-green-50 flex items-center justify-center text-green-500 shrink-0">
                                 <Users size={24} />
                             </div>
                             <div>
@@ -176,8 +176,8 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                                 <p className="text-lg font-black text-gray-900">{viewActivity.non_member_attendance || 0}</p>
                             </div>
                         </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
-                            <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                        <div className="bg-white p-6 rounded-none shadow-sm border border-gray-100 flex items-center gap-5">
+                            <div className="w-12 h-12 rounded-none bg-gray-50 flex items-center justify-center text-blue-500 shrink-0">
                                 <Users size={24} />
                             </div>
                             <div>
@@ -185,8 +185,8 @@ export const ActivityViewModal: React.FC<ActivityViewModalProps> = ({
                                 <p className="text-lg font-black text-gray-900">{viewActivity.total_attendance}</p>
                             </div>
                         </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5">
-                            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 shrink-0">
+                        <div className="bg-white p-6 rounded-none shadow-sm border border-gray-100 flex items-center gap-5">
+                            <div className="w-12 h-12 rounded-none bg-red-50 flex items-center justify-center text-red-500 shrink-0">
                                 <Heart size={24} />
                             </div>
                             <div>

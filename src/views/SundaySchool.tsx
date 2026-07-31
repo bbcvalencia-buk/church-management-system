@@ -782,7 +782,7 @@ const SundaySchool: React.FC = () => {
     if (authLoading || accessLoading) {
         return (
             <div className="space-y-8 p-6 lg:p-10 max-w-7xl mx-auto">
-                <div className="bg-white rounded-2xl border border-gray-100 p-8 text-center text-gray-500">
+                <div className="bg-white rounded-none border border-gray-100 p-8 text-center text-gray-500">
                     Loading Sunday School access...
                 </div>
             </div>
@@ -792,7 +792,7 @@ const SundaySchool: React.FC = () => {
     if (!hasSundaySchoolAccess) {
         return (
             <div className="space-y-8 p-6 lg:p-10 max-w-4xl mx-auto">
-                <div className="bg-white rounded-2xl border border-red-100 p-8">
+                <div className="bg-white rounded-none border border-red-100 p-8">
                     <h1 className="text-2xl font-bold text-red-600">Access Restricted</h1>
                     <p className="text-sm text-gray-600 mt-2">
                         You are unable to access this section. Please contact the administrator.
@@ -843,11 +843,11 @@ const SundaySchool: React.FC = () => {
             {
                 isModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-sans animate-in fade-in duration-200">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="bg-white rounded-none shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-300">
                             {/* Body */}
                             <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 space-y-8">
                                 <h2 className="text-xl font-bold flex items-center gap-3 text-gray-900 border-b border-gray-100 pb-4">
-                                    <BookOpen size={24} className="text-blue-600" />
+                                    <BookOpen size={24} className="text-[var(--color-text-main)]" />
                                     {newSession.id ? 'Edit Report' : 'File New Report'}
                                 </h2>
 
@@ -858,7 +858,7 @@ const SundaySchool: React.FC = () => {
                                             type="date"
                                             value={newSession.session_date}
                                             onChange={(e) => setNewSession({ ...newSession, session_date: e.target.value })}
-                                            className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                            className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                         />
                                     </div>
                                     <div>
@@ -867,7 +867,7 @@ const SundaySchool: React.FC = () => {
                                             <select
                                                 value={newSession.department}
                                                 onChange={(e) => setNewSession({ ...newSession, department: e.target.value as any })}
-                                                className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm font-sans"
+                                                className="w-full bg-white border border-gray-200 rounded-none p-3 text-sm font-bold text-gray-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm font-sans"
                                             >
                                                 {availableDepartments.map((dept) => (
                                                     <option key={dept.id} value={dept.id}>
@@ -876,7 +876,7 @@ const SundaySchool: React.FC = () => {
                                                 ))}
                                             </select>
                                         ) : (
-                                            <div className="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm font-bold text-gray-700 shadow-sm cursor-not-allowed">
+                                            <div className="w-full bg-gray-50 border border-gray-200 rounded-none p-3 text-sm font-bold text-gray-700 shadow-sm cursor-not-allowed">
                                                 {DEPARTMENTS.find(d => d.id === newSession.department)?.label}
                                             </div>
                                         )}
@@ -885,7 +885,7 @@ const SundaySchool: React.FC = () => {
 
                                 {/* Alert Context */}
                                 {!isSundaySchoolAdmin ? (
-                                    <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-sm font-medium">
+                                    <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-none p-4 text-sm font-medium">
                                         {newSession.id ? (
                                             <span>You are editing the <span className="font-bold">{DEPARTMENTS.find(d => d.id === newSession.department)?.label}</span> report for <span className="font-bold">{new Date(newSession.session_date || '').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })}</span>. Continue?</span>
                                         ) : (
@@ -893,7 +893,7 @@ const SundaySchool: React.FC = () => {
                                         )}
                                     </div>
                                 ) : (
-                                    <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-4 text-sm font-medium">
+                                    <div className="bg-gray-50 border border-blue-200 text-blue-800 rounded-none p-4 text-sm font-medium">
                                         <p>You are viewing this as an <strong>Administrator</strong>.</p>
                                     </div>
                                 )}
@@ -901,7 +901,7 @@ const SundaySchool: React.FC = () => {
                                 {/* Attendance */}
                                 <div className="space-y-4 border-t border-gray-100 pt-6">
                                     {!isSundaySchoolAdmin && members.length <= 1 && (
-                                        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-sm font-medium">
+                                        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-none p-4 text-sm font-medium">
                                             <p className="font-bold mb-1">⚠️ Database Policy Restriction</p>
                                             <p className="text-xs leading-relaxed">
                                                 Only your profile is visible. The Supabase security policy (RLS) is restricting access to students and visitor profiles. Please ensure you have executed the contents of the <strong>fix_sunday_school_roles_rls.sql</strong> patch in your Supabase SQL Editor.
@@ -910,10 +910,10 @@ const SundaySchool: React.FC = () => {
                                     )}
 
                                     {!isSundaySchoolAdmin && (
-                                        <label className="inline-flex items-center gap-2 text-xs text-gray-700 font-bold bg-gray-50 border border-gray-100 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors w-full">
+                                        <label className="inline-flex items-center gap-2 text-xs text-gray-700 font-bold bg-gray-50 border border-gray-100 px-3 py-2.5 rounded-none cursor-pointer hover:bg-gray-100 transition-colors w-full">
                                             <input
                                                 type="checkbox"
-                                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2"
+                                                className="w-4 h-4 rounded border-gray-300 text-[var(--color-text-main)] focus:ring-blue-500 focus:ring-2"
                                                 checked={searchAllRegistry}
                                                 onChange={(e) => setSearchAllRegistry(e.target.checked)}
                                             />
@@ -949,7 +949,7 @@ const SundaySchool: React.FC = () => {
                                                 min="0"
                                                 value={newSession.visitors_present}
                                                 onChange={(e) => setNewSession({ ...newSession, visitors_present: parseInt(e.target.value) || 0 })}
-                                                className="w-full border border-gray-200 rounded-lg p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                className="w-full border border-gray-200 rounded-none p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             />
                                             <p className="text-[10px] text-gray-500 mt-1 font-semibold">
                                                 Visitor cards encoded: {newVisitors.length}
@@ -957,7 +957,7 @@ const SundaySchool: React.FC = () => {
                                         </div>
                                         <div className="flex flex-col">
                                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 text-center">Total</label>
-                                            <div className="w-full bg-blue-50 text-gray-900 font-bold text-xl rounded-lg p-3 flex items-center justify-center border border-blue-100 shadow-sm h-[54px]">
+                                            <div className="w-full bg-gray-50 text-gray-900 font-bold text-xl rounded-none p-3 flex items-center justify-center border border-blue-100 shadow-sm h-[54px]">
                                                 {selectedRegularCountInModal + visitorsCountInModal}
                                             </div>
                                         </div>
@@ -967,7 +967,7 @@ const SundaySchool: React.FC = () => {
                                     {supportsVisitorCards && (
                                         <div className="space-y-2 pt-6">
                                             <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">Visitor Card Image</label>
-                                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex gap-4 items-center transition-colors hover:border-blue-300">
+                                            <div className="bg-gray-50 border border-gray-200 rounded-none p-4 flex gap-4 items-center transition-colors hover:border-blue-300">
                                                 <ImageUpload
                                                     value={newSession.visitor_card_url || ''}
                                                     onChange={(url) => setNewSession({ ...newSession, visitor_card_url: url })}
@@ -984,14 +984,14 @@ const SundaySchool: React.FC = () => {
                                 {supportsSoulsSaved && (
                                     <div className="pt-6 border-t border-gray-100">
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Souls Saved</label>
-                                        <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 p-4 rounded-xl">
+                                        <div className="flex items-center gap-4 bg-gray-50 border border-gray-100 p-4 rounded-none">
                                             <Heart size={20} className="text-red-500 shrink-0" />
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={newSession.souls_saved ?? 0}
                                                 onChange={(e) => setNewSession({ ...newSession, souls_saved: parseInt(e.target.value) || 0 })}
-                                                className="w-full border border-gray-200 rounded-lg p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                                                className="w-full border border-gray-200 rounded-none p-3 text-center text-xl font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                                             />
                                         </div>
                                     </div>
@@ -1011,7 +1011,7 @@ const SundaySchool: React.FC = () => {
                                         <p className="text-[10px] text-gray-400 mb-3">
                                             Enter scores for members who submitted their assessment review questions. Leave blank if not submitted.
                                         </p>
-                                        <div className="bg-gray-50 border border-gray-100 rounded-xl overflow-hidden max-h-[200px] overflow-y-auto">
+                                        <div className="bg-gray-50 border border-gray-100 rounded-none overflow-hidden max-h-[200px] overflow-y-auto">
                                             <div className="divide-y divide-gray-100">
                                                 {selectedMemberIds.map((memberId) => {
                                                     const member = attendanceMembers.find((m) => m.id === memberId);
@@ -1035,7 +1035,7 @@ const SundaySchool: React.FC = () => {
                                                                         [memberId]: val
                                                                     }));
                                                                 }}
-                                                                className="w-16 border border-gray-200 rounded-lg px-2 py-1.5 text-center text-sm font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                                                                className="w-16 border border-gray-200 rounded-none px-2 py-1.5 text-center text-sm font-bold bg-white text-gray-900 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
                                                             />
                                                         </div>
                                                     );
@@ -1065,7 +1065,7 @@ const SundaySchool: React.FC = () => {
                                     {newSession.id && (
                                         <button
                                             onClick={() => setConfirmDelete({ isOpen: true, id: newSession.id! })}
-                                            className="px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors text-xs font-bold uppercase tracking-widest"
+                                            className="px-4 py-2 rounded-none text-red-400 hover:bg-red-400/10 transition-colors text-xs font-bold uppercase tracking-widest"
                                         >
                                             Delete
                                         </button>
@@ -1077,14 +1077,14 @@ const SundaySchool: React.FC = () => {
                                             setIsModalOpen(false);
                                             setSelectedMemberIds([]);
                                         }}
-                                        className="text-sm font-medium text-gray-300 hover:text-white transition-colors py-2 px-4"
+                                        className="text-sm font-medium text-gray-300 hover:text-[var(--color-text-main)] transition-colors py-2 px-4"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSave}
                                         disabled={saving}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_12px_rgba(37,99,235,0.2)] rounded-lg px-8 py-2.5 text-sm font-bold transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] shadow-[0_4px_12px_rgba(37,99,235,0.2)] rounded-none px-8 py-2.5 text-sm font-bold transition-transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {saving ? 'Saving...' : (newSession.id ? 'Save Changes' : 'Submit Report')}
                                     </button>

@@ -60,7 +60,7 @@ const formatLabel = (value: string) =>
         .join(" ");
 
 const SOURCE_META: Record<AnnouncementSource, { label: string; icon: React.ElementType; color: string }> = {
-    service: { label: "Service", icon: Calendar, color: "bg-blue-100 text-blue-600" },
+    service: { label: "Service", icon: Calendar, color: "bg-blue-100 text-[var(--color-text-main)]" },
     sunday_school: { label: "Sunday School", icon: BookOpen, color: "bg-emerald-100 text-emerald-600" },
     activity: { label: "Activity", icon: Activity, color: "bg-purple-100 text-purple-600" },
     church_event: { label: "Church Event", icon: Calendar, color: "bg-orange-100 text-orange-600" },
@@ -423,9 +423,9 @@ const Announcements: React.FC = () => {
     return (
         <div className="space-y-6 p-6 lg:p-8">
             {/* Header */}
-            < div className="bg-white border border-gray-100 rounded-2xl p-6" >
+            < div className="bg-white border border-gray-100 rounded-none p-6" >
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-none bg-blue-100 text-[var(--color-text-main)] flex items-center justify-center">
                         <Bell size={20} />
                     </div>
                     <div>
@@ -440,27 +440,27 @@ const Announcements: React.FC = () => {
             {/* Sunday Date Selector */}
             {
                 sundayDates.length > 0 && (
-                    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+                    <div className="bg-white border border-gray-100 rounded-none overflow-hidden">
                         {/* Date navigation bar */}
                         <div className="px-6 py-4 bg-gradient-to-r from-slate-800 to-slate-900 flex items-center justify-between">
                             <button
                                 onClick={() => setSelectedSundayIndex((prev) => Math.min(prev + 1, sundayDates.length - 1))}
                                 disabled={!canGoPrev}
-                                className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="p-2 rounded-none text-[var(--color-text-main)]/70 hover:text-[var(--color-text-main)] hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                 title="Previous Sunday"
                             >
                                 <ChevronLeft size={20} />
                             </button>
                             <div className="text-center">
                                 <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">Sunday Results</p>
-                                <p className="text-white font-bold text-lg mt-0.5">
+                                <p className="text-[var(--color-text-main)] font-bold text-lg mt-0.5">
                                     {selectedSundayDate ? formatSundayLabel(selectedSundayDate) : "No Data"}
                                 </p>
                             </div>
                             <button
                                 onClick={() => setSelectedSundayIndex((prev) => Math.max(prev - 1, 0))}
                                 disabled={!canGoNext}
-                                className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="p-2 rounded-none text-[var(--color-text-main)]/70 hover:text-[var(--color-text-main)] hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                                 title="Next Sunday"
                             >
                                 <ChevronRight size={20} />
@@ -472,7 +472,7 @@ const Announcements: React.FC = () => {
                             {/* MORNING SECTION */}
                             <div className="p-6">
                                 <div className="flex items-center gap-2.5 mb-5">
-                                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-none bg-amber-100 text-amber-600 flex items-center justify-center">
                                         <Sun size={16} />
                                     </div>
                                     <div>
@@ -483,7 +483,7 @@ const Announcements: React.FC = () => {
 
                                 <div className="space-y-3">
                                     {/* Total */}
-                                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
+                                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-none p-4">
                                         <div className="flex items-center justify-between">
                                             <div>
                                                 <p className="text-[10px] uppercase tracking-wider font-bold text-blue-500">
@@ -503,13 +503,13 @@ const Announcements: React.FC = () => {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                                        <div className="bg-gray-50 border border-gray-100 rounded-none px-4 py-3">
                                             <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
                                                 <UserPlus size={11} /> Visitors
                                             </p>
                                             <p className="text-xl font-black text-gray-900 mt-1">{sundaySummary.totalVisitors}</p>
                                         </div>
-                                        <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                                        <div className="bg-gray-50 border border-gray-100 rounded-none px-4 py-3">
                                             <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
                                                 <Heart size={11} /> Souls Saved
                                             </p>
@@ -518,7 +518,7 @@ const Announcements: React.FC = () => {
                                     </div>
 
                                     {(sundaySummary.morningMembersWhoPrayed > 0 || sundaySummary.morningProspectsForBaptism > 0) && (
-                                        <div className="flex gap-3 text-xs text-gray-500 bg-gray-50/50 rounded-lg px-3 py-2">
+                                        <div className="flex gap-3 text-xs text-gray-500 bg-gray-50/50 rounded-none px-3 py-2">
                                             <span>Prayed: <strong className="text-gray-700">{sundaySummary.morningMembersWhoPrayed}</strong></span>
                                             <span>•</span>
                                             <span>Prospects: <strong className="text-gray-700">{sundaySummary.morningProspectsForBaptism}</strong></span>
@@ -530,7 +530,7 @@ const Announcements: React.FC = () => {
                             {/* AFTERNOON SECTION */}
                             <div className="p-6">
                                 <div className="flex items-center gap-2.5 mb-5">
-                                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-none bg-indigo-100 text-indigo-600 flex items-center justify-center">
                                         <Moon size={16} />
                                     </div>
                                     <div>
@@ -540,7 +540,7 @@ const Announcements: React.FC = () => {
                                 </div>
 
                                 <div className="space-y-3">
-                                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-4">
+                                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-none p-4">
                                         <p className="text-[10px] uppercase tracking-wider font-bold text-indigo-500">
                                             Total Attendance
                                         </p>
@@ -558,7 +558,7 @@ const Announcements: React.FC = () => {
                             {/* WEEKLY SECTION */}
                             <div className="p-6">
                                 <div className="flex items-center gap-2.5 mb-5">
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                    <div className="w-8 h-8 rounded-none bg-emerald-100 text-emerald-600 flex items-center justify-center">
                                         <Activity size={16} />
                                     </div>
                                     <div>
@@ -569,7 +569,7 @@ const Announcements: React.FC = () => {
 
                                 <div className="space-y-3">
                                     {/* Wednesday Service */}
-                                    <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 flex justify-between items-center">
+                                    <div className="bg-gray-50 border border-gray-100 rounded-none px-4 py-3 flex justify-between items-center">
                                         <div>
                                             <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500">Wednesday Service</p>
                                             <div className="flex gap-3 text-[10px] mt-1 text-gray-400 font-semibold">
@@ -577,13 +577,13 @@ const Announcements: React.FC = () => {
                                                 <span>Saved: <strong className="text-gray-700">{weeklySummary.wednesdaySoulsSaved}</strong></span>
                                             </div>
                                         </div>
-                                        <div className="bg-white border border-gray-200 w-10 h-10 rounded-lg flex items-center justify-center font-black text-gray-900 shadow-sm">
+                                        <div className="bg-white border border-gray-200 w-10 h-10 rounded-none flex items-center justify-center font-black text-gray-900 shadow-sm">
                                             {weeklySummary.wednesdayAttendance}
                                         </div>
                                     </div>
 
                                     {/* Goodnews Class */}
-                                    <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                                    <div className="bg-gray-50 border border-gray-100 rounded-none px-4 py-3">
                                         <div className="flex justify-between items-center mb-2">
                                             <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
                                                 <BookOpen size={11} /> Goodnews Class
@@ -596,7 +596,7 @@ const Announcements: React.FC = () => {
                                         {weeklySummary.goodnewsClasses.length > 0 ? (
                                             <div className="space-y-1.5 mt-2">
                                                 {weeklySummary.goodnewsClasses.map((ac, idx) => (
-                                                    <div key={idx} className="flex justify-between items-center bg-white border border-gray-100 rounded-md px-2 py-1.5 text-xs">
+                                                    <div key={idx} className="flex justify-between items-center bg-white border border-gray-100 rounded-none px-2 py-1.5 text-xs">
                                                         <span className="font-medium text-gray-700 truncate mr-2" title={ac.area || "Unknown Area"}>📍 {ac.area || "Unknown"}</span>
                                                         <span className="text-gray-500 font-semibold flex-shrink-0">
                                                             A: {ac.total_attendance || 0} | S: {ac.souls_saved || 0}
@@ -610,7 +610,7 @@ const Announcements: React.FC = () => {
                                     </div>
 
                                     {/* Other Ministries */}
-                                    <div className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+                                    <div className="bg-gray-50 border border-gray-100 rounded-none px-4 py-3">
                                         <div className="flex justify-between items-center mb-2">
                                             <p className="text-[10px] uppercase tracking-wider font-bold text-gray-500 flex items-center gap-1">
                                                 <Users size={11} /> Activities & Ministries
@@ -629,7 +629,7 @@ const Announcements: React.FC = () => {
                                                     if (ac.activity_type === "bible_study" && ac.bible_study_type) details = ac.bible_study_type;
 
                                                     return (
-                                                        <div key={idx} className="flex flex-col bg-white border border-gray-100 rounded-md px-2 py-1.5 text-xs">
+                                                        <div key={idx} className="flex flex-col bg-white border border-gray-100 rounded-none px-2 py-1.5 text-xs">
                                                             <div className="flex justify-between items-center">
                                                                 <span className="font-bold text-gray-700 capitalize">
                                                                     {ac.activity_type.replace('_', ' ')}
@@ -659,7 +659,7 @@ const Announcements: React.FC = () => {
             }
 
             {/* Upcoming Birthdays */}
-            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-none overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-3">
                     <h2 className="text-lg font-bold text-gray-900">Upcoming Birthdays</h2>
                     <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Next 30 days</p>
@@ -674,7 +674,7 @@ const Announcements: React.FC = () => {
                         {upcomingBirthdays.map((birthday) => (
                             <div key={birthday.id} className="px-6 py-4 flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center">
+                                    <div className="w-9 h-9 rounded-none bg-transparent text-[var(--color-text-muted)] flex items-center justify-center">
                                         <Calendar size={16} />
                                     </div>
                                     <div>
@@ -700,7 +700,7 @@ const Announcements: React.FC = () => {
 
             {
                 sourceWarnings.length > 0 && (
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm font-medium space-y-1">
+                    <div className="bg-amber-50 border border-amber-200 rounded-none p-4 text-amber-800 text-sm font-medium space-y-1">
                         {sourceWarnings.map((warning) => (
                             <p key={warning}>{warning}</p>
                         ))}
@@ -709,7 +709,7 @@ const Announcements: React.FC = () => {
             }
 
             {/* Recent Result Announcements */}
-            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+            <div className="bg-white border border-gray-100 rounded-none overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100">
                     <h2 className="text-lg font-bold text-gray-900">Recent Reports</h2>
                 </div>
@@ -728,7 +728,7 @@ const Announcements: React.FC = () => {
                                 <div key={item.id} className="p-6">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                         <div className="flex items-start gap-3">
-                                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${sourceMeta.color}`}>
+                                            <div className={`w-9 h-9 rounded-none flex items-center justify-center shrink-0 ${sourceMeta.color}`}>
                                                 <Icon size={18} />
                                             </div>
                                             <div>
@@ -746,19 +746,19 @@ const Announcements: React.FC = () => {
                                         </div>
 
                                         <div className="grid grid-cols-3 gap-3 sm:min-w-[280px]">
-                                            <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-none px-3 py-2">
                                                 <p className="text-[10px] uppercase tracking-wide font-bold text-gray-500 flex items-center gap-1">
                                                     <Users size={11} /> Attendance
                                                 </p>
                                                 <p className="text-sm font-bold text-gray-900 mt-1">{item.attendance || 0}</p>
                                             </div>
-                                            <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-none px-3 py-2">
                                                 <p className="text-[10px] uppercase tracking-wide font-bold text-gray-500 flex items-center gap-1">
                                                     <UserPlus size={11} /> Visitors
                                                 </p>
                                                 <p className="text-sm font-bold text-gray-900 mt-1">{item.visitors || 0}</p>
                                             </div>
-                                            <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                                            <div className="bg-gray-50 border border-gray-100 rounded-none px-3 py-2">
                                                 <p className="text-[10px] uppercase tracking-wide font-bold text-gray-500 flex items-center gap-1">
                                                     <Heart size={11} /> Saved
                                                 </p>

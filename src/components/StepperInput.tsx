@@ -41,7 +41,7 @@ const StepperInput: React.FC<StepperInputProps> = ({
                     type="button"
                     onClick={handleDecrement}
                     disabled={value <= min}
-                    className="w-11 h-11 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-700 disabled:opacity-50 disabled:shadow-none border border-gray-200 active:scale-95 transition-transform"
+                    className="w-11 h-11 flex items-center justify-center bg-white rounded-none shadow-sm text-gray-700 disabled:opacity-50 disabled:shadow-none border border-gray-200 active:scale-95 transition-transform"
                 >
                     <Minus size={20} strokeWidth={3} />
                 </button>
@@ -52,7 +52,7 @@ const StepperInput: React.FC<StepperInputProps> = ({
                     type="button"
                     onClick={handleIncrement}
                     disabled={value >= max}
-                    className="w-11 h-11 flex items-center justify-center bg-white rounded-2xl shadow-sm text-gray-700 disabled:opacity-50 disabled:shadow-none border border-gray-200 active:scale-95 transition-transform"
+                    className="w-11 h-11 flex items-center justify-center bg-white rounded-none shadow-sm text-gray-700 disabled:opacity-50 disabled:shadow-none border border-gray-200 active:scale-95 transition-transform"
                 >
                     <Plus size={20} strokeWidth={3} />
                 </button>

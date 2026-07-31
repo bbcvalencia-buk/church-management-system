@@ -29,7 +29,7 @@ class ErrorBoundary extends Component<Props, State> {
             return (
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
                     <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-red-100 p-8 text-center animate-in fade-in zoom-in duration-300">
-                        <div className="w-20 h-20 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-red-600">
+                        <div className="w-20 h-20 bg-red-50 rounded-none flex items-center justify-center mx-auto mb-6 text-red-600">
                             <AlertCircle size={40} />
                         </div>
 
@@ -39,7 +39,7 @@ class ErrorBoundary extends Component<Props, State> {
                         </p>
 
                         {import.meta.env.DEV && this.state.error && (
-                            <div className="mb-8 p-4 bg-gray-100 rounded-xl text-left overflow-auto max-h-40">
+                            <div className="mb-8 p-4 bg-gray-100 rounded-none text-left overflow-auto max-h-40">
                                 <p className="text-xs font-mono text-red-600 whitespace-pre-wrap">
                                     {this.state.error.toString()}
                                 </p>
@@ -49,14 +49,14 @@ class ErrorBoundary extends Component<Props, State> {
                         <div className="flex flex-col gap-3">
                             <button
                                 onClick={() => window.location.reload()}
-                                className="w-full bg-[#2563eb] hover:bg-blue-700 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20"
+                                className="w-full bg-[#2563eb] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] py-3 rounded-none font-bold flex items-center justify-center gap-2 transition-all shadow-lg "
                             >
                                 <RefreshCw size={18} />
                                 Reload Application
                             </button>
                             <button
                                 onClick={() => window.location.href = '/'}
-                                className="w-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all"
+                                className="w-full bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 py-3 rounded-none font-bold flex items-center justify-center gap-2 transition-all"
                             >
                                 <Home size={18} />
                                 Back to Home

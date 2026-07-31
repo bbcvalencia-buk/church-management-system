@@ -231,18 +231,18 @@ export const FaithPromiseImport: React.FC<FaithPromiseImportProps> = ({ isOpen, 
 
     return (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-                <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-blue-50/50">
+            <div className="bg-white rounded-none shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                     <div>
                         <h2 className="text-xl font-bold flex items-center gap-2 text-blue-900">
-                            <FileUp className="text-blue-600" />
+                            <FileUp className="text-[var(--color-text-main)]" />
                             Import Faith Promise Records
                         </h2>
                         <p className="text-xs text-blue-700/70 mt-1">Upload a CSV to batch import financial records.</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-white rounded-full text-gray-500 hover:text-gray-700 transition-colors"
+                        className="p-2 hover:bg-white rounded-none text-gray-500 hover:text-gray-700 transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -251,11 +251,11 @@ export const FaithPromiseImport: React.FC<FaithPromiseImportProps> = ({ isOpen, 
                 <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
                     {importSummary ? (
                         <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
-                            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-2">
+                            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-none flex items-center justify-center mb-2">
                                 <CheckCircle size={32} />
                             </div>
                             <h3 className="text-2xl font-bold text-gray-900">Import Complete!</h3>
-                            <div className="flex gap-8 mt-4 p-6 bg-gray-50 rounded-xl border border-gray-100">
+                            <div className="flex gap-8 mt-4 p-6 bg-gray-50 rounded-none border border-gray-100">
                                 <div className="text-center">
                                     <p className="text-3xl font-black text-green-600">{importSummary.imported}</p>
                                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">Valid Records Imported</p>
@@ -268,7 +268,7 @@ export const FaithPromiseImport: React.FC<FaithPromiseImportProps> = ({ isOpen, 
                             </div>
                             <button
                                 onClick={onClose}
-                                className="mt-6 px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-colors"
+                                className="mt-6 px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-[var(--color-text-main)] rounded-none font-medium transition-colors"
                             >
                                 Close & Return to Dashboard
                             </button>
@@ -277,27 +277,27 @@ export const FaithPromiseImport: React.FC<FaithPromiseImportProps> = ({ isOpen, 
                         <>
                             {/* Step 1 & 2 */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="p-5 border border-gray-200 rounded-xl bg-white shadow-sm hover:border-blue-300 transition-colors group relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -z-10 group-hover:bg-blue-100 transition-colors"></div>
+                                <div className="p-5 border border-gray-200 rounded-none bg-white shadow-sm hover:border-blue-300 transition-colors group relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-bl-full -z-10 group-hover:bg-blue-100 transition-colors"></div>
                                     <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                                        <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span>
+                                        <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-none flex items-center justify-center text-xs">1</span>
                                         Download Template
                                     </h3>
                                     <p className="text-sm text-gray-500 mt-2">Get the pre-filled CSV template containing all current members and their IDs.</p>
                                     <button
                                         onClick={handleDownloadTemplate}
-                                        className="mt-4 w-full py-2 px-4 bg-white border border-gray-300 hover:bg-gray-50 hover:text-blue-600 hover:border-blue-300 text-gray-700 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 shadow-sm"
+                                        className="mt-4 w-full py-2 px-4 bg-white border border-gray-300 hover:bg-gray-50 hover:text-[var(--color-text-main)] hover:border-blue-300 text-gray-700 rounded-none text-sm font-medium transition-all flex items-center justify-center gap-2 shadow-sm"
                                     >
                                         <Download size={16} /> Download CSV Template
                                     </button>
                                 </div>
 
-                                <div className="p-5 border border-gray-200 rounded-xl bg-white flex flex-col justify-center items-center text-center cursor-pointer hover:bg-gray-50 transition-colors shadow-sm" onClick={() => fileInputRef.current?.click()}>
-                                    <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-3">
+                                <div className="p-5 border border-gray-200 rounded-none bg-white flex flex-col justify-center items-center text-center cursor-pointer hover:bg-gray-50 transition-colors shadow-sm" onClick={() => fileInputRef.current?.click()}>
+                                    <div className="w-12 h-12 bg-gray-50 text-[var(--color-text-main)] rounded-none flex items-center justify-center mb-3">
                                         {isParsing ? <Loader2 size={24} className="animate-spin" /> : <Upload size={24} />}
                                     </div>
                                     <h3 className="font-bold text-gray-900 flex items-center justify-center gap-2">
-                                        <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span>
+                                        <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-none flex items-center justify-center text-xs">2</span>
                                         Upload Completed CSV
                                     </h3>
                                     <p className="text-xs text-gray-500 mt-1 max-w-[200px]">{file ? file.name : "Click to select file or drag and drop"}</p>
@@ -313,10 +313,10 @@ export const FaithPromiseImport: React.FC<FaithPromiseImportProps> = ({ isOpen, 
 
                             {/* Step 3: Preview Data */}
                             {previewData.length > 0 && (
-                                <div className="border border-gray-200 rounded-xl overflow-hidden flex flex-col flex-1 max-h-[400px]">
+                                <div className="border border-gray-200 rounded-none overflow-hidden flex flex-col flex-1 max-h-[400px]">
                                     <div className="bg-gray-50 p-3 border-b border-gray-200 flex items-center justify-between">
                                         <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
-                                            <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span>
+                                            <span className="bg-blue-100 text-blue-700 w-6 h-6 rounded-none flex items-center justify-center text-xs">3</span>
                                             Review Data ({previewData.length} records)
                                         </h3>
                                         <div className="flex gap-3 text-xs font-medium">
@@ -365,14 +365,14 @@ export const FaithPromiseImport: React.FC<FaithPromiseImportProps> = ({ isOpen, 
                     <div className="p-5 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
                         <button
                             onClick={onClose}
-                            className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                            className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-100 rounded-none font-medium transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleImport}
                             disabled={isImporting || validCount === 0}
-                            className={`px-5 py-2 rounded-lg font-medium transition-all shadow-sm flex items-center gap-2 ${validCount > 0 && !isImporting ? 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-md' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                            className={`px-5 py-2 rounded-none font-medium transition-all shadow-sm flex items-center gap-2 ${validCount > 0 && !isImporting ? 'bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] text-[var(--color-text-main)] hover:bg-[var(--color-surface-hover)] hover:shadow-md' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                         >
                             {isImporting ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
                             {isImporting ? 'Importing...' : `Import ${validCount} Valid Row${validCount !== 1 ? 's' : ''}`}

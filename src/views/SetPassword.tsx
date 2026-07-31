@@ -93,7 +93,7 @@ const SetPassword: React.FC = () => {
     if (initializing || sessionStatus === 'checking') {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#f4f6f8]">
-                <div className="h-8 w-8 border-4 border-[#1565c0] border-t-transparent rounded-full animate-spin" />
+                <div className="h-8 w-8 border-4 border-[#1565c0] border-t-transparent rounded-none animate-spin" />
             </div>
         );
     }
@@ -101,7 +101,7 @@ const SetPassword: React.FC = () => {
     if (sessionStatus === 'invalid') {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#f4f6f8] p-4">
-                <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border-t-4 border-red-500 overflow-hidden p-8 text-center space-y-4">
+                <div className="max-w-md w-full bg-white rounded-none shadow-xl border-t-4 border-red-500 overflow-hidden p-8 text-center space-y-4">
                     <AlertCircle className="w-16 h-16 text-red-500 mx-auto" />
                     <h2 className="text-2xl font-bold text-gray-900">Invalid or Expired Link</h2>
                     <p className="text-gray-600">
@@ -109,7 +109,7 @@ const SetPassword: React.FC = () => {
                     </p>
                     <button
                         onClick={() => navigate('/login')}
-                        className="mt-6 px-6 py-2 bg-[#1565c0] text-white rounded-lg font-medium hover:bg-[#0d47a1] transition-colors inline-block"
+                        className="mt-6 px-6 py-2 bg-[#1565c0] text-[var(--color-text-main)] rounded-none font-medium hover:bg-[#0d47a1] transition-colors inline-block"
                     >
                         Return to Login
                     </button>
@@ -120,12 +120,12 @@ const SetPassword: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-[#f4f6f8] p-4">
-            <div className="w-full max-w-[480px] bg-white rounded-2xl shadow-xl border-t-4 border-[#1565c0] overflow-hidden">
+            <div className="w-full max-w-[480px] bg-white rounded-none shadow-xl border-t-4 border-[#1565c0] overflow-hidden">
                 <div className="p-10 space-y-6">
                     {/* Header */}
                     <div className="text-center space-y-4">
-                        <div className="mx-auto w-16 h-16 bg-[#1565c0] rounded-full flex items-center justify-center mb-2">
-                            <Church className="text-white w-8 h-8" />
+                        <div className="mx-auto w-16 h-16 bg-[#1565c0] rounded-none flex items-center justify-center mb-2">
+                            <Church className="text-[var(--color-text-main)] w-8 h-8" />
                         </div>
                         <h2 className="text-[26px] font-bold text-[#1f2937] leading-tight">
                             Welcome to BBC<br />Management System
@@ -136,7 +136,7 @@ const SetPassword: React.FC = () => {
                     </div>
 
                     {error && (
-                        <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-lg flex items-center gap-3 text-sm">
+                        <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-none flex items-center gap-3 text-sm">
                             <AlertCircle className="w-5 h-5 flex-shrink-0" />
                             <span>{error}</span>
                         </div>
@@ -156,7 +156,7 @@ const SetPassword: React.FC = () => {
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="block w-full border border-gray-300 bg-white pl-12 pr-12 py-3 text-[#1f2937] focus:border-[#1565c0] focus:ring-1 focus:ring-[#1565c0] outline-none transition-colors rounded-lg font-mono tracking-widest"
+                                    className="block w-full border border-gray-300 bg-white pl-12 pr-12 py-3 text-[#1f2937] focus:border-[#1565c0] focus:ring-1 focus:ring-[#1565c0] outline-none transition-colors rounded-none font-mono tracking-widest"
                                     placeholder="••••••••"
                                 />
                                 <div
@@ -181,14 +181,14 @@ const SetPassword: React.FC = () => {
                                     type="password"
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className={`block w-full border ${password === confirmPassword && confirmPassword.length > 0 ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-white'} pl-12 pr-4 py-3 text-[#1f2937] focus:border-[#1565c0] focus:ring-1 focus:ring-[#1565c0] outline-none transition-colors rounded-lg font-mono tracking-widest`}
+                                    className={`block w-full border ${password === confirmPassword && confirmPassword.length > 0 ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-white'} pl-12 pr-4 py-3 text-[#1f2937] focus:border-[#1565c0] focus:ring-1 focus:ring-[#1565c0] outline-none transition-colors rounded-none font-mono tracking-widest`}
                                     placeholder="••••••••"
                                 />
                             </div>
                         </div>
 
                         {/* Password Requirements */}
-                        <div className="bg-[#f8f9fa] rounded-xl p-4 border border-gray-100 flex justify-between">
+                        <div className="bg-[#f8f9fa] rounded-none p-4 border border-gray-100 flex justify-between">
                             <div className="flex items-center gap-2">
                                 {hasLength ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Circle className="w-4 h-4 text-gray-300" />}
                                 <span className={`text-[13px] ${hasLength ? 'text-green-600 font-medium' : 'text-gray-500'}`}>
@@ -206,10 +206,10 @@ const SetPassword: React.FC = () => {
                         <button
                             type="submit"
                             disabled={!isReady || loading}
-                            className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-bold text-white bg-[#1565c0] hover:bg-[#0d47a1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1565c0] disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-wide rounded-lg shadow-md mt-6"
+                            className="w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-bold text-[var(--color-text-main)] bg-[#1565c0] hover:bg-[#0d47a1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1565c0] disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-wide rounded-none shadow-md mt-6"
                         >
                             {loading ? (
-                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-none animate-spin" />
                             ) : (
                                 "SET PASSWORD"
                             )}

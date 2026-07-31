@@ -75,10 +75,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         <div className={`space-y-2 ${className || ''}`}>
             {label && <label className="form-label">{label}</label>}
 
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5">
+            <div className="rounded-none border border-[var(--color-border)] bg-[var(--color-surface)] p-3.5">
                 <div className="flex flex-col gap-3.5">
                     {/* Preview Area */}
-                    <div className="relative group w-full h-36 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-bg)] flex items-center justify-center overflow-hidden transition-colors hover:border-[var(--color-primary)]/50">
+                    <div className="relative group w-full h-36 rounded-none border border-dashed border-[var(--color-border)] bg-[var(--color-bg)] flex items-center justify-center overflow-hidden transition-colors hover:border-[var(--color-primary)]/50">
                         {uploading ? (
                             <Loader2 className="animate-spin text-[var(--color-primary)]" />
                         ) : value ? (
@@ -96,7 +96,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                                     <button
                                         type="button"
                                         onClick={() => window.open(value, '_blank')}
-                                        className="p-1.5 rounded-md bg-black/55 hover:bg-black/70 text-white transition-colors"
+                                        className="p-1.5 rounded-none bg-black/55 hover:bg-black/70 text-[var(--color-text-main)] transition-colors"
                                         title="View Full Size"
                                     >
                                         <ImageIcon size={15} />
@@ -104,7 +104,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                                     <button
                                         type="button"
                                         onClick={handleRemove}
-                                        className="p-1.5 rounded-md bg-red-600/75 hover:bg-red-700 text-white transition-colors"
+                                        className="p-1.5 rounded-none bg-red-600/75 hover:bg-red-700 text-[var(--color-text-main)] transition-colors"
                                         title="Delete Image"
                                     >
                                         <Trash2 size={15} />
@@ -127,7 +127,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     {value ? (
                         <div className="text-sm space-y-1.5">
                             <p className="text-emerald-600 text-[0.8rem] font-semibold uppercase tracking-[0.07em] flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                                <span className="w-1.5 h-1.5 rounded-none bg-emerald-600"></span>
                                 Image uploaded
                             </p>
                             <p className="text-[0.76rem] leading-5 text-[var(--color-text-muted)] break-all" title={value}>
@@ -136,7 +136,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="inline-flex items-center px-3 py-1.5 rounded-md border border-[var(--color-primary)]/25 bg-[var(--color-primary)]/10 text-[0.72rem] font-semibold uppercase tracking-[0.07em] text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)]/15 transition-colors"
+                                className="inline-flex items-center px-3 py-1.5 rounded-none border border-[var(--color-primary)]/25 bg-[var(--color-primary)]/10 text-[0.72rem] font-semibold uppercase tracking-[0.07em] text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)]/15 transition-colors"
                             >
                                 Replace Image
                             </button>
@@ -148,7 +148,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="inline-flex items-center px-3 py-1.5 rounded-md border border-[var(--color-primary)]/25 bg-[var(--color-primary)]/10 text-[0.72rem] font-semibold uppercase tracking-[0.07em] text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)]/15 transition-colors"
+                                className="inline-flex items-center px-3 py-1.5 rounded-none border border-[var(--color-primary)]/25 bg-[var(--color-primary)]/10 text-[0.72rem] font-semibold uppercase tracking-[0.07em] text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)]/15 transition-colors"
                             >
                                 Browse Files
                             </button>

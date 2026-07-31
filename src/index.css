@@ -8,20 +8,20 @@
 @import '@fontsource/outfit/700.css';
 
 :root {
-  /* Cobalt OKLCH Theme (Modern Minimal) */
-  --color-bg: oklch(0.99 0.01 255);
+  /* Minimalist Editorial Palette */
+  --color-bg: oklch(0.98 0.005 250);
   --color-surface: oklch(1 0 0);
-  --color-surface-hover: oklch(0.98 0.01 255);
-  --color-border: oklch(0.93 0.02 255);
-  --color-primary: oklch(0.55 0.22 260);
-  --color-primary-dark: oklch(0.45 0.18 260);
-  --color-primary-glow: oklch(0.55 0.22 260 / 0.15);
-  --color-text-main: oklch(0.2 0.02 260);
-  --color-text-muted: oklch(0.55 0.02 260);
+  --color-surface-hover: oklch(0.96 0.005 250);
+  --color-border: oklch(0.85 0.005 250);
+  --color-primary: oklch(0.2 0.005 250);
+  --color-primary-dark: oklch(0.1 0 0);
+  --color-primary-glow: oklch(0.2 0.005 250 / 0.15);
+  --color-text-main: oklch(0.15 0.005 250);
+  --color-text-muted: oklch(0.5 0.005 250);
   --color-text-light: oklch(1 0 0);
-  --radius-dlg: 16px;
-  --shadow-card: 0 10px 15px -3px oklch(0 0 0 / 0.03), 0 4px 6px -2px oklch(0 0 0 / 0.01);
-  --shadow-hover: 0 20px 25px -5px oklch(0 0 0 / 0.05), 0 10px 10px -5px oklch(0 0 0 / 0.02);
+  --radius-dlg: 0px;
+  --shadow-card: none;
+  --shadow-hover: none;
 }
 
 @theme {
@@ -51,65 +51,66 @@
 }
 
 @layer components {
-
-  /* Renamed from glass-panel to card-panel for clarity, but supporting glass-panel class for backward compatibility during refactor */
+  /* Minimalist 1px bordered containers */
   .card-panel,
   .glass-panel {
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
-    box-shadow: var(--shadow-card);
-    border-radius: var(--radius-dlg);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: none;
+    border-radius: 0;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
   }
 
-  .card-panel:hover {
-    box-shadow: var(--shadow-hover);
+  .card-panel:hover,
+  .glass-panel:hover {
+    box-shadow: none;
+    border-color: var(--color-text-muted);
   }
 
-  /* Primary Button Style */
+  /* Redesign Buttons globally */
   .btn-primary {
-    @apply bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-dark)] transition-colors px-4 py-2 rounded-lg font-medium shadow-sm hover:shadow-md flex items-center gap-2 justify-center;
+    @apply bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] active:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-4 py-2 rounded-none font-medium flex items-center gap-2 justify-center shadow-none;
   }
 
   /* Secondary/Ghost Button Style */
   .btn-ghost {
-    @apply hover:bg-slate-100 text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors px-3 py-2 rounded-lg flex items-center gap-2;
+    @apply bg-transparent hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] border border-transparent transition-colors px-3 py-2 rounded-none flex items-center gap-2 shadow-none;
   }
 }
 
-/* Form Styles — inside @layer base so Tailwind utilities always override */
+/* Form Styles */
 @layer base {
-
   input,
   select,
   textarea {
     width: 100%;
     padding: 0.625rem 0.75rem;
-    border-radius: 0.5rem;
+    border-radius: 0;
     border: 1px solid var(--color-border);
     background-color: var(--color-surface);
     color: var(--color-text-main);
     font-size: 0.95rem;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
   }
 
   input:focus,
   select:focus,
   textarea:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-glow);
+    border-color: var(--color-text-main);
+    box-shadow: none;
   }
 }
 
-/* Shared field styles for complex forms (consistent typography + placeholders) */
+/* Shared field styles for complex forms */
 .form-label {
   display: block;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.75rem; /* text-xs */
+  font-weight: 700;   /* font-bold */
   line-height: 1.25rem;
   color: var(--color-text-muted);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.1em; /* tracking-widest */
   text-transform: uppercase;
 }
 
@@ -117,24 +118,25 @@
   width: 100%;
   min-height: 2.75rem;
   padding: 0.625rem 0.875rem;
-  border-radius: 0.75rem;
+  border-radius: 0;
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
   color: var(--color-text-main);
   font-size: 0.96rem;
   line-height: 1.35;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
 }
 
 .form-control::placeholder {
-  color: hsl(220, 14%, 64%);
-  opacity: 1;
+  color: var(--color-text-muted);
+  opacity: 0.7;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-glow);
+  border-color: var(--color-text-main);
+  box-shadow: none;
 }
 
 .form-textarea {

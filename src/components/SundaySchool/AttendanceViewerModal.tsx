@@ -38,7 +38,7 @@ const AttendanceViewerModal: React.FC<Props> = ({
 }) => {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-sans animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-white rounded-none shadow-2xl w-full max-w-xl flex flex-col max-h-[85vh] overflow-hidden animate-in zoom-in-95 duration-300">
                 {/* Header */}
                 <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
                     <div>
@@ -52,7 +52,7 @@ const AttendanceViewerModal: React.FC<Props> = ({
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                        className="p-2 rounded-none hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                         <X size={18} />
                     </button>
@@ -80,7 +80,7 @@ const AttendanceViewerModal: React.FC<Props> = ({
                             placeholder="Search students..."
                             value={search}
                             onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
+                            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-none bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
                         />
                     </div>
                 </div>
@@ -132,18 +132,18 @@ const AttendanceViewerModal: React.FC<Props> = ({
                                             </div>
                                             <div className="text-center">
                                                 {tardyIds.has(member.id) ? (
-                                                    <span className="inline-flex items-center gap-0.5 bg-yellow-50 text-yellow-700 border border-yellow-200 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                                                    <span className="inline-flex items-center gap-0.5 bg-yellow-50 text-yellow-700 border border-yellow-200 px-1.5 py-0.5 rounded-none text-[10px] font-bold">
                                                         <Clock size={9} /> Tardy
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full text-[10px] font-bold">
+                                                    <span className="inline-flex items-center gap-0.5 bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-none text-[10px] font-bold">
                                                         <CheckCircle2 size={9} /> Present
                                                     </span>
                                                 )}
                                             </div>
                                             <div className="text-center">
                                                 {sessionScore != null && sessionScore > 0 ? (
-                                                    <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                                    <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 px-2 py-0.5 rounded-none text-[10px] font-bold">
                                                         <Star size={9} /> {sessionScore}
                                                     </span>
                                                 ) : (
@@ -151,7 +151,7 @@ const AttendanceViewerModal: React.FC<Props> = ({
                                                 )}
                                             </div>
                                             <div className="text-center">
-                                                <span className="inline-flex items-center gap-0.5 bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                                <span className="inline-flex items-center gap-0.5 bg-gray-50 text-blue-700 px-2 py-0.5 rounded-none text-[10px] font-bold">
                                                     <Hash size={9} />
                                                     {dayCounts[member.id] || 0}
                                                 </span>
@@ -167,7 +167,7 @@ const AttendanceViewerModal: React.FC<Props> = ({
                 <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-end">
                     <button
                         onClick={onClose}
-                        className="px-5 py-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold transition-colors"
+                        className="px-5 py-2 rounded-none border border-gray-200 text-gray-600 hover:bg-gray-100 text-sm font-semibold transition-colors"
                     >
                         Close
                     </button>

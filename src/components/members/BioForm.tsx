@@ -22,7 +22,7 @@ const BioForm: React.FC<BioFormProps> = ({ data, onChange }) => {
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-medium text-white mb-4">Biographical Data</h3>
+            <h3 className="text-lg font-medium text-[var(--color-text-main)] mb-4">Biographical Data</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-[var(--color-text-muted)]">First Name <span className="text-red-400">*</span></label>
@@ -72,7 +72,7 @@ const BioForm: React.FC<BioFormProps> = ({ data, onChange }) => {
                     <select
                         value={data.name_ext || ''}
                         onChange={(e) => update('name_ext', e.target.value)}
-                        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2.5"
+                        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-none px-3 py-2.5"
                     >
                         <option value="">None</option>
                         <option value="Jr.">Jr.</option>

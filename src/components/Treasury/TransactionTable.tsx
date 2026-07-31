@@ -96,7 +96,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                                                         <>
                                                             <button
                                                                 onClick={() => openEditModal(row)}
-                                                                className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded"
+                                                                className="p-1.5 text-blue-500 hover:bg-gray-500/10 rounded"
                                                                 title="Edit"
                                                             >
                                                                 <Edit size={14} />

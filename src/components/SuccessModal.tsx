@@ -23,8 +23,8 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm font-sans animate-in fade-in duration-200">
             <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[440px] p-8 flex flex-col items-center text-center animate-in zoom-in-95 duration-300">
-                <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-6">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-green-50 rounded-none flex items-center justify-center mb-6">
+                    <div className="w-12 h-12 bg-green-100 rounded-none flex items-center justify-center">
                         <Check size={28} className="text-green-500" strokeWidth={3} />
                     </div>
                 </div>
@@ -40,14 +40,14 @@ const SuccessModal: React.FC<SuccessModalProps> = ({
                 <div className="flex items-center gap-3 w-full justify-center">
                     <button
                         onClick={onDone}
-                        className="px-6 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="px-6 py-2.5 rounded-none border border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                         Done
                     </button>
                     {onView && (
                         <button
                             onClick={onView}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-colors shadow-sm"
+                            className="flex-1 bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] text-[var(--color-text-main)] px-6 py-2.5 rounded-none text-sm font-bold transition-colors shadow-sm"
                         >
                             {viewText}
                         </button>

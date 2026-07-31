@@ -29,9 +29,9 @@ const FinancialSummary: React.FC<FinancialSummaryProps> = ({ financials }) => {
             
             <div className="space-y-4">
                 {financials.map((f, i) => (
-                    <div key={i} className="flex justify-between items-center p-3 bg-emerald-50 rounded-xl border border-emerald-100/50">
+                    <div key={i} className="flex justify-between items-center p-3 bg-emerald-50 rounded-none border border-emerald-100/50">
                         <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-none bg-emerald-100 flex items-center justify-center shrink-0">
                                 <Banknote size={14} className="text-emerald-600" />
                             </div>
                             <span className="font-bold text-gray-700 text-sm">Faith Promise {f.year}</span>

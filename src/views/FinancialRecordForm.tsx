@@ -195,7 +195,7 @@ const FinancialRecordForm: React.FC = () => {
             <div className="flex items-center gap-4">
                 <button
                     onClick={() => navigate(-1)}
-                    className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                    className="p-2 hover:bg-white/10 rounded-none transition-colors"
                 >
                     <ArrowLeft size={20} />
                 </button>
@@ -223,12 +223,12 @@ const FinancialRecordForm: React.FC = () => {
                                         setSelectedMember(null); // Clear selection if user types
                                     }
                                 }}
-                                className={`w-full pl-10 bg-[var(--color-bg)] border rounded-lg p-3 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)]/50 transition-all
+                                className={`w-full pl-10 bg-[var(--color-bg)] border rounded-none p-3 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)]/50 transition-all
                                     ${selectedMember ? 'border-green-500/50' : 'border-[var(--color-border)]'}
                                 `}
                             />
                             {showMemberResults && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[var(--color-border)] rounded-lg shadow-xl z-50 overflow-hidden max-h-72 overflow-y-auto">
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[var(--color-border)] rounded-none shadow-xl z-50 overflow-hidden max-h-72 overflow-y-auto">
                                     {members.length > 0 ? (
                                         members.map(m => (
                                             <button
@@ -237,7 +237,7 @@ const FinancialRecordForm: React.FC = () => {
                                                 onClick={() => selectMember(m)}
                                                 className="w-full text-left p-3 hover:bg-gray-50 flex items-center gap-3 border-b border-[var(--color-border)] last:border-0"
                                             >
-                                                <div className="w-8 h-8 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">
+                                                <div className="w-8 h-8 rounded-none bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center text-xs font-bold">
                                                     {(m.first_name?.[0] || 'U')}{(m.surname?.[0] || 'M')}
                                                 </div>
                                                 <div>
@@ -271,7 +271,7 @@ const FinancialRecordForm: React.FC = () => {
                                 type="date"
                                 value={form.transaction_date}
                                 onChange={(e) => setForm({ ...form, transaction_date: e.target.value })}
-                                className="w-full pl-10 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)]/50"
+                                className="w-full pl-10 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-none p-3 text-[var(--color-text-main)] focus:ring-2 focus:ring-[var(--color-primary)]/50"
                             />
                         </div>
                     </div>
@@ -294,7 +294,7 @@ const FinancialRecordForm: React.FC = () => {
                                 placeholder="0.00"
                                 value={form.tithe_amount}
                                 onChange={(e) => setForm({ ...form, tithe_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-[var(--color-text-main)] font-mono focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-colors"
+                                className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-none p-3 text-[var(--color-text-main)] font-mono focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-colors"
                             />
                         </div>
                     </div>
@@ -313,7 +313,7 @@ const FinancialRecordForm: React.FC = () => {
                                 placeholder="0.00"
                                 value={form.faith_promise_amount}
                                 onChange={(e) => setForm({ ...form, faith_promise_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-[var(--color-text-main)] font-mono focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition-colors"
+                                className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-none p-3 text-[var(--color-text-main)] font-mono focus:border-green-500/50 focus:ring-1 focus:ring-green-500/50 transition-colors"
                             />
                         </div>
                     </div>
@@ -332,13 +332,13 @@ const FinancialRecordForm: React.FC = () => {
                                 placeholder="0.00"
                                 value={form.love_gift_amount}
                                 onChange={(e) => setForm({ ...form, love_gift_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-[var(--color-text-main)] font-mono focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/50 transition-colors"
+                                className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-none p-3 text-[var(--color-text-main)] font-mono focus:border-pink-500/50 focus:ring-1 focus:ring-pink-500/50 transition-colors"
                             />
                         </div>
                     </div>
 
                     {/* Specific Pledge */}
-                    <div className="md:col-span-2 p-5 bg-yellow-500/5 rounded-xl border border-yellow-500/20 mt-2">
+                    <div className="md:col-span-2 p-5 bg-yellow-500/5 rounded-none border border-yellow-500/20 mt-2">
                         <label className="text-sm font-bold text-yellow-500 flex items-center gap-2 mb-3">
                             <TargetIcon /> Specific Pledge
                         </label>
@@ -352,13 +352,13 @@ const FinancialRecordForm: React.FC = () => {
                                     placeholder="0.00"
                                     value={form.pledge_amount}
                                     onChange={(e) => setForm({ ...form, pledge_amount: e.target.value === '' ? '' : parseFloat(e.target.value) })}
-                                    className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-[var(--color-text-main)] font-mono focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-colors"
+                                    className="w-full pl-8 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-none p-3 text-[var(--color-text-main)] font-mono focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-colors"
                                 />
                             </div>
                             <select
                                 value={form.pledge_purpose}
                                 onChange={(e) => setForm({ ...form, pledge_purpose: e.target.value })}
-                                className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-[var(--color-text-main)] focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-colors"
+                                className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-none p-3 text-[var(--color-text-main)] focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/50 transition-colors"
                             >
                                 <option value="" disabled>Select Purpose...</option>
                                 <option value="Building Fund">Building Fund</option>
@@ -377,7 +377,7 @@ const FinancialRecordForm: React.FC = () => {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="bg-[var(--color-primary)] hover:bg-violet-600 text-white px-8 py-3 rounded-lg font-medium transition-all shadow-lg shadow-purple-500/20 flex items-center gap-2 disabled:opacity-50 hover:scale-105 active:scale-95"
+                        className="bg-[var(--color-primary)] hover:bg-violet-600 text-[var(--color-text-main)] px-8 py-3 rounded-none font-medium transition-all shadow-lg shadow-purple-500/20 flex items-center gap-2 disabled:opacity-50 hover:scale-105 active:scale-95"
                     >
                         <Save size={18} />
                         {saving ? 'Saving...' : 'Save Record'}

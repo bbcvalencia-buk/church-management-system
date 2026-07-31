@@ -39,12 +39,12 @@ const Login: React.FC = () => {
             >
                 {/* Header - Church branding */}
                 <div className="relative z-10 p-8 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full border-2 border-white/40 flex items-center justify-center">
-                        <Church className="text-white w-5 h-5" />
+                    <div className="w-10 h-10 rounded-none border-2 border-white/40 flex items-center justify-center">
+                        <Church className="text-[var(--color-text-main)] w-5 h-5" />
                     </div>
                     <div>
-                        <h1 className="text-white font-black text-sm tracking-[0.15em] uppercase leading-tight">Bible Baptist Church</h1>
-                        <p className="text-white/60 text-[11px] tracking-[0.2em] uppercase">Management System</p>
+                        <h1 className="text-[var(--color-text-main)] font-black text-sm tracking-[0.15em] uppercase leading-tight">Bible Baptist Church</h1>
+                        <p className="text-[var(--color-text-main)]/60 text-[11px] tracking-[0.2em] uppercase">Management System</p>
                     </div>
                 </div>
 
@@ -54,9 +54,9 @@ const Login: React.FC = () => {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%]">
                         <div className="relative">
                             {/* Back shape - darker */}
-                            <div className="w-[220px] h-[260px] bg-white/[0.06] rounded-2xl transform rotate-0 absolute -top-4 -left-4"></div>
+                            <div className="w-[220px] h-[260px] bg-white/[0.06] rounded-none transform rotate-0 absolute -top-4 -left-4"></div>
                             {/* Front shape - lighter with border */}
-                            <div className="w-[220px] h-[260px] bg-white/[0.08] rounded-2xl border border-white/[0.12] backdrop-blur-sm relative">
+                            <div className="w-[220px] h-[260px] bg-white/[0.08] rounded-none border border-white/[0.12] backdrop-blur-sm relative">
                                 {/* Inner chevron pointing down */}
                                 <div className="absolute inset-0 flex items-center justify-center">
                                     <svg viewBox="0 0 120 140" className="w-24 h-28 opacity-20" fill="white">
@@ -68,16 +68,16 @@ const Login: React.FC = () => {
                     </div>
 
                     {/* Subtle curved light arc */}
-                    <div className="absolute top-[20%] right-0 w-[300px] h-[300px] rounded-full border border-white/[0.06]"></div>
-                    <div className="absolute top-[25%] right-[-20px] w-[260px] h-[260px] rounded-full border border-white/[0.04]"></div>
+                    <div className="absolute top-[20%] right-0 w-[300px] h-[300px] rounded-none border border-white/[0.06]"></div>
+                    <div className="absolute top-[25%] right-[-20px] w-[260px] h-[260px] rounded-none border border-white/[0.04]"></div>
                 </div>
 
                 {/* Bottom content - Tagline */}
                 <div className="relative z-10 p-10 pb-12">
-                    <h2 className="text-white text-[2.2rem] leading-[1.15] font-bold mb-4">
+                    <h2 className="text-[var(--color-text-main)] text-[2.2rem] leading-[1.15] font-bold mb-4">
                         Faithfully serving<br />the congregation.
                     </h2>
-                    <p className="text-white/60 text-sm leading-relaxed max-w-[340px]">
+                    <p className="text-[var(--color-text-main)]/60 text-sm leading-relaxed max-w-[340px]">
                         Access your ministry tools, manage member records, and organize events with ease and security.
                     </p>
                 </div>
@@ -89,8 +89,8 @@ const Login: React.FC = () => {
                     <div className="mb-10">
                         {/* Mobile-only church branding */}
                         <div className="lg:hidden flex items-center gap-3 mb-8">
-                            <div className="w-10 h-10 rounded-full bg-[#1565c0] flex items-center justify-center">
-                                <Church className="text-white w-5 h-5" />
+                            <div className="w-10 h-10 rounded-none bg-[#1565c0] flex items-center justify-center">
+                                <Church className="text-[var(--color-text-main)] w-5 h-5" />
                             </div>
                             <div>
                                 <h1 className="text-[#1f2937] font-black text-sm tracking-wide uppercase">Bible Baptist Church</h1>
@@ -106,7 +106,7 @@ const Login: React.FC = () => {
 
                     <form onSubmit={handleLogin} className="space-y-6">
                         {error && (
-                            <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-lg flex items-center gap-3 text-sm">
+                            <div className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-none flex items-center gap-3 text-sm">
                                 <span>{error}</span>
                             </div>
                         )}
@@ -128,7 +128,7 @@ const Login: React.FC = () => {
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="block w-full border border-gray-300 bg-white pl-12 pr-4 py-3.5 rounded-lg text-[#1f2937] placeholder-gray-400 focus:border-[#1565c0] focus:ring-2 focus:ring-[#1565c0]/20 outline-none transition-all sm:text-[15px]"
+                                        className="block w-full border border-gray-300 bg-white pl-12 pr-4 py-3.5 rounded-none text-[#1f2937] placeholder-gray-400 focus:border-[#1565c0] focus:ring-2 focus:ring-[#1565c0]/20 outline-none transition-all sm:text-[15px]"
                                         placeholder="admin@church.org"
                                     />
                                 </div>
@@ -150,7 +150,7 @@ const Login: React.FC = () => {
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full border border-gray-300 bg-white pl-12 pr-12 py-3.5 rounded-lg text-[#1f2937] placeholder-gray-400 focus:border-[#1565c0] focus:ring-2 focus:ring-[#1565c0]/20 outline-none transition-all sm:text-xl font-mono tracking-widest"
+                                        className="block w-full border border-gray-300 bg-white pl-12 pr-12 py-3.5 rounded-none text-[#1f2937] placeholder-gray-400 focus:border-[#1565c0] focus:ring-2 focus:ring-[#1565c0]/20 outline-none transition-all sm:text-xl font-mono tracking-widest"
                                         placeholder="••••••••"
                                     />
                                     <button
@@ -185,10 +185,10 @@ const Login: React.FC = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full flex justify-center items-center py-4 px-4 border border-transparent text-sm font-bold text-white rounded-lg bg-[#1565c0] hover:bg-[#0d47a1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1565c0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors uppercase tracking-wide shadow-lg shadow-blue-500/25"
+                            className="w-full flex justify-center items-center py-4 px-4 border border-transparent text-sm font-bold text-[var(--color-text-main)] rounded-none bg-[#1565c0] hover:bg-[#0d47a1] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1565c0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors uppercase tracking-wide shadow-lg "
                         >
                             {loading ? (
-                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-none animate-spin" />
                             ) : (
                                 "SIGN IN SECURELY"
                             )}

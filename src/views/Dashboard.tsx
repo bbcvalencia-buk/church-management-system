@@ -75,7 +75,7 @@ const Dashboard: React.FC = () => {
                     </h1>
                     <p className="text-[var(--color-text-muted)] text-sm">Welcome back, Pastor. Here's your overview.</p>
                 </div>
-                <div className="text-sm bg-white border border-[var(--color-border)] shadow-sm px-4 py-2 rounded-full text-[var(--color-text-main)] font-medium flex items-center gap-2">
+                <div className="text-sm bg-white border border-[var(--color-border)] shadow-sm px-4 py-2 rounded-none text-[var(--color-text-main)] font-medium flex items-center gap-2">
                     <Calendar size={14} className="text-[var(--color-text-muted)]" />
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                 </div>
@@ -237,7 +237,7 @@ const Dashboard: React.FC = () => {
                             )}
                         </div>
                         <Link to="/members">
-                            <button className="w-full mt-6 text-xs text-[var(--color-primary)] font-bold uppercase tracking-widest hover:text-white transition-colors">
+                            <button className="w-full mt-6 text-xs text-[var(--color-primary)] font-bold uppercase tracking-widest hover:text-[var(--color-text-main)] transition-colors">
                                 View Member Directory
                             </button>
                         </Link>
@@ -250,8 +250,8 @@ const Dashboard: React.FC = () => {
 
 const StatCard = ({ title, value, icon: Icon, color, trend, link }: any) => {
     const colorStyles = {
-        blue: 'bg-blue-50 text-blue-600',
-        pink: 'bg-pink-50 text-pink-600',
+        blue: 'bg-gray-50 text-[var(--color-text-main)]',
+        pink: 'bg-transparent text-[var(--color-text-muted)]',
         emerald: 'bg-emerald-50 text-emerald-600',
         violet: 'bg-violet-50 text-violet-600',
     };
@@ -261,11 +261,11 @@ const StatCard = ({ title, value, icon: Icon, color, trend, link }: any) => {
     return (
         <Link to={link || "#"} className="card-panel p-6 group hover:-translate-y-1 transition-all duration-300">
             <div className="flex justify-between items-start mb-4">
-                <div className={`p-3 rounded-xl ${activeColor} transition-colors`}>
+                <div className={`p-3 rounded-none ${activeColor} transition-colors`}>
                     <Icon size={24} />
                 </div>
                 {trend && (
-                    <span className="text-xs font-medium text-[var(--color-text-muted)] bg-gray-50 px-2 py-1 rounded-full border border-gray-100">
+                    <span className="text-xs font-medium text-[var(--color-text-muted)] bg-gray-50 px-2 py-1 rounded-none border border-gray-100">
                         {trend}
                     </span>
                 )}
@@ -279,7 +279,7 @@ const StatCard = ({ title, value, icon: Icon, color, trend, link }: any) => {
 };
 
 const QuickActionLink = ({ to, label, sub }: any) => (
-    <Link to={to} className="flex items-center justify-between p-3 rounded-lg bg-[var(--color-bg)] border border-transparent hover:border-[var(--color-border)] hover:bg-white hover:shadow-sm transition-all group">
+    <Link to={to} className="flex items-center justify-between p-3 rounded-none bg-[var(--color-bg)] border border-transparent hover:border-[var(--color-border)] hover:bg-white hover:shadow-sm transition-all group">
         <div>
             <p className="font-bold text-sm text-[var(--color-text-main)] group-hover:text-[var(--color-primary)] transition-colors">{label}</p>
             <p className="text-[10px] text-[var(--color-text-muted)]">{sub}</p>

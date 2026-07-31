@@ -31,14 +31,14 @@ const SundaySchoolTabs: React.FC<SundaySchoolTabsProps> = ({
                     <button
                         key={dept.id}
                         onClick={() => document.getElementById(dept.id === 'children' ? 'dept-children' : `dept-${dept.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border hover:shadow-sm"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-none text-xs font-bold transition-all border hover:shadow-sm"
                         style={{
                             backgroundColor: `${dept.color}10`,
                             borderColor: `${dept.color}30`,
                             color: dept.color
                         }}
                     >
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: dept.color }} />
+                        <span className="w-2 h-2 rounded-none" style={{ backgroundColor: dept.color }} />
                         {dept.label}
                         <span className="bg-white/80 text-gray-700 px-1.5 py-0.5 rounded text-[10px] font-black">
                             {stats?.attendance || 0}
