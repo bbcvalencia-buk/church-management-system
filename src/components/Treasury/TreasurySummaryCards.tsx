@@ -15,29 +15,29 @@ interface TreasurySummaryCardsProps {
 
 export const TreasurySummaryCards: React.FC<TreasurySummaryCardsProps> = ({ totals, formatCurrency }) => {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bento-grid">
-            <div className="card-panel p-6 relative overflow-hidden group bg-gradient-to-br from-blue-50 to-white border border-blue-100 shadow-sm rounded-2xl">
-                <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <DollarSign size={64} className="text-blue-500" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[var(--color-border)] border border-[var(--color-border)] mb-12">
+            <div className="p-8 bg-white flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-12">
+                    <p className="text-[10px] text-[var(--color-text-muted)] font-mono uppercase tracking-widest">Total Tithes</p>
+                    <DollarSign size={16} className="text-gray-300" />
                 </div>
-                <p className="text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Total Tithes</p>
-                <h3 className="text-4xl font-extrabold text-[var(--color-text-main)] mt-2 tracking-tight">{formatCurrency(totals.tithe)}</h3>
+                <h3 className="text-5xl font-normal tracking-tighter text-[var(--color-text-main)]" style={{ fontFamily: "var(--font-display, inherit)" }}>{formatCurrency(totals.tithe)}</h3>
             </div>
 
-            <div className="card-panel p-6 relative overflow-hidden group bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 shadow-sm rounded-2xl">
-                <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <CreditCard size={64} className="text-green-500" />
+            <div className="p-8 bg-white flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-12">
+                    <p className="text-[10px] text-[var(--color-text-muted)] font-mono uppercase tracking-widest">Faith Promise</p>
+                    <CreditCard size={16} className="text-gray-300" />
                 </div>
-                <p className="text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Faith Promise</p>
-                <h3 className="text-4xl font-extrabold text-[var(--color-text-main)] mt-2 tracking-tight">{formatCurrency(totals.faith_promise)}</h3>
+                <h3 className="text-5xl font-normal tracking-tighter text-[var(--color-text-main)]" style={{ fontFamily: "var(--font-display, inherit)" }}>{formatCurrency(totals.faith_promise)}</h3>
             </div>
 
-            <div className="card-panel p-6 relative overflow-hidden group bg-gradient-to-br from-pink-50 to-white border border-pink-100 shadow-sm rounded-2xl">
-                <div className="absolute right-0 top-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <PieChart size={64} className="text-pink-500" />
+            <div className="p-8 bg-white flex flex-col justify-between">
+                <div className="flex justify-between items-start mb-12">
+                    <p className="text-[10px] text-[var(--color-text-muted)] font-mono uppercase tracking-widest">Offerings & Pledges</p>
+                    <PieChart size={16} className="text-gray-300" />
                 </div>
-                <p className="text-xs text-[var(--color-text-muted)] font-bold uppercase tracking-wider">Offerings & Pledges</p>
-                <h3 className="text-4xl font-extrabold text-[var(--color-text-main)] mt-2 tracking-tight">{formatCurrency(totals.love_gift)}</h3>
+                <h3 className="text-5xl font-normal tracking-tighter text-[var(--color-text-main)]" style={{ fontFamily: "var(--font-display, inherit)" }}>{formatCurrency(totals.love_gift)}</h3>
             </div>
         </div>
     );

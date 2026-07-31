@@ -29,24 +29,24 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 }) => {
     return (
         <div className="space-y-4">
-            <button
-                onClick={() => setShowTransactionHistory(!showTransactionHistory)}
-                className="w-full flex items-center justify-between p-4 bg-white border border-[var(--color-border)] rounded-xl shadow-sm hover:bg-gray-50 transition-colors"
-            >
-                <span className="font-bold text-[var(--color-text-main)]">
-                    {showTransactionHistory ? "Hide Transaction History" : "View Full Transaction History"}
-                </span>
-                <span className="text-[var(--color-text-muted)] text-sm">
-                    {aggregatedData.length} records found
-                </span>
-            </button>
+            <div className="flex items-end justify-between border-b border-[var(--color-border)] pb-4 mt-16 mb-4">
+                <h2 className="text-xl font-normal tracking-tight text-[var(--color-text-main)]" style={{ fontFamily: "var(--font-display, inherit)" }}>
+                    Ledger
+                </h2>
+                <button
+                    onClick={() => setShowTransactionHistory(!showTransactionHistory)}
+                    className="text-[11px] font-mono uppercase tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] transition-colors"
+                >
+                    {showTransactionHistory ? "Hide Records" : `View ${aggregatedData.length} Records`}
+                </button>
+            </div>
             
             {showTransactionHistory && (
-                <div className={`card-panel overflow-hidden bg-white rounded-2xl shadow-sm border border-[var(--color-border)] ${activeTab === 'deleted' ? 'border-red-200 shadow-red-500/10' : ''}`}>
-                    <div className="overflow-x-auto">
+                <div className={`overflow-x-auto ${activeTab === 'deleted' ? 'opacity-80' : ''}`}>
+                    <div className="min-w-max">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className={`border-b border-[var(--color-border)] text-xs font-bold uppercase tracking-wider ${activeTab === 'deleted' ? 'bg-red-50 text-red-500' : 'bg-gray-50 text-[var(--color-text-muted)]'}`}>
+                                <tr className={`border-b border-[var(--color-border)] text-[10px] font-mono uppercase tracking-widest ${activeTab === 'deleted' ? 'text-red-500' : 'text-[var(--color-text-muted)]'}`}>
                                     <th className="p-4">Date</th>
                                     <th className="p-4">Member</th>
                                     <th className="p-4 text-right">Tithe</th>
@@ -79,17 +79,17 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                                     </tr>
                                 ) : (
                                     aggregatedData.map((row) => (
-                                        <tr key={row.key} className={`text-sm group transition-colors ${activeTab === 'deleted' ? 'hover:bg-red-50/50' : 'hover:bg-gray-50'}`}>
-                                            <td className="p-4 font-mono text-gray-500">{row.date}</td>
-                                            <td className="p-4 font-medium text-gray-800 flex items-center gap-2">
+                                        <tr key={row.key} className={`text-sm group transition-colors border-b border-[var(--color-border)] ${activeTab === 'deleted' ? 'hover:bg-red-50/30' : 'hover:bg-gray-50/50'}`}>
+                                            <td className="p-4 font-mono text-gray-500 text-xs">{row.date}</td>
+                                            <td className="p-4 font-normal text-[var(--color-text-main)] flex items-center gap-2">
                                                 {row.member_name}
-                                                {activeTab === 'deleted' && <span className="bg-red-100 text-red-700 text-[10px] px-2 py-0.5 rounded-full uppercase font-bold">Deleted</span>}
+                                                {activeTab === 'deleted' && <span className="text-red-500 text-[10px] font-mono uppercase tracking-widest">Deleted</span>}
                                             </td>
-                                            <td className="p-4 text-right font-mono text-gray-700">{row.tithe > 0 ? formatCurrency(row.tithe) : '-'}</td>
-                                            <td className="p-4 text-right font-mono text-gray-700">{row.faith_promise > 0 ? formatCurrency(row.faith_promise) : '-'}</td>
-                                            <td className="p-4 text-right font-mono text-gray-700">{row.love_gift > 0 ? formatCurrency(row.love_gift) : '-'}</td>
-                                            <td className="p-4 text-right font-mono text-gray-700">{row.pledge > 0 ? formatCurrency(row.pledge) : '-'}</td>
-                                            <td className="p-4 text-right font-bold text-black">{formatCurrency(row.total)}</td>
+                                            <td className="p-4 text-right font-mono text-gray-600 text-xs">{row.tithe > 0 ? formatCurrency(row.tithe) : '-'}</td>
+                                            <td className="p-4 text-right font-mono text-gray-600 text-xs">{row.faith_promise > 0 ? formatCurrency(row.faith_promise) : '-'}</td>
+                                            <td className="p-4 text-right font-mono text-gray-600 text-xs">{row.love_gift > 0 ? formatCurrency(row.love_gift) : '-'}</td>
+                                            <td className="p-4 text-right font-mono text-gray-600 text-xs">{row.pledge > 0 ? formatCurrency(row.pledge) : '-'}</td>
+                                            <td className="p-4 text-right font-mono text-[var(--color-text-main)]">{formatCurrency(row.total)}</td>
                                             <td className="p-4 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 {activeTab === 'active' ? (
                                                     canManageTreasury ? (
