@@ -8,18 +8,18 @@
 @import '@fontsource/outfit/700.css';
 
 :root {
-  /* Minimalist Editorial Palette */
-  --color-bg: oklch(0.98 0.005 250);
-  --color-surface: oklch(1 0 0);
-  --color-surface-hover: oklch(0.96 0.005 250);
-  --color-border: oklch(0.85 0.005 250);
-  --color-primary: oklch(0.2 0.005 250);
-  --color-primary-dark: oklch(0.1 0 0);
-  --color-primary-glow: oklch(0.2 0.005 250 / 0.15);
-  --color-text-main: oklch(0.15 0.005 250);
-  --color-text-muted: oklch(0.5 0.005 250);
-  --color-text-light: oklch(1 0 0);
-  --radius-dlg: 0px;
+  /* Warm & Legible Hallmark "Garden" Palette */
+  --color-bg: oklch(0.98 0.01 60);
+  --color-surface: oklch(0.98 0.01 60);
+  --color-surface-hover: oklch(0.96 0.01 60);
+  --color-border: oklch(0.85 0.01 60);
+  --color-primary: oklch(0.6 0.1 140);
+  --color-primary-dark: oklch(0.5 0.1 140);
+  --color-primary-glow: oklch(0.6 0.1 140 / 0.15);
+  --color-text-main: oklch(0.2 0.02 60);
+  --color-text-muted: oklch(0.5 0.02 60);
+  --color-text-light: oklch(0.98 0.01 60);
+  --radius-dlg: 0.5rem;
   --shadow-card: none;
   --shadow-hover: none;
 }
@@ -57,7 +57,7 @@
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
     box-shadow: none;
-    border-radius: 0;
+    border-radius: 0.5rem;
     transition: background-color 0.2s ease, border-color 0.2s ease;
   }
 
@@ -69,12 +69,12 @@
 
   /* Redesign Buttons globally */
   .btn-primary {
-    @apply bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] active:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-4 py-2 rounded-none font-medium flex items-center gap-2 justify-center shadow-none;
+    @apply bg-[var(--color-surface)] text-[var(--color-text-main)] border border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] active:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors px-4 py-2 rounded-lg font-medium flex items-center gap-2 justify-center shadow-none;
   }
 
   /* Secondary/Ghost Button Style */
   .btn-ghost {
-    @apply bg-transparent hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] border border-transparent transition-colors px-3 py-2 rounded-none flex items-center gap-2 shadow-none;
+    @apply bg-transparent hover:bg-[var(--color-surface-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-main)] border border-transparent transition-colors px-3 py-2 rounded-lg flex items-center gap-2 shadow-none;
   }
 }
 
@@ -85,7 +85,7 @@
   textarea {
     width: 100%;
     padding: 0.625rem 0.75rem;
-    border-radius: 0;
+    border-radius: 0.5rem;
     border: 1px solid var(--color-border);
     background-color: var(--color-surface);
     color: var(--color-text-main);
@@ -118,7 +118,7 @@
   width: 100%;
   min-height: 2.75rem;
   padding: 0.625rem 0.875rem;
-  border-radius: 0;
+  border-radius: 0.5rem;
   border: 1px solid var(--color-border);
   background-color: var(--color-surface);
   color: var(--color-text-main);
